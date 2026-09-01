@@ -7,7 +7,9 @@ import sys
 
 # Подключение init_db
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from database.init_db import DB_PATH, init_db, get_db_connection
+#from database.init_db import DB_PATH, init_db, get_db_connection
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 app = Flask(__name__)
 CORS(app)
