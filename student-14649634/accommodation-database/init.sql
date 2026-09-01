@@ -22,7 +22,7 @@ VALUES
     320,
     4,
     4.5,
-    'Luxury accommodation in Melbourne Southbank.',
+    'Luxury accommodation in Melbourne Southbank precinct, close to restaurants, entertainment and the Melbourne CBD.',
     'static/images/crown_melbourne.jpg.webp'
 ),
 (
@@ -33,7 +33,7 @@ VALUES
     280,
     4,
     4.4,
-    'Modern accommodation near the beach and shopping.',
+    'Modern accommodation in the centre of Surfers Paradise, close to the beach, shopping, restaurants and nightlife.',
     'static/images/hilton_surfers.jpg'
 ),
 (
@@ -44,7 +44,7 @@ VALUES
     190,
     2,
     4.1,
-    'Affordable accommodation near Darling Harbour.',
+    'Affordable accommodation in Darling Harbour with convenient access to the Sydney CBD, light rail, ICC Sydney and major waterfront attractions.',
     'static/images/ibis_darlingharbour.jpg.webp'
 ),
 (
@@ -55,7 +55,7 @@ VALUES
     550,
     14,
     4.7,
-    'Historic guest house suitable for larger groups.',
+    'A historic boutique guest house in the Bathurst region offering luxury suites, landscaped gardens and whole-house group accommodation for larger stays.',
     'static/images/littlebourne.jpg.webp'
 ),
 (
@@ -66,7 +66,7 @@ VALUES
     230,
     4,
     4.1,
-    'Apartment-style accommodation near Darling Harbour.',
+    'AApartment-style accommodation near Darling Harbour, suitable for travellers wanting additional space and convenient access to central Sydney.',
     'static/images/oaks_goldsbrough.jpg'
 ),
 (
@@ -77,7 +77,7 @@ VALUES
     210,
     6,
     4.2,
-    'Relaxed resort accommodation in Port Douglas.',
+    'A tropical resort in Port Douglas offering a relaxed setting near beaches and attractions around Far North Queensland.',
     'static/images/oaks_portdouglas.jpeg'
 ),
 (
@@ -88,7 +88,7 @@ VALUES
     190,
     3,
     4.3,
-    'Convenient hotel accommodation in central Cairns.',
+    'Waterfront accommodation in central Cairns, convenient for travellers visiting the Esplanade, marina and Great Barrier Reef departure points.',
     'static/images/pacific_cairns.jpeg'
 ),
 (
@@ -99,7 +99,7 @@ VALUES
     650,
     3,
     4.8,
-    'Luxury accommodation near Sydney Harbour.',
+    'Luxury waterfront accommodation in The Rocks with convenient access to Circular Quay, Sydney Harbour and major city attractions.',
     'static/images/parkhyatt.jpeg'
 ),
 (
@@ -110,7 +110,7 @@ VALUES
     360,
     4,
     4.5,
-    'Waterfront hotel accommodation at Walsh Bay.',
+    'Waterfront hotel at Walsh Bay offering harbour surroundings and convenient access to The Rocks and central Sydney.',
     'static/images/pierone.jpeg'
 ),
 (
@@ -121,7 +121,7 @@ VALUES
     220,
     2,
     4.2,
-    'Convenient accommodation near Sydney Airport.',
+    'Airport accommodation suitable for international travellers, early departures, late arrivals and short Sydney stopovers.',
     'static/images/rydges_airport.jpeg'
 ),
 (
@@ -154,7 +154,7 @@ VALUES
     340,
     4,
     4.6,
-    'Contemporary luxury accommodation near Brisbane CBD.',
+    'Contemporary luxury accommodation overlooking the Brisbane River, close to the CBD, South Bank and major entertainment areas.',
     'static/images/w_brisbane.jpg'
 ),
 (
@@ -165,7 +165,7 @@ VALUES
     420,
     2,
     4.6,
-    'Modern luxury hotel in Sydney.',
+    'Modern luxury accommodation at Darling Harbour with convenient access to restaurants, entertainment, shopping and the Sydney CBD.',
     'static/images/w_sydney.jpeg'
 );
 
@@ -176,6 +176,11 @@ INSERT INTO availability (
 )
 VALUES
 (1, '2026-09-05', 1),
+(1, '2026-09-06', 0),
+(1, '2026-09-07', 1),
+(1, '2026-09-08', 1),
+(1, '2026-09-09', 1),
+(1, '2026-09-10', 0),
 (2, '2026-09-05', 1),
 (3, '2026-09-05', 1),
 (4, '2026-09-07', 1),
