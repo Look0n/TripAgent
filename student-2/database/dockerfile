@@ -1,0 +1,5 @@
+FROM python:3.10-slim
+WORKDIR /db
+COPY init_db.py .
+RUN python init_db.py
+CMD ["tail", "-f", "/dev/null"]
