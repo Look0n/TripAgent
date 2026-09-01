@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Add Accommodation | TripAgent</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/styles.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../static/css/accommodation.css"
+    >
+</head>
+
+
+<body>
+
+    <header class="navbar">
+
+        <a href="/" class="brand">
+            TripAgent
+        </a>
+
+        <nav>
+            <a href="/">Home</a>
+            <button
+                id="logout-button"
+                class="link-button"
+            >
+                Logout
+            </button>
+        </nav>
+
+    </header>
+
+
+<main class="form-page">
+
+    <section class="form-card">
+
+        <a
+            href="/accommodation/?view=admin"
+            class="back-link"
+        >
+            ← Back
+        </a>
+
+
+        <h1>Add Accommodation</h1>
+
+        <p class="subtitle">
+            Create a new accommodation record.
+        </p>
+
+
+        <form id="addForm">
+
+            <label for="name">
+                Accommodation Name
+            </label>
+
+            <input
+                id="name"
+                required
+            >
+
+
+            <label for="type">
+                Type
+            </label>
+
+            <select id="type">
+
+                <option value="Hotel">
+                    Hotel
+                </option>
+
+                <option value="Hostel">
+                    Hostel
+                </option>
+
+                <option value="Apartment">
+                    Apartment
+                </option>
+
+                <option value="Resort">
+                    Resort
+                </option>
+
+                <option value="Guesthouse">
+                    Guesthouse
+                </option>
+
+            </select>
+
+
+            <label for="city">
+                City
+            </label>
+
+            <input
+                id="city"
+                required
+            >
+
+
+            <label for="address">
+                Address
+            </label>
+
+            <input id="address">
+
+
+            <div class="form-grid">
+
+                <div>
+
+                    <label for="price">
+                        Price Per Night
+                    </label>
+
+                    <input
+                        type="number"
+                        id="price"
+                        required
+                    >
+
+                </div>
+
+
+                <div>
+
+                    <label for="capacity">
+                        Guest Capacity
+                    </label>
+
+                    <input
+                        type="number"
+                        id="capacity"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <label for="rating">
+                Rating
+            </label>
+
+            <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="5"
+                id="rating"
+            >
+
+
+            <label for="image">
+                Image Path
+            </label>
+
+            <input
+                id="image"
+                placeholder="static/images/hotel.png"
+            >
+
+
+            <label for="description">
+                Description
+            </label>
+
+            <textarea
+                id="description"
+            ></textarea>
+
+
+            <button type="submit">
+                Add Accommodation
+            </button>
+
+        </form>
+
+
+        <p
+            id="message"
+            class="message"
+        ></p>
+
+    </section>
+
+</main>
+
+
+<script>
+
+document
+    .getElementById("addForm")
+    .addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+
+            const payload = {
+
+                accommodation_name:
+                    document.getElementById(
+                        "name"
+                    ).value,
+
+                type:
+                    document.getElementById(
+                        "type"
+                    ).value,
+
+                city:
+                    document.getElementById(
+                        "city"
+                    ).value,
+
+                address:
+                    document.getElementById(
+                        "address"
+                    ).value,
+
+                price_per_night:
+                    Number(
+                        document.getElementById(
+                            "price"
+                        ).value
+                    ),
+
+                guest_capacity:
+                    Number(
+                        document.getElementById(
+                            "capacity"
+                        ).value
+                    ),
+
+                rating:
+                    Number(
+                        document.getElementById(
+                            "rating"
+                        ).value
+                    ) || null,
+
+                description:
+                    document.getElementById(
+                        "description"
+                    ).value,
+
+                image_url:
+                    document.getElementById(
+                        "image"
+                    ).value
+            };
+
+
+            const response = await fetch(
+                "http://127.0.0.1:5002/api/accommodations",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(payload)
+                }
+            );
+
+
+            if (!response.ok) {
+
+                document
+                    .getElementById("message")
+                    .textContent =
+                        "Unable to add accommodation.";
+
+                return;
+            }
+
+
+            window.location.href =
+                "/accommodation/?view=admin";
+        }
+    );
+
+</script>
+
+</body>
+</html>
