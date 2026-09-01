@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Accommodation Details | TripAgent</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/styles.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../static/css/accommodation.css"
+    >
+</head>
+
+
+<body>
+
+    <header class="navbar">
+
+        <a href="/" class="brand">
+            TripAgent
+        </a>
+
+        <nav>
+            <a href="/">Home</a>
+            <button
+                id="logout-button"
+                class="link-button"
+            >
+                Logout
+            </button>
+        </nav>
+
+    </header>
+
+
+<main class="form-page">
+
+    <section class="form-card">
+
+        <a
+            id="backLink"
+            href="/accommodation/"
+            class="back-link"
+        >
+            ← Back to Accommodation
+        </a>
+
+        <div id="detailContent">
+            Loading accommodation...
+        </div>
+
+    </section>
+
+</main>
+
+
+<script>
+
+const accommodationId =
+    {{ accommodation_id }};
+
+
+    const params =
+    new URLSearchParams(
+        window.location.search
+    );
+    
+    const fromView =
+    params.get("from");
+    
+    
+    const backLink =
+    document.getElementById(
+        "backLink"
+    );
+    
+    if (backLink) {
+
+        if (fromView === "admin") {
+        
+        backLink.href =
+            "/accommodation/?view=admin";
+        
+        backLink.textContent =
+            "← Back to Admin View";
+        
+        } else {
+        
+        backLink.href =
+            "/accommodation/?view=browse";
+        
+        backLink.textContent =
+            "← Back to Browse";
+        }
+    }
+
+async function loadAccommodation() {
+
+    const response = await fetch(
+        `http://127.0.0.1:5002/api/accommodations/${accommodationId}`
+    );
+
+    const accommodation =
+        await response.json();
+
+
+    const imageFile =
+    accommodation.image_url
+        ? accommodation.image_url.split("/").pop()
+        : "";
+
+
+    document
+        .getElementById("detailContent")
+        .innerHTML = `
+
+            <h1>
+                ${accommodation.accommodation_name}
+            </h1>
+
+            <p class="subtitle">
+                ${accommodation.type}
+                ·
+                ${accommodation.city}
+            </p>
+
+            <img
+                class="detail-image"
+                src="/accommodation/static/images/${imageFile}"
+                alt="${accommodation.accommodation_name}"
+            >
+
+            <div class="detail-grid">
+
+                <div>
+                    <strong>Address</strong>
+
+                    <p>
+                        ${accommodation.address || "-"}
+                    </p>
+                </div>
+
+                <div>
+                    <strong>Price Per Night</strong>
+
+                    <p>
+                        $${accommodation.price_per_night}
+                    </p>
+                </div>
+
+                <div>
+                    <strong>Guest Capacity</strong>
+
+                    <p>
+                        ${accommodation.guest_capacity}
+                    </p>
+                </div>
+
+                <div>
+                    <strong>Rating</strong>
+
+                    <p>
+                        ★ ${accommodation.rating ?? "N/A"}
+                    </p>
+                </div>
+
+            </div>
+
+            <h2>Description</h2>
+
+            <p class="description">
+                ${accommodation.description || ""}
+            </p>
+        `;
+}
+
+
+loadAccommodation();
+
+</script>
+
+</body>
+</html>

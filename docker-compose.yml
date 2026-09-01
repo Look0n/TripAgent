@@ -17,6 +17,9 @@ services:
       account-frontend:
         condition: service_started
 
+      accommodation-frontend:
+        condition: service_started
+
     restart: unless-stopped
 
 
@@ -28,7 +31,7 @@ services:
       context: ./shared/gateway
 
     ports:
-      - "5000:5000"
+      - "5050:5000"
 
     environment:
       SHARED_DATABASE_URL: http://shared-database:6000
@@ -172,6 +175,94 @@ services:
 
 
   # =================================================
+  # ACCOMMODATION FRONTEND
+  # =================================================
+  accommodation-frontend:
+    build:
+      context: ./student-14649634/accommodation-frontend
+
+    # Optional direct access for debugging:
+    # http://localhost:3002
+    ports:
+      - "3002:3002"
+
+    depends_on:
+      accommodation-backend:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ACCOMMODATION BACKEND
+  # =================================================
+  accommodation-backend:
+    build:
+      context: ./student-14649634/accommodation-backend
+
+    ports:
+      - "5002:5002"
+
+    environment:
+      DATABASE_API_URL: http://accommodation-database:6002
+      OLLAMA_URL: http://ollama:11434/api/generate
+
+    depends_on:
+      accommodation-database:
+        condition: service_healthy
+
+      ollama:
+        condition: service_started
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5002/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ACCOMMODATION DATABASE
+  # =================================================
+  accommodation-database:
+    build:
+      context: ./student-14649634/accommodation-database
+
+    ports:
+      - "6002:6002"
+
+    environment:
+      DATABASE_PATH: /data/accommodation.db
+
+    volumes:
+      - accommodation-database-data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:6002/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
   # OLLAMA
   # =================================================
   ollama:
@@ -194,5 +285,7 @@ volumes:
   shared-database-data:
 
   account-database-data:
+
+  accommodation-database-data:
 
   ollama-data:

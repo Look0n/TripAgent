@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Accommodation | TripAgent</title>
+
+
+    <link
+        rel="stylesheet"
+        href="/css/styles.css"
+    >
+
+
+    <link
+        rel="stylesheet"
+        href="static/css/accommodation.css"
+    >
+</head>
+
+
+<body>
+
+    <header class="navbar">
+
+        <a href="/" class="brand">
+            TripAgent
+        </a>
+
+        <nav>
+            <a href="/">Home</a>
+            <button
+                id="logout-button"
+                class="link-button"
+            >
+                Logout
+            </button>
+        </nav>
+
+    </header>
+
+
+    <main class="accommodation-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="accommodation-sidebar">
+
+            <h2>Accommodation</h2>
+
+            <button
+                class="sidebar-link active"
+                id="browseTab"
+                onclick="showView('browse')"
+            >
+                Browse
+            </button>
+
+            <button
+                class="sidebar-link"
+                id="searchTab"
+                onclick="showView('search')"
+            >
+                Search & Filter
+            </button>
+
+            <button
+                class="sidebar-link"
+                id="aiTab"
+                onclick="showView('ai')"
+            >
+                AI Assistant
+            </button>
+
+            <button
+                class="sidebar-link"
+                id="adminTab"
+                onclick="showView('admin')"
+            >
+                Admin View
+            </button>
+
+        </aside>
+
+
+        <!-- MAIN CONTENT -->
+        <section class="content-card">
+
+
+            <!-- =====================================
+                 BROWSE
+                 ===================================== -->
+
+            <div
+                id="browseView"
+                class="accommodation-view"
+            >
+
+                <h1>Browse Accommodation</h1>
+
+                <p class="subtitle">
+                    Explore accommodation available
+                    through TripAgent.
+                </p>
+
+                <div id="accommodationList">
+                    Loading accommodations...
+                </div>
+
+            </div>
+
+
+
+            <!-- =====================================
+                 SEARCH & FILTER
+                 ===================================== -->
+
+            <div
+                id="searchView"
+                class="accommodation-view"
+                style="display: none;"
+            >
+
+                <h1>Search & Filter</h1>
+
+                <p class="subtitle">
+                    Find accommodation matching
+                    your travel requirements.
+                </p>
+
+
+                <div class="search-grid">
+
+                    <div class="form-group">
+
+                        <label for="city">
+                            City
+                        </label>
+
+                        <input
+                            type="text"
+                            id="city"
+                            placeholder="Sydney"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="type">
+                            Type
+                        </label>
+
+                        <select id="type">
+
+                            <option value="">
+                                All
+                            </option>
+
+                            <option value="Hotel">
+                                Hotel
+                            </option>
+
+                            <option value="Hostel">
+                                Hostel
+                            </option>
+
+                            <option value="Apartment">
+                                Apartment
+                            </option>
+
+                            <option value="Resort">
+                                Resort
+                            </option>
+
+                            <option value="Guesthouse">
+                                Guesthouse
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="maxPrice">
+                            Maximum Price
+                        </label>
+
+                        <input
+                            type="number"
+                            id="maxPrice"
+                            placeholder="400"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="button-row">
+
+                    <button onclick="searchAccommodations()">
+                        Search
+                    </button>
+
+                    <button
+                        class="secondary-button"
+                        onclick="showAllSearchResults()"
+                    >
+                        Show All
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="searchResults"
+                    class="accommodation-grid"
+                >
+                </div>
+
+            </div>
+
+
+
+            <!-- =====================================
+                 AI ASSISTANT
+                 ===================================== -->
+
+            <div
+                id="aiView"
+                class="accommodation-view"
+                style="display: none;"
+            >
+
+                <h1>AI Accommodation Assistant</h1>
+
+                <p class="subtitle">
+                    Describe what you are looking for
+                    and TripAgent will recommend matching
+                    accommodation from the database.
+                </p>
+
+
+                <div class="ai-panel">
+
+                    <div id="chatBox">
+
+                        <p>
+                            <strong>AI:</strong>
+                            Tell me what kind of
+                            accommodation you are looking for.
+                        </p>
+
+                    </div>
+
+
+                    <div class="chat-input-row">
+
+                        <input
+                            type="text"
+                            id="chatInput"
+                            placeholder="I want a quiet hotel in Sydney for 2 people under $400..."
+                            onkeydown="handleChatKey(event)"
+                        >
+
+                        <button onclick="sendChatMessage()">
+                            Send
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =====================================
+                 ADMIN
+                 ===================================== -->
+
+            <div
+                id="adminView"
+                class="accommodation-view"
+                style="display: none;"
+            >
+
+                <h1>Accommodation Management</h1>
+
+                <p class="subtitle">
+                    Add, update and remove
+                    accommodation records.
+                </p>
+
+
+                <div class="button-row">
+
+                    <button
+                        onclick="window.location.href='admin/add'"
+                    >
+                        Add Accommodation
+                    </button>
+
+                </div>
+
+                <p
+                    id="addMessage"
+                    class="message"
+                ></p>
+
+
+                <h2 class="admin-list-title">
+                    Existing Accommodation
+                </h2>
+
+                <div id="adminAccommodationList">
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="static/js/accommodation.js"></script>
+
+</body>
+</html>
