@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        TripAgent - Travel Preferences
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="/account/css/styles.css"
+    >
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <a
+        href="/"
+        class="brand"
+    >
+        TripAgent
+    </a>
+
+    <nav>
+        <a href="/">Home</a>
+
+        <button
+            id="logout-button"
+            class="link-button"
+        >
+            Logout
+        </button>
+    </nav>
+
+</header>
+
+
+<main class="account-layout">
+
+    <aside class="sidebar">
+
+        <h2>Account</h2>
+
+        <a href="/account/profile">
+            Profile
+        </a>
+
+        <a
+            href="/account/preferences"
+            class="active"
+        >
+            Preferences
+        </a>
+
+    </aside>
+
+
+    <section class="content-card">
+
+        <h1>Travel Preferences</h1>
+
+        <p class="subtitle">
+            Tell TripAgent what type of travel
+            experience you prefer.
+        </p>
+
+
+        <form id="preference-form">
+
+            <label for="budget-level">
+                Budget Level
+            </label>
+
+            <select id="budget-level">
+                <option value="">
+                    Select
+                </option>
+
+                <option value="budget">
+                    Budget
+                </option>
+
+                <option value="moderate">
+                    Moderate
+                </option>
+
+                <option value="luxury">
+                    Luxury
+                </option>
+            </select>
+
+
+            <label for="travel-style">
+                Travel Style
+            </label>
+
+            <input
+                id="travel-style"
+                placeholder=
+                    "e.g. adventure, relaxation, culture"
+            >
+
+
+            <label for="accommodation-type">
+                Accommodation Type
+            </label>
+
+            <input
+                id="accommodation-type"
+                placeholder=
+                    "e.g. hotel, hostel, resort"
+            >
+
+
+            <label for="transport-preference">
+                Transport Preference
+            </label>
+
+            <input
+                id="transport-preference"
+                placeholder=
+                    "e.g. train, public transport, car"
+            >
+
+
+            <label for="food-preference">
+                Food Preference
+            </label>
+
+            <input
+                id="food-preference"
+                placeholder=
+                    "e.g. local cuisine, vegetarian"
+            >
+
+
+            <label for="pace-preference">
+                Pace Preference
+            </label>
+
+            <select id="pace-preference">
+
+                <option value="">
+                    Select
+                </option>
+
+                <option value="relaxed">
+                    Relaxed
+                </option>
+
+                <option value="balanced">
+                    Balanced
+                </option>
+
+                <option value="fast-paced">
+                    Fast-paced
+                </option>
+
+            </select>
+
+
+            <div class="button-row">
+
+                <button type="submit">
+                    Save Preferences
+                </button>
+
+                <button
+                    type="button"
+                    id="delete-button"
+                    class="danger-button"
+                >
+                    Delete Preferences
+                </button>
+
+            </div>
+
+        </form>
+
+
+        <p
+            id="message"
+            class="message"
+        ></p>
+
+
+        <section class="ai-panel">
+
+            <h2>
+                AI Preference Assistant
+            </h2>
+
+            <p>
+                Describe the kind of holiday you enjoy.
+                The assistant will suggest preferences
+                you may want to consider.
+            </p>
+
+            <textarea
+                id="ai-message"
+                rows="5"
+                placeholder=
+                    "For example: I enjoy quiet beach holidays, good food and a relaxed schedule."
+            ></textarea>
+
+            <button
+                id="ask-ai-button"
+                type="button"
+            >
+                Ask AI
+            </button>
+
+            <div
+                id="ai-response"
+                class="ai-response"
+            ></div>
+
+            <p class="ai-note">
+                AI suggestions are advisory only.
+                They do not automatically change
+                your saved preferences.
+            </p>
+
+        </section>
+
+    </section>
+
+</main>
+
+
+<script>
+
+async function loadPreferences() {
+
+    const response = await fetch(
+        "/api/account/preferences",
+        {
+            credentials: "include"
+        }
+    );
+
+    if (response.status === 401) {
+
+        window.location.href =
+            "/account/login";
+
+        return;
+    }
+
+    const preference =
+        await response.json();
+
+    document
+        .getElementById("budget-level")
+        .value =
+            preference.budget_level || "";
+
+    document
+        .getElementById("travel-style")
+        .value =
+            preference.travel_style || "";
+
+    document
+        .getElementById(
+            "accommodation-type"
+        )
+        .value =
+            preference.accommodation_type || "";
+
+    document
+        .getElementById(
+            "transport-preference"
+        )
+        .value =
+            preference.transport_preference || "";
+
+    document
+        .getElementById(
+            "food-preference"
+        )
+        .value =
+            preference.food_preference || "";
+
+    document
+        .getElementById(
+            "pace-preference"
+        )
+        .value =
+            preference.pace_preference || "";
+}
+
+
+document
+    .getElementById("preference-form")
+    .addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+            const payload = {
+
+                budget_level:
+                    document
+                        .getElementById(
+                            "budget-level"
+                        )
+                        .value,
+
+                travel_style:
+                    document
+                        .getElementById(
+                            "travel-style"
+                        )
+                        .value,
+
+                accommodation_type:
+                    document
+                        .getElementById(
+                            "accommodation-type"
+                        )
+                        .value,
+
+                transport_preference:
+                    document
+                        .getElementById(
+                            "transport-preference"
+                        )
+                        .value,
+
+                food_preference:
+                    document
+                        .getElementById(
+                            "food-preference"
+                        )
+                        .value,
+
+                pace_preference:
+                    document
+                        .getElementById(
+                            "pace-preference"
+                        )
+                        .value
+            };
+
+
+            const response = await fetch(
+                "/api/account/preferences",
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    credentials: "include",
+
+                    body:
+                        JSON.stringify(payload)
+                }
+            );
+
+            const data =
+                await response.json();
+
+            document
+                .getElementById("message")
+                .textContent =
+                    data.message ||
+                    data.error ||
+                    "";
+        }
+    );
+
+
+document
+    .getElementById("delete-button")
+    .addEventListener(
+        "click",
+        async () => {
+
+            const confirmed =
+                window.confirm(
+                    "Delete your saved travel preferences?"
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            const response = await fetch(
+                "/api/account/preferences",
+                {
+                    method: "DELETE",
+                    credentials: "include"
+                }
+            );
+
+            const data =
+                await response.json();
+
+            document
+                .getElementById("message")
+                .textContent =
+                    data.message ||
+                    data.error ||
+                    "";
+
+            if (response.ok) {
+                document
+                    .getElementById(
+                        "preference-form"
+                    )
+                    .reset();
+            }
+        }
+    );
+
+
+document
+    .getElementById("ask-ai-button")
+    .addEventListener(
+        "click",
+        async () => {
+
+            const message =
+                document
+                    .getElementById(
+                        "ai-message"
+                    )
+                    .value
+                    .trim();
+
+            if (!message) {
+                return;
+            }
+
+            const responseBox =
+                document.getElementById(
+                    "ai-response"
+                );
+
+            responseBox.textContent =
+                "Thinking...";
+
+            const response = await fetch(
+                "/api/account/ai/preferences",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    credentials: "include",
+
+                    body: JSON.stringify({
+                        message: message
+                    })
+                }
+            );
+
+            const data =
+                await response.json();
+
+            if (!response.ok) {
+
+                responseBox.textContent =
+                    data.error ||
+                    "Unable to contact AI.";
+
+                return;
+            }
+
+            responseBox.textContent =
+                data.response;
+        }
+    );
+
+
+document
+    .getElementById("logout-button")
+    .addEventListener(
+        "click",
+        async () => {
+
+            await fetch(
+                "/api/account/logout",
+                {
+                    method: "POST",
+                    credentials: "include"
+                }
+            );
+
+            window.location.href =
+                "/account/login";
+        }
+    );
+
+
+loadPreferences();
+
+</script>
+
+</body>
+</html>

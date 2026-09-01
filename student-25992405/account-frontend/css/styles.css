@@ -1,0 +1,452 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #f5f7fa;
+    color: #1f2937;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+
+/* =========================================
+   TOP NAVIGATION
+   ========================================= */
+
+.topbar {
+    min-height: 70px;
+
+    padding: 0 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: white;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+.brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.topbar nav {
+    display: flex;
+    gap: 22px;
+    align-items: center;
+}
+
+.topbar nav a,
+.link-button {
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.topbar nav a:hover,
+.link-button:hover {
+    color: #2563eb;
+}
+
+.link-button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+}
+
+
+/* =========================================
+   ACCOUNT PAGE LAYOUT
+   ========================================= */
+
+.account-layout {
+    max-width: 1200px;
+
+    margin: 0 auto;
+
+    padding: 50px 24px 80px;
+
+    display: grid;
+
+    grid-template-columns:
+        240px minmax(0, 1fr);
+
+    gap: 28px;
+}
+
+
+/* =========================================
+   SIDEBAR
+   ========================================= */
+
+.sidebar {
+    background: white;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius: 12px;
+
+    padding: 24px;
+
+    height: fit-content;
+
+    box-shadow:
+        0 4px 15px
+        rgba(0, 0, 0, 0.04);
+}
+
+.sidebar h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.sidebar a {
+    display: block;
+
+    padding: 12px 14px;
+
+    margin-bottom: 8px;
+
+    border-radius: 8px;
+
+    color: #4b5563;
+
+    font-weight: 500;
+}
+
+.sidebar a:hover {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.sidebar a.active {
+    background: #2563eb;
+    color: white;
+}
+
+
+/* =========================================
+   MAIN CONTENT CARD
+   ========================================= */
+
+.content-card {
+    background: white;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius: 12px;
+
+    padding: 32px;
+
+    box-shadow:
+        0 4px 15px
+        rgba(0, 0, 0, 0.04);
+}
+
+.content-card h1 {
+    margin-top: 0;
+    margin-bottom: 8px;
+
+    font-size: 2rem;
+}
+
+.subtitle {
+    margin-top: 0;
+    margin-bottom: 30px;
+
+    color: #6b7280;
+}
+
+
+/* =========================================
+   FORMS
+   ========================================= */
+
+form {
+    display: grid;
+    gap: 16px;
+}
+
+label {
+    font-weight: 600;
+    color: #374151;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+
+    padding: 12px 14px;
+
+    border:
+        1px solid #d1d5db;
+
+    border-radius: 8px;
+
+    background: white;
+
+    color: #1f2937;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37, 99, 235, 0.12);
+}
+
+input:disabled {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+
+/* =========================================
+   BUTTONS
+   ========================================= */
+
+button,
+.primary-button {
+    display: inline-block;
+
+    padding: 12px 22px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #2563eb;
+    color: white;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    width: fit-content;
+}
+
+button:hover,
+.primary-button:hover {
+    background: #1d4ed8;
+}
+
+.secondary-button {
+    background: white;
+    color: #2563eb;
+
+    border:
+        1px solid #2563eb;
+}
+
+.secondary-button:hover {
+    background: #eff6ff;
+}
+
+
+/* =========================================
+   MESSAGES
+   ========================================= */
+
+.message {
+    margin-top: 18px;
+
+    padding: 12px 14px;
+
+    border-radius: 8px;
+
+    background: #f3f4f6;
+
+    color: #374151;
+}
+
+.message:empty {
+    display: none;
+}
+
+
+/* =========================================
+   LOGIN / REGISTER PAGES
+   ========================================= */
+
+.auth-page {
+    min-height: calc(100vh - 70px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px 20px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 460px;
+
+    padding: 34px;
+
+    background: white;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 4px 15px
+        rgba(0, 0, 0, 0.04);
+}
+
+.auth-card h1 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.auth-card p {
+    color: #6b7280;
+}
+
+.auth-card form {
+    margin-top: 24px;
+}
+
+.auth-links {
+    margin-top: 22px;
+}
+
+.auth-links a {
+    color: #2563eb;
+    font-weight: 600;
+}
+
+
+/* =========================================
+   PREFERENCES / AI SECTION
+   ========================================= */
+
+.preference-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap: 18px;
+}
+
+.ai-panel {
+    margin-top: 30px;
+
+    padding: 24px;
+
+    background: #f8fafc;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius: 12px;
+}
+
+.ai-panel h2 {
+    margin-top: 0;
+}
+
+.ai-panel p {
+    color: #6b7280;
+}
+
+.ai-chat {
+    margin-top: 18px;
+
+    display: grid;
+    gap: 12px;
+}
+
+
+/* =========================================
+   RESPONSIVE DESIGN
+   ========================================= */
+
+@media (max-width: 800px) {
+
+    .topbar {
+        padding: 16px 20px;
+
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .topbar nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .account-layout {
+        grid-template-columns: 1fr;
+
+        padding:
+            30px 18px
+            60px;
+    }
+
+    .sidebar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .sidebar h2 {
+        width: 100%;
+    }
+
+    .sidebar a {
+        margin-bottom: 0;
+    }
+
+    .preference-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .content-card {
+        padding: 24px;
+    }
+}

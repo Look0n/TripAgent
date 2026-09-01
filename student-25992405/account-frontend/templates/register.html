@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>TripAgent - Register</title>
+
+    <link
+        rel="stylesheet"
+        href="/account/css/styles.css"
+    >
+</head>
+
+<body>
+
+<header class="topbar">
+    <a
+        href="/"
+        class="brand"
+    >
+        TripAgent
+    </a>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/account/login">
+            Login
+        </a>
+    </nav>
+</header>
+
+
+<main class="auth-page">
+
+<section class="auth-card">
+
+    <h1>Create Account</h1>
+
+    <p class="subtitle">
+        Create your traveller profile.
+    </p>
+
+    <form id="register-form">
+
+        <label for="first-name">
+            First Name
+        </label>
+
+        <input
+            id="first-name"
+            required
+        >
+
+        <label for="last-name">
+            Last Name
+        </label>
+
+        <input
+            id="last-name"
+            required
+        >
+
+        <label for="email">
+            Email
+        </label>
+
+        <input
+            id="email"
+            type="email"
+            required
+        >
+
+        <label for="password">
+            Password
+        </label>
+
+        <input
+            id="password"
+            type="password"
+            minlength="8"
+            required
+        >
+
+        <label for="phone">
+            Phone
+        </label>
+
+        <input
+            id="phone"
+            type="tel"
+        >
+
+        <label for="country">
+            Country
+        </label>
+
+        <input
+            id="country"
+        >
+
+        <button type="submit">
+            Register
+        </button>
+
+    </form>
+
+    <p
+        id="message"
+        class="message"
+    ></p>
+
+    <p class="form-link">
+        Already registered?
+
+        <a href="/account/login">
+            Login
+        </a>
+    </p>
+
+</section>
+
+</main>
+
+
+<script>
+
+const form =
+    document.getElementById(
+        "register-form"
+    );
+
+const message =
+    document.getElementById(
+        "message"
+    );
+
+
+form.addEventListener(
+    "submit",
+    async (event) => {
+
+        event.preventDefault();
+
+        message.textContent = "";
+
+        const payload = {
+            first_name:
+                document
+                    .getElementById(
+                        "first-name"
+                    )
+                    .value,
+
+            last_name:
+                document
+                    .getElementById(
+                        "last-name"
+                    )
+                    .value,
+
+            email:
+                document
+                    .getElementById("email")
+                    .value,
+
+            password:
+                document
+                    .getElementById("password")
+                    .value,
+
+            phone:
+                document
+                    .getElementById("phone")
+                    .value,
+
+            country:
+                document
+                    .getElementById("country")
+                    .value
+        };
+
+        const response = await fetch(
+            "/api/access/register",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                credentials: "include",
+
+                body:
+                    JSON.stringify(payload)
+            }
+        );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+            message.textContent =
+                data.error ||
+                "Registration failed";
+
+            return;
+        }
+
+        window.location.href =
+            "/account/profile";
+    }
+);
+
+</script>
+
+</body>
+</html>

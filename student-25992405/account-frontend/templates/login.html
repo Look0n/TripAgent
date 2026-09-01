@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>TripAgent - Login</title>
+
+    <link
+        rel="stylesheet"
+        href="/account/css/styles.css"
+    >
+</head>
+
+<body>
+
+<header class="topbar">
+    <a
+        href="/"
+        class="brand"
+    >
+        TripAgent
+    </a>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/account/login">Account</a>
+    </nav>
+</header>
+
+
+<main class="auth-page">
+
+    <section class="auth-card">
+
+        <h1>Welcome Back</h1>
+
+        <p class="subtitle">
+            Sign in to manage your TripAgent profile.
+        </p>
+
+        <form id="login-form">
+
+            <label for="email">
+                Email
+            </label>
+
+            <input
+                id="email"
+                type="email"
+                required
+            >
+
+            <label for="password">
+                Password
+            </label>
+
+            <input
+                id="password"
+                type="password"
+                required
+            >
+
+            <button type="submit">
+                Login
+            </button>
+
+        </form>
+
+        <p
+            id="message"
+            class="message"
+        ></p>
+
+        <p class="form-link">
+            Don't have an account?
+
+            <a href="/account/register">
+                Register
+            </a>
+        </p>
+
+    </section>
+
+</main>
+
+
+<script>
+
+const form = document.getElementById("login-form");
+const message = document.getElementById("message");
+
+form.addEventListener(
+    "submit",
+    async (event) => {
+
+        event.preventDefault();
+
+        message.textContent = "";
+
+        const response = await fetch(
+            "/api/access/login",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    email:
+                        document
+                            .getElementById("email")
+                            .value,
+
+                    password:
+                        document
+                            .getElementById("password")
+                            .value
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            message.textContent =
+                data.error || "Login failed";
+
+            return;
+        }
+
+        window.location.href =
+            "/account/profile";
+    }
+);
+
+</script>
+
+</body>
+</html>

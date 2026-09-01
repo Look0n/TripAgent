@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>TripAgent - Profile</title>
+
+    <link
+        rel="stylesheet"
+        href="/account/css/styles.css"
+    >
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <a
+        href="/"
+        class="brand"
+    >
+        TripAgent
+    </a>
+
+    <nav>
+        <a href="/">Home</a>
+        <button
+            id="logout-button"
+            class="link-button"
+        >
+            Logout
+        </button>
+    </nav>
+
+</header>
+
+
+<main class="account-layout">
+
+    <aside class="sidebar">
+
+        <h2>Account</h2>
+
+        <a
+            href="/account/profile"
+            class="active"
+        >
+            Profile
+        </a>
+
+        <a href="/account/preferences">
+            Preferences
+        </a>
+
+    </aside>
+
+
+    <section class="content-card">
+
+        <h1>Traveller Profile</h1>
+
+        <p class="subtitle">
+            View and update your account information.
+        </p>
+
+        <form id="profile-form">
+
+            <label for="first-name">
+                First Name
+            </label>
+
+            <input
+                id="first-name"
+                required
+            >
+
+            <label for="last-name">
+                Last Name
+            </label>
+
+            <input
+                id="last-name"
+                required
+            >
+
+            <label for="email">
+                Email
+            </label>
+
+            <input
+                id="email"
+                type="email"
+                disabled
+            >
+
+            <label for="phone">
+                Phone
+            </label>
+
+            <input
+                id="phone"
+                type="tel"
+            >
+
+            <label for="country">
+                Country
+            </label>
+
+            <input id="country">
+
+            <button type="submit">
+                Save Changes
+            </button>
+
+        </form>
+
+        <p
+            id="message"
+            class="message"
+        ></p>
+
+    </section>
+
+</main>
+
+
+<script>
+
+async function loadProfile() {
+
+    const response = await fetch(
+        "/api/account/profile",
+        {
+            credentials: "include"
+        }
+    );
+
+    if (response.status === 401) {
+
+        window.location.href =
+            "/account/login";
+
+        return;
+    }
+
+    const profile =
+        await response.json();
+
+    document
+        .getElementById("first-name")
+        .value =
+            profile.first_name || "";
+
+    document
+        .getElementById("last-name")
+        .value =
+            profile.last_name || "";
+
+    document
+        .getElementById("email")
+        .value =
+            profile.email || "";
+
+    document
+        .getElementById("phone")
+        .value =
+            profile.phone || "";
+
+    document
+        .getElementById("country")
+        .value =
+            profile.country || "";
+}
+
+
+document
+    .getElementById("profile-form")
+    .addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+            const response = await fetch(
+                "/api/account/profile",
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    credentials: "include",
+
+                    body: JSON.stringify({
+                        first_name:
+                            document
+                                .getElementById(
+                                    "first-name"
+                                )
+                                .value,
+
+                        last_name:
+                            document
+                                .getElementById(
+                                    "last-name"
+                                )
+                                .value,
+
+                        phone:
+                            document
+                                .getElementById(
+                                    "phone"
+                                )
+                                .value,
+
+                        country:
+                            document
+                                .getElementById(
+                                    "country"
+                                )
+                                .value
+                    })
+                }
+            );
+
+            const data =
+                await response.json();
+
+            document
+                .getElementById("message")
+                .textContent =
+                    data.message ||
+                    data.error ||
+                    "";
+        }
+    );
+
+
+document
+    .getElementById("logout-button")
+    .addEventListener(
+        "click",
+        async () => {
+
+            await fetch(
+                "/api/access/logout",
+                {
+                    method: "POST",
+                    credentials: "include"
+                }
+            );
+
+            window.location.href =
+                "/account/login";
+        }
+    );
+
+
+loadProfile();
+
+</script>
+
+</body>
+</html>
