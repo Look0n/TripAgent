@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TripAgent - Flight Search</title>
+
+    <link rel="stylesheet" href="/flight/css/styles.css">
+
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <style>
+        .htmx-indicator { display: none; }
+        .htmx-request .htmx-indicator { display: block; }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <a href="/" class="brand">TripAgent</a>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/flight/search">Search</a>
+        <a href="/flight/manage">Manage</a>
+    </nav>
+
+</header>
+
+
+<main class="account-layout">
+
+    <aside class="sidebar">
+
+        <h2>Flights</h2>
+
+        <a href="/flight/search" class="active">AI Search</a>
+        <a href="/flight/manage">Manage Flights</a>
+
+    </aside>
+
+
+    <section class="content">
+
+        <h1>Flight Search</h1>
+
+        <p class="lead">
+            Describe what you need and the agent will plan a search,
+            retrieve matching flights, verify the results, and
+            recommend an option.
+        </p>
+
+
+        <form
+            hx-post="/api/flight/ai/recommend/html"
+            hx-target="#results"
+            hx-swap="innerHTML"
+            class="search-form"
+        >
+
+            <div class="field-row">
+
+                <label>
+                    From
+                    <input
+                        type="text"
+                        name="origin"
+                        value="SYD"
+                        maxlength="3"
+                        placeholder="SYD"
+                    >
+                </label>
+
+                <label>
+                    To
+                    <input
+                        type="text"
+                        name="destination"
+                        maxlength="3"
+                        placeholder="MEL"
+                    >
+                </label>
+
+            </div>
+
+            <label>
+                What are you looking for?
+                <input
+                    type="text"
+                    name="message"
+                    required
+                    placeholder="I want the cheapest flight to Melbourne"
+                >
+            </label>
+
+            <button type="submit" class="primary-button">
+                Ask the agent
+            </button>
+
+            <div class="htmx-indicator loading">
+                Running the agentic workflow. The local model can take
+                a few seconds.
+            </div>
+
+        </form>
+
+
+        <div id="results"></div>
+
+    </section>
+
+</main>
+
+
+<footer>
+    <p>TripAgent</p>
+</footer>
+
+</body>
+</html>

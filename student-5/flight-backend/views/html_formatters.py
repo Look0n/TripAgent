@@ -124,3 +124,67 @@ def format_agentic_response(plan, act, observe, adapt):
     parts.append('</div>')
 
     return "".join(parts)
+
+
+def format_flight_table(flights):
+    if not flights:
+        return (
+            '<p class="empty-state">'
+            'No flights in the database.'
+            '</p>'
+        )
+
+    parts = ['<table class="flight-table">']
+
+    parts.append(
+        '<thead><tr>'
+        '<th>ID</th>'
+        '<th>Airline</th>'
+        '<th>Route</th>'
+        '<th>Departure</th>'
+        '<th>Duration</th>'
+        '<th>Price</th>'
+        '<th>Seats</th>'
+        '<th></th>'
+        '</tr></thead>'
+    )
+
+    parts.append('<tbody>')
+
+    for flight in flights:
+        parts.append('<tr>')
+
+        parts.append(f'<td>{flight["flight_id"]}</td>')
+        parts.append(f'<td>{html.escape(flight["airline"])}</td>')
+
+        parts.append(
+            f'<td>{html.escape(flight["origin"])} &rarr; '
+            f'{html.escape(flight["destination"])}</td>'
+        )
+
+        parts.append(f'<td>{format_time(flight["departure_time"])}</td>')
+        parts.append(f'<td>{format_duration(flight["duration"])}</td>')
+        parts.append(f'<td>${flight["price"]:.2f}</td>')
+
+        if flight["seat_availability"] < LOW_SEAT_THRESHOLD:
+            parts.append(
+                f'<td class="warning">{flight["seat_availability"]}</td>'
+            )
+        else:
+            parts.append(f'<td>{flight["seat_availability"]}</td>')
+
+        parts.append(
+            f'<td><button class="link-button" '
+            f'hx-delete="/api/flight/flights/{flight["flight_id"]}/html" '
+            f'hx-target="#flight-table" '
+            f'hx-swap="innerHTML" '
+            f'hx-confirm="Delete flight {flight["flight_id"]}?">'
+            f'Delete</button></td>'
+        )
+
+        parts.append('</tr>')
+
+    parts.append('</tbody>')
+    parts.append('</table>')
+
+    return "".join(parts)
