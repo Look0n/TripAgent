@@ -171,6 +171,54 @@ services:
     restart: unless-stopped
 
 
+  flight-frontend:
+    build:
+      context: ./student-5/flight-frontend
+    ports:
+      - "3005:80"
+    depends_on:
+      flight-backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  flight-backend:
+    build:
+      context: ./student-5/flight-backend
+    ports:
+      - "5005:5005"
+    environment:
+      FLIGHT_DATABASE_URL: http://flight-database:6005
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+      OLLAMA_MODEL: qwen2.5:0.5b
+    depends_on:
+      flight-database:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5005/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  flight-database:
+    build:
+      context: ./student-5/flight-database
+    ports:
+      - "6005:6005"
+    volumes:
+      - flight-database-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:6005/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+
   # =================================================
   # OLLAMA
   # =================================================
@@ -196,3 +244,5 @@ volumes:
   account-database-data:
 
   ollama-data:
+
+  flight-database-data:
