@@ -549,7 +549,7 @@ async function getRecommendation() {
     try {
 
         const response = await fetch(
-            `${API_URL}/chat`,
+            `${API_URL}/recommend`,
             {
                 method: "POST",
 
@@ -639,7 +639,7 @@ async function sendChatMessage() {
     try {
 
         const response = await fetch(
-            `${API_URL}/chat`,
+            `${API_URL}/recommend`,
             {
                 method: "POST",
 
@@ -675,8 +675,12 @@ async function sendChatMessage() {
 
         chatBox.innerHTML += `
             <p>
+                <div class="chat-message">
                 <strong>AI:</strong>
-                ${result.reply}
+                    <div class="chat-reply">
+                        ${result.reply}
+                    </div>
+                </div>
             </p>
         `;
 

@@ -55,7 +55,7 @@ def test_ai_chat_success():
     ):
 
         response = client.post(
-            "/api/accommodations/chat",
+            "/api/accommodations/recommend",
             json={
                 "message":
                     "I want a quiet resort style "
@@ -78,7 +78,7 @@ def test_ai_chat_missing_message():
     client = app.test_client()
 
     response = client.post(
-        "/api/accommodations/chat",
+        "/api/accommodations/recommend",
         json={}
     )
 
@@ -113,7 +113,7 @@ def test_ai_chat_no_matches(
     client = app.test_client()
 
     response = client.post(
-        "/api/accommodations/chat",
+        "/api/accommodations/recommend",
         json={
             "message":
                 "Find accommodation "

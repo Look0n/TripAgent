@@ -229,6 +229,22 @@ button:active {
 }
 
 
+.accommodation-card .button-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.accommodation-card .button-row button {
+    flex: 1;
+    min-width: 0;
+    min-height: 40px;
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 8px;
+}
+
+
 .search-grid {
     display: grid;
     grid-template-columns: 
@@ -308,41 +324,36 @@ button:active {
 }
 
 
-.button-row button {
+#searchView .button-row button {
     min-width: 130px;
     min-height: 46px;
-
     padding: 11px 22px;
-
     border-radius: 9px;
-
     font-size: 15px;
     font-weight: 600;
-
     cursor: pointer;
 }
 
 
-.button-row button:not(.secondary-button) {
+#searchView .button-row button:not(.secondary-button) {
     border: none;
     background: #2563eb;
     color: white;
 }
 
-
-.button-row button:not(.secondary-button):hover {
-    background: #1d4ed8;
-}
-
-
-.button-row .secondary-button {
+#searchView .button-row .secondary-button {
     background: white;
     color: #2563eb;
     border: 1px solid #2563eb;
 }
 
 
-.button-row .secondary-button:hover {
+#searchView .button-row button:not(.secondary-button):hover {
+    background: #1d4ed8;
+}
+
+
+#searchView .button-row .secondary-button:hover {
     background: #eff6ff;
 }
 
@@ -594,6 +605,7 @@ button:active {
 
 .availability-success,
 .availability-error,
+.availability-info,
 .availability-loading {
     padding: 16px 18px;
     border-radius: 10px;
@@ -617,6 +629,11 @@ button:active {
     border: 1px solid #e2e8f0;
 }
 
+
+.availability-info {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+}
 
 .availability-success strong {
     font-size: 16px;
@@ -690,4 +707,19 @@ button:active {
 .recommendation-text {
     white-space: pre-line;
     line-height: 1.6;
+}
+
+.chat-message-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.chat-message-row strong {
+    flex-shrink: 0;
+}
+
+.chat-message strong {
+    display: inline;
+    margin-right: 6px;
 }

@@ -280,6 +280,27 @@ async function checkAvailability() {
         }
 
 
+        // check availability first
+        if (result.status === "unknown") {
+
+            resultContainer.innerHTML = `
+                <div class="availability-info">
+
+                    <strong>
+                        Availability Information Unavailable
+                    </strong>
+
+                    <p>
+                        ${result.message ||
+                        "Availability information is not available. Please contact the hotel."}
+                    </p>
+
+                </div>
+            `;
+
+            return;
+        }
+
         if (result.available) {
 
             resultContainer.innerHTML = `

@@ -21,7 +21,7 @@ ai_bp = Blueprint(
 
 
 @ai_bp.route(
-    "/api/accommodations/chat",
+    "/api/accommodations/recommend",
     methods=["POST"]
 )
 def accommodation_chat():
