@@ -126,3 +126,23 @@ def search_for_recommendation(
     )
 
     return accommodations[:2]
+
+
+def check_availability(
+    accommodation_id,
+    check_in,
+    check_out
+):
+
+    response = requests.get(
+        f"{DATABASE_API_URL}/availability/{accommodation_id}",
+        params={
+            "check_in": check_in,
+            "check_out": check_out
+        },
+        timeout=10
+    )
+
+    response.raise_for_status()
+
+    return response.json()

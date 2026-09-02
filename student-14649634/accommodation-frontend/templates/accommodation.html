@@ -234,7 +234,6 @@
             <!-- =====================================
                  AI ASSISTANT
                  ===================================== -->
-
             <div
                 id="aiView"
                 class="accommodation-view"
@@ -243,16 +242,76 @@
 
                 <h1>AI Accommodation Assistant</h1>
 
-                <p class="subtitle">
-                    Describe what you are looking for
-                    and TripAgent will recommend matching
-                    accommodation from the database.
-                </p>
-
-
                 <div class="ai-panel">
 
-                    <div id="chatBox class="chat-box">
+                    <div class="quick-recommendation">
+
+                        <h2>Quick Recommendation</h2>
+                    
+                        <p class="subtitle">
+                            Enter a few preferences for a quick AI recommendation.
+                        </p>
+                    
+                        <div class="recommendation-form">
+                    
+                            <input
+                                type="text"
+                                id="aiCity"
+                                placeholder="City"
+                            >
+                    
+                            <input
+                                type="number"
+                                id="aiBudget"
+                                placeholder="Max budget"
+                            >
+                    
+                            <input
+                                type="number"
+                                id="aiGuests"
+                                placeholder="Guests"
+                                min="1"
+                            >
+                    
+                            <select id="aiType">
+                                <option value="">
+                                    Any type
+                                </option>
+                                <option value="Hotel">Hotel</option>
+                                <option value="Apartment">Apartment</option>
+                                <option value="Resort">Resort</option>
+                                <option value="Guest House">Guest House</option>
+                            </select>
+                    
+                            <input
+                                type="text"
+                                id="aiPreference"
+                                placeholder="e.g. quiet, family friendly, resort style"
+                            >
+                    
+                            <button onclick="getRecommendation()">
+                                Get Recommendation
+                            </button>
+                    
+                        </div>
+                    
+                        <div
+                            id="recommendationResult"
+                            class="recommendation-result"
+                        ></div>
+                    
+                    </div>
+
+
+                    <div id="chatBox" class="chat-box">
+
+                        <h2>Chat with AI Bot</h2>
+
+                        <p class="subtitle">
+                            Describe what you are looking for
+                            and TripAgent will recommend matching
+                            accommodation from the database.
+                        </p>
 
                         <p>
                             <strong>AI:</strong>
@@ -267,7 +326,7 @@
 
                         <input
                             type="text"
-                            id="chatInput class="ai-input"
+                            id="chatInput" class="ai-input"
                             placeholder="I want a quiet hotel in Sydney for 2 people under $400..."
                             onkeydown="handleChatKey(event)"
                         >

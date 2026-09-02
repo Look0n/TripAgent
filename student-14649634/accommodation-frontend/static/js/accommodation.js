@@ -498,6 +498,8 @@ async function getRecommendation() {
     const type =
         document.getElementById("aiType").value;
 
+    const preference =
+        document.getElementById("aiPreference").value;
 
     const resultBox =
         document.getElementById("recommendationResult");
@@ -512,6 +514,34 @@ async function getRecommendation() {
     }
 
 
+    let message =
+    `Recommend accommodation in ${city}.`;
+
+
+    if (budget) {
+        message +=
+            ` My budget is up to $${budget} per night.`;
+    }
+
+
+    if (guests) {
+        message +=
+            ` It is for ${guests} guest${guests > 1 ? "s" : ""}.`;
+    }
+
+
+    if (type) {
+        message +=
+            ` I prefer ${type}.`;
+    }
+
+
+    if (preference) {
+        message +=
+            ` I also prefer ${preference}.`;
+    }
+
+
     resultBox.textContent =
         "Generating recommendation...";
 
@@ -519,7 +549,7 @@ async function getRecommendation() {
     try {
 
         const response = await fetch(
-            `${API_URL}/recommend`,
+            `${API_URL}/chat`,
             {
                 method: "POST",
 
@@ -528,10 +558,7 @@ async function getRecommendation() {
                 },
 
                 body: JSON.stringify({
-                    city: city,
-                    budget: budget,
-                    guests: guests,
-                    type: type
+                    message: message
                 })
             }
         );
@@ -556,7 +583,7 @@ async function getRecommendation() {
             </p>
 
             <p>
-                ${result.recommendation}
+                ${result.reply}
             </p>
         `;
 

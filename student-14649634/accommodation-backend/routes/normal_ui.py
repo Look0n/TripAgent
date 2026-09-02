@@ -1,4 +1,7 @@
 from flask import Blueprint, jsonify, request
+import requests
+
+from services import database_api
 
 from services.database_api import (
     get_all_accommodations,
@@ -151,3 +154,68 @@ def delete(accommodation_id):
         "message":
             "Accommodation deleted successfully"
     })
+    
+    
+@normal_bp.route(
+    "/api/accommodations/<int:accommodation_id>/availability",
+    methods=["GET"]
+)
+def get_accommodation_availability(
+    accommodation_id
+):
+
+    check_in = request.args.get(
+        "check_in"
+    )
+
+    check_out = request.args.get(
+        "check_out"
+    )
+
+
+    if not check_in or not check_out:
+
+        return jsonify({
+            "error":
+            "check_in and check_out are required"
+        }), 400
+
+
+    try:
+
+        result = (
+            database_api.check_availability(
+                accommodation_id,
+                check_in,
+                check_out
+            )
+        )
+
+        return jsonify(result), 200
+
+
+    except requests.HTTPError as error:
+
+        if error.response is not None:
+
+            try:
+                return jsonify(
+                    error.response.json()
+                ), error.response.status_code
+
+            except ValueError:
+                pass
+
+
+        return jsonify({
+            "error":
+            "Unable to check availability"
+        }), 503
+
+
+    except requests.RequestException:
+
+        return jsonify({
+            "error":
+            "Database service unavailable"
+        }), 503

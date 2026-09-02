@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from datetime import datetime
 
 import sqlite3
 import os
@@ -343,6 +344,139 @@ def delete_accommodation(accommodation_id):
         "message":
             "Accommodation deleted successfully"
     })
+
+
+@app.route(
+    "/availability/<int:accommodation_id>",
+    methods=["GET"]
+)
+def check_availability(accommodation_id):
+
+    check_in = request.args.get("check_in")
+    check_out = request.args.get("check_out")
+
+    if not check_in or not check_out:
+        return jsonify({
+            "error": "check_in and check_out are required"
+        }), 400
+
+    try:
+        check_in_date = datetime.strptime(
+            check_in,
+            "%Y-%m-%d"
+        ).date()
+
+        check_out_date = datetime.strptime(
+            check_out,
+            "%Y-%m-%d"
+        ).date()
+
+    except ValueError:
+        return jsonify({
+            "error": "Invalid date format. Use YYYY-MM-DD"
+        }), 400
+
+    if check_out_date <= check_in_date:
+        return jsonify({
+            "error": "Check-out date must be after check-in date"
+        }), 400
+
+    number_of_nights = (
+        check_out_date - check_in_date
+    ).days
+
+    conn = get_db_connection()
+
+    accommodation = conn.execute(
+        """
+        SELECT accommodation_id
+        FROM accommodations
+        WHERE accommodation_id = ?
+        """,
+        (accommodation_id,)
+    ).fetchone()
+
+    if accommodation is None:
+        conn.close()
+
+        return jsonify({
+            "error": "Accommodation not found"
+        }), 404
+
+    rows = conn.execute(
+        """
+        SELECT date, is_available
+        FROM availability
+        WHERE accommodation_id = ?
+          AND date >= ?
+          AND date < ?
+        ORDER BY date ASC
+        """,
+        (
+            accommodation_id,
+            check_in,
+            check_out
+        )
+    ).fetchall()
+
+    conn.close()
+
+    dates = [
+        dict(row)
+        for row in rows
+    ]
+
+    # 선택한 기간에 availability 정보 자체가 없음
+    if len(dates) == 0:
+        return jsonify({
+            "accommodation_id": accommodation_id,
+            "check_in": check_in,
+            "check_out": check_out,
+            "status": "unknown",
+            "available": None,
+            "message":
+                "Availability information is not available. "
+                "Please contact the hotel."
+        }), 200
+
+    # 일부 날짜 데이터만 있는 경우도 확실한 판단 불가
+    if len(dates) < number_of_nights:
+        return jsonify({
+            "accommodation_id": accommodation_id,
+            "check_in": check_in,
+            "check_out": check_out,
+            "status": "unknown",
+            "available": None,
+            "message":
+                "Availability information is incomplete. "
+                "Please contact the hotel.",
+            "dates": dates
+        }), 200
+
+    unavailable_dates = [
+        row["date"]
+        for row in dates
+        if row["is_available"] == 0
+    ]
+
+    available = (
+        len(unavailable_dates) == 0
+    )
+
+    return jsonify({
+        "accommodation_id": accommodation_id,
+        "check_in": check_in,
+        "check_out": check_out,
+        "number_of_nights": number_of_nights,
+        "status":
+            "available"
+            if available
+            else "unavailable",
+        "available": available,
+        "unavailable_dates": unavailable_dates,
+        "dates": dates
+    }), 200
+    
 
 def initialise_database():
     conn = sqlite3.connect(DATABASE_NAME)

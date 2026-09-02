@@ -1,0 +1,270 @@
+name: Accommodation Service CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "student-14649634/**"
+      - "docker-compose.yml"
+      - ".github/workflows/student-14649634-ci.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "student-14649634/**"
+      - "docker-compose.yml"
+      - ".github/workflows/student-14649634-ci.yml"
+
+
+jobs:
+  accommodation-service-ci:
+    name: Test Accommodation Service
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ---------------------------------------------------
+      # 1. Checkout repository
+      # ---------------------------------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # ---------------------------------------------------
+      # 2. Set up Python
+      # ---------------------------------------------------
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+
+      # ---------------------------------------------------
+      # 3. Check Python syntax
+      # ---------------------------------------------------
+
+      - name: Check backend Python syntax
+        run: |
+          python -m compileall student-14649634/accommodation-backend
+
+
+      - name: Check database Python syntax
+        run: |
+          python -m compileall student-14649634/accommodation-database
+
+
+      - name: Check frontend Python syntax
+        run: |
+          python -m compileall student-14649634/accommodation-frontend
+
+
+      # ---------------------------------------------------
+      # 4. Validate Docker Compose
+      # ---------------------------------------------------
+
+      - name: Validate Docker Compose
+        run: |
+          docker compose config
+
+
+      # ---------------------------------------------------
+      # 5. Build Accommodation containers
+      # ---------------------------------------------------
+
+      - name: Build Accommodation services
+        run: |
+          docker compose build \
+            accommodation-database \
+            accommodation-backend \
+            accommodation-frontend
+
+
+      # ---------------------------------------------------
+      # 6. Start Accommodation services
+      # ---------------------------------------------------
+
+      - name: Start Accommodation services
+        run: |
+          docker compose up -d \
+            accommodation-database \
+            accommodation-backend \
+            accommodation-frontend
+
+
+      # ---------------------------------------------------
+      # 7. Show container status
+      # ---------------------------------------------------
+
+      - name: Show Docker containers
+        run: |
+          docker compose ps
+
+
+      # ---------------------------------------------------
+      # 8. Wait for database
+      # ---------------------------------------------------
+
+      - name: Wait for Accommodation Database
+        run: |
+          for i in {1..30}; do
+
+            if curl --fail --silent http://localhost:6002/health; then
+              echo ""
+              echo "Accommodation database is healthy."
+              exit 0
+            fi
+
+            echo "Waiting for accommodation database..."
+            sleep 2
+
+          done
+
+          echo "Accommodation database failed to become healthy."
+          docker compose logs accommodation-database
+          exit 1
+
+
+      # ---------------------------------------------------
+      # 9. Wait for backend
+      # ---------------------------------------------------
+
+      - name: Wait for Accommodation Backend
+        run: |
+          for i in {1..30}; do
+
+            if curl --fail --silent http://localhost:5002/health; then
+              echo ""
+              echo "Accommodation backend is healthy."
+              exit 0
+            fi
+
+            echo "Waiting for accommodation backend..."
+            sleep 2
+
+          done
+
+          echo "Accommodation backend failed to become healthy."
+          docker compose logs accommodation-backend
+          exit 1
+
+
+      # ---------------------------------------------------
+      # 10. Check frontend
+      # ---------------------------------------------------
+
+      - name: Check Accommodation Frontend
+        run: |
+          curl --fail http://localhost:3002/
+
+
+      # ---------------------------------------------------
+      # 11. Verify seed data
+      # ---------------------------------------------------
+
+      - name: Verify database seed records
+        run: |
+          ACCOMMODATION_COUNT=$(docker compose exec -T accommodation-database \
+            python -c "import sqlite3; conn=sqlite3.connect('/data/accommodation.db'); print(conn.execute('SELECT COUNT(*) FROM accommodations').fetchone()[0])")
+
+          AVAILABILITY_COUNT=$(docker compose exec -T accommodation-database \
+            python -c "import sqlite3; conn=sqlite3.connect('/data/accommodation.db'); print(conn.execute('SELECT COUNT(*) FROM availability').fetchone()[0])")
+
+          echo "Accommodation records: $ACCOMMODATION_COUNT"
+          echo "Availability records: $AVAILABILITY_COUNT"
+
+          if [ "$ACCOMMODATION_COUNT" -lt 10 ]; then
+            echo "Expected at least 10 accommodation records."
+            exit 1
+          fi
+
+          if [ "$AVAILABILITY_COUNT" -lt 10 ]; then
+            echo "Expected at least 10 availability records."
+            exit 1
+          fi
+
+
+      # ---------------------------------------------------
+      # 12. Test Accommodation API
+      # ---------------------------------------------------
+
+      - name: Test get all accommodations
+        run: |
+          curl --fail \
+            http://localhost:5002/api/accommodations
+
+
+      - name: Test accommodation by ID
+        run: |
+          curl --fail \
+            http://localhost:5002/api/accommodations/1
+
+
+      - name: Test accommodation search
+        run: |
+          curl --fail \
+            "http://localhost:5002/api/accommodations?city=Sydney"
+
+
+      # ---------------------------------------------------
+      # 13. Test Availability API
+      # ---------------------------------------------------
+
+      - name: Test available dates
+        run: |
+          curl --fail \
+            "http://localhost:5002/api/accommodations/1/availability?check_in=2026-09-05&check_out=2026-09-06"
+
+
+      - name: Test unavailable dates
+        run: |
+          curl --fail \
+            "http://localhost:5002/api/accommodations/1/availability?check_in=2026-09-05&check_out=2026-09-07"
+
+
+      # ---------------------------------------------------
+      # 14. Install pytest dependencies
+      # ---------------------------------------------------
+
+      - name: Install backend test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r student-14649634/accommodation-backend/requirements.txt
+          pip install pytest
+
+
+      # ---------------------------------------------------
+      # 15. Run pytest
+      # ---------------------------------------------------
+
+      - name: Run Accommodation pytest
+        working-directory: student-14649634/accommodation-backend
+        env:
+          DATABASE_API_URL: http://localhost:6002
+        run: |
+          pytest -v
+
+
+      # ---------------------------------------------------
+      # 16. Display logs if something failed
+      # ---------------------------------------------------
+
+      - name: Show Docker logs on failure
+        if: failure()
+        run: |
+          docker compose logs accommodation-database
+          docker compose logs accommodation-backend
+          docker compose logs accommodation-frontend
+
+
+      # ---------------------------------------------------
+      # 17. Clean up
+      # ---------------------------------------------------
+
+      - name: Stop Accommodation services
+        if: always()
+        run: |
+          docker compose down -v

@@ -55,8 +55,13 @@ def accommodation_chat():
             extraction_prompt,
             timeout=60,
             json_format=True,
-            num_predict=120,
+            num_predict=150,
             temperature=0.1
+        )
+        
+        print(
+            "Raw extraction response:",
+            extraction_text
         )
 
         requirements = json.loads(
@@ -71,7 +76,7 @@ def accommodation_chat():
 
         print(
             "Requirement extraction error:",
-            error
+            repr(error)
         )
 
         return jsonify({
@@ -80,6 +85,13 @@ def accommodation_chat():
                 "the accommodation request."
         }), 503
 
+    # Make sure preferences always exists
+
+    if "preferences" not in requirements:
+        requirements["preferences"] = []
+
+    if requirements["preferences"] is None:
+        requirements["preferences"] = []
 
     print(
         "Extracted requirements:",
@@ -94,13 +106,30 @@ def accommodation_chat():
         "Searching accommodation database..."
     )
 
+    # IMPORTANT:
+    # We do NOT use type as a strict filter here.
+    #
+    # Example:
+    # User asks for "resort-style accommodation"
+    # but a Hotel may have a resort-style description.
+    #
+    # City / budget / guests are hard filters.
+    # Type / vibe / family / CBD etc.
+    # are considered later by the AI.
+
+    guests = requirements.get("guests")
+
+    if guests is not None:
+        try:
+            requirements["guests"] = int(guests)
+        except (ValueError, TypeError):
+            requirements["guests"] = None
+
     accommodations = search_for_recommendation(
         city=requirements.get("city"),
         budget=requirements.get("budget"),
         guests=requirements.get("guests"),
-        accommodation_type=requirements.get(
-            "type"
-        )
+        accommodation_type=None
     )
 
 
@@ -110,7 +139,12 @@ def accommodation_chat():
 
     print(
         f"{len(accommodations)} "
-        "matching accommodation(s) found."
+        "matching accommodation(s) found.",
+        "Candidate accommodations:",
+        [
+            item["accommodation_name"]
+            for item in accommodations
+        ]
     )
 
     if not accommodations:
@@ -121,7 +155,7 @@ def accommodation_chat():
                 "those requirements.",
             "requirements": requirements,
             "matches": 0
-        })
+        }), 200
 
 
     # ADAPT
@@ -130,7 +164,8 @@ def accommodation_chat():
 
     print(
         "Ranking database results using "
-        "traveller preferences..."
+        "traveller preferences and "
+        "accommodation descriptions..."
     )
 
     recommendation_prompt = (
@@ -146,7 +181,7 @@ def accommodation_chat():
         reply = generate_text(
             recommendation_prompt,
             timeout=120,
-            num_predict=80,
+            num_predict=150,
             temperature=0.3
         )
 
@@ -154,7 +189,7 @@ def accommodation_chat():
             "reply": reply,
             "requirements": requirements,
             "matches": len(accommodations)
-        })
+        }), 200
 
     except requests.RequestException as error:
 

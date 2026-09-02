@@ -2,6 +2,10 @@ DELETE FROM availability;
 DELETE FROM accommodations;
 
 
+DELETE FROM sqlite_sequence WHERE name='availability';
+DELETE FROM sqlite_sequence WHERE name='accommodations';
+
+
 INSERT INTO accommodations (
     accommodation_name,
     type,
@@ -88,7 +92,7 @@ VALUES
     190,
     3,
     4.3,
-    'Waterfront accommodation in central Cairns, convenient for travellers visiting the Esplanade, marina and Great Barrier Reef departure points.',
+    'Waterfront accommodation in central Cairns with a tropical resort-style atmosphere, swimming pool, spacious rooms and a relaxed holiday environment. Suitable for couples and families, convenient for travellers visiting the Esplanade, marina and Great Barrier Reef departure points.',
     'static/images/pacific_cairns.jpeg'
 ),
 (
