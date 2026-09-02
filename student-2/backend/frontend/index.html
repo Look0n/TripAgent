@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripAgent - Activities & Attractions</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">TripAgent</div>
+            <ul class="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Account</a></li>
+                <li><a href="#">Accommodation</a></li>
+                <li><a href="#" class="active">Activities</a></li>
+                <li><a href="#">Itinerary</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content Layout -->
+    <main class="main-wrapper">
+        
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1 class="hero-title">Plan your journey with TripAgent</h1>
+            <p class="hero-subtitle">Manage your travel profile, discover accommodation and activities, and build your itinerary in one place.</p>
+        </section>
+
+        <!-- AI Recommendation Section -->
+        <section class="ai-card">
+            <div class="ai-card-header">
+                <h3>Ask TripAgent AI Assistant</h3>
+                <p>Type your travel preference or question to get personalized recommendations.</p>
+            </div>
+            <div class="ai-input-wrapper">
+                <input type="text" id="aiCustomPrompt" placeholder="e.g. Suggest a 1-day itinerary for Paris with museum visits...">
+                <button class="btn-primary" onclick="getAIRecommendations()">Ask AI</button>
+            </div>
+            <div id="aiResults" class="ai-response-box hidden"></div>
+        </section>
+
+        <!-- Search & Filter Controls -->
+        <section class="filter-section">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search activities by name, city, or category..." onkeyup="handleSearch()">
+            </div>
+        </section>
+
+        <!-- Attractions Grid -->
+        <section id="activitiesGrid" class="cards-grid">
+            <div class="loading-state">Loading activities...</div>
+        </section>
+
+    </main>
+
+    <script>
+        const API_URL = '/api/attractions';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAttractions();
+        });
+
+        async function fetchAttractions(query = '') {
+            const grid = document.getElementById('activitiesGrid');
+            try {
+                const url = query ? `${API_URL}?search=${encodeURIComponent(query)}` : API_URL;
+                const response = await fetch(url);
+                const data = await response.json();
+                renderAttractions(data);
+            } catch (error) {
+                console.error('Error fetching attractions:', error);
+                grid.innerHTML = '<div class="empty-state">Failed to load attractions. Please refresh the page.</div>';
+            }
+        }
+
+        function renderAttractions(items) {
+            const grid = document.getElementById('activitiesGrid');
+            if (!items || items.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No activities found matching your criteria.</div>';
+                return;
+            }
+
+            const fallbackImg = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=600&q=80";
+
+            grid.innerHTML = items.map(item => `
+                <div class="card">
+                    <div class="card-image-wrap">
+                        <img src="${item.image_url || fallbackImg}" alt="${item.name}" onerror="this.src='${fallbackImg}'">
+                        <span class="category-badge">${item.category || 'General'}</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">${item.name}</h3>
+                        <p class="card-location">📍 ${item.city}</p>
+                        <p class="card-desc">${item.description || 'Explore this unique location with expert guides.'}</p>
+                        <div class="card-footer">
+                            <span class="price-tag">$${item.price}</span>
+                            <span class="rating-tag">⭐ ${item.average_rating || '4.8'}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value;
+            fetchAttractions(query);
+        }
+
+        async function getAIRecommendations() {
+            const aiDiv = document.getElementById('aiResults');
+            const userPrompt = document.getElementById('aiCustomPrompt').value.trim();
+            
+            aiDiv.classList.remove('hidden');
+            aiDiv.innerHTML = '<div class="ai-loading"><em>Thinking... Consulting AI Guide...</em></div>';
+            
+            try {
+                const res = await fetch('/api/attractions/recommend', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: userPrompt })
+                });
+                const data = await res.json();
+                const resultText = data.recommendation || 'No response from AI.';
+                aiDiv.innerHTML = `<div class="ai-content"><strong>AI Insights:</strong> ${resultText}</div>`;
+            } catch (err) {
+                aiDiv.innerHTML = '<div class="ai-content error">Error connecting to AI service.</div>';
+            }
+        }
+    </script>
+</body>
+</html>
