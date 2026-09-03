@@ -23,6 +23,11 @@ SERVICE_ROUTES = {
         "http://itinerary-backend:5004"
     ),
 
+    "checklist": os.getenv(
+        "CHECKLIST_BACKEND_URL",
+        "http://checklist-backend:5004"
+    ),
+
     "flight": os.getenv(
         "FLIGHT_BACKEND_URL",
         "http://flight-backend:5005"

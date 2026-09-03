@@ -20,6 +20,9 @@ services:
       accommodation-frontend:
         condition: service_healthy
 
+      checklist-frontend:
+        condition: service_healthy
+
       flight-frontend:
         condition: service_started
 
@@ -40,6 +43,7 @@ services:
       SHARED_DATABASE_URL: http://shared-database:6000
       ACCOUNT_BACKEND_URL: http://account-backend:5001
       ACCOMMODATION_BACKEND_URL: http://accommodation-backend:5002
+      CHECKLIST_BACKEND_URL: http://checklist-backend:5004
       FLIGHT_BACKEND_URL: http://flight-backend:5005
 
     depends_on:
@@ -50,6 +54,9 @@ services:
         condition: service_healthy
 
       accommodation-backend:
+        condition: service_healthy
+
+      checklist-backend:
         condition: service_healthy
 
       flight-backend:
@@ -283,6 +290,111 @@ services:
 
     restart: unless-stopped
 
+  # =================================================
+  # CHECKLIST FRONTEND
+  # =================================================
+  checklist-frontend:
+    build:
+      context: ./student-14582668/checklist-frontend
+
+    ports:
+      - "3004:3004"
+
+    environment:
+      CHECKLIST_FRONTEND_PORT: 3004
+      CHECKLIST_API_URL: /api/checklist-items
+
+    depends_on:
+      checklist-backend:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:3004/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # CHECKLIST BACKEND
+  # =================================================
+  checklist-backend:
+    build:
+      context: ./student-14582668/checklist-backend
+
+    ports:
+      - "5004:5004"
+
+    environment:
+      CHECKLIST_BACKEND_PORT: 5004
+      CHECKLIST_DATABASE_URL: http://checklist-database:6004
+      OLLAMA_URL: http://ollama:11434/api/generate
+      OLLAMA_MODEL: qwen2.5:0.5b
+
+    depends_on:
+      checklist-database:
+        condition: service_healthy
+
+      ollama:
+        condition: service_started
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5004/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # CHECKLIST DATABASE
+  # =================================================
+  checklist-database:
+    build:
+      context: ./student-14582668/checklist-database
+
+    ports:
+      - "6004:6004"
+
+    environment:
+      CHECKLIST_DATABASE_PORT: 6004
+      DATABASE_PATH: /data/checklist.db
+
+    volumes:
+      - checklist-database-data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:6004/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
 
   # =================================================
   # FLIGHT FRONTEND
@@ -428,5 +540,7 @@ volumes:
   flight-database-data:
 
   accommodation-database-data:
+
+  checklist-database-data:
 
   ollama-data:
