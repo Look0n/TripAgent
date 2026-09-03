@@ -174,17 +174,94 @@ def format_flight_table(flights):
             parts.append(f'<td>{flight["seat_availability"]}</td>')
 
         parts.append(
-            f'<td><button class="link-button" '
+            f'<td>'
+            f'<button class="link-button" '
+            f'hx-get="/api/flight/flights/{flight["flight_id"]}/edit" '
+            f'hx-target="closest tr" '
+            f'hx-swap="outerHTML">'
+            f'Edit</button> '
+            f'<button class="link-button" '
             f'hx-delete="/api/flight/flights/{flight["flight_id"]}/html" '
             f'hx-target="#flight-table" '
             f'hx-swap="innerHTML" '
             f'hx-confirm="Delete flight {flight["flight_id"]}?">'
-            f'Delete</button></td>'
+            f'Delete</button>'
+            f'</td>'
         )
 
         parts.append('</tr>')
 
     parts.append('</tbody>')
     parts.append('</table>')
+
+    return "".join(parts)
+
+
+def format_flight_edit_row(flight):
+    flight_id = flight["flight_id"]
+
+    parts = [f'<tr id="edit-row-{flight_id}">']
+
+    parts.append(f'<td>{flight_id}</td>')
+
+    parts.append(
+        f'<td><input form="edit-form-{flight_id}" name="airline" '
+        f'value="{html.escape(flight["airline"])}" required></td>'
+    )
+
+    parts.append(
+        f'<td>'
+        f'<input form="edit-form-{flight_id}" name="origin" size="4" '
+        f'maxlength="3" value="{html.escape(flight["origin"])}" required> '
+        f'<input form="edit-form-{flight_id}" name="destination" size="4" '
+        f'maxlength="3" value="{html.escape(flight["destination"])}" required>'
+        f'</td>'
+    )
+
+    parts.append(
+        f'<td>'
+        f'<input form="edit-form-{flight_id}" type="datetime-local" '
+        f'name="departure_time" value="{flight["departure_time"][:16]}" required>'
+        f'<input form="edit-form-{flight_id}" type="hidden" '
+        f'name="arrival_time" value="{flight["arrival_time"]}">'
+        f'<input form="edit-form-{flight_id}" type="hidden" '
+        f'name="image" value="{html.escape(flight["image"] or "")}">'
+        f'</td>'
+    )
+
+    parts.append(
+        f'<td><input form="edit-form-{flight_id}" type="number" name="duration" '
+        f'size="5" min="1" value="{flight["duration"]}" required></td>'
+    )
+
+    parts.append(
+        f'<td><input form="edit-form-{flight_id}" type="number" name="price" '
+        f'size="7" step="0.01" min="0" value="{flight["price"]}" required></td>'
+    )
+
+    parts.append(
+        f'<td><input form="edit-form-{flight_id}" type="number" '
+        f'name="seat_availability" size="5" min="0" '
+        f'value="{flight["seat_availability"]}" required></td>'
+    )
+
+    parts.append(
+        f'<td>'
+        f'<form id="edit-form-{flight_id}" '
+        f'hx-put="/api/flight/flights/{flight_id}/html" '
+        f'hx-target="#flight-table" '
+        f'hx-swap="innerHTML" '
+        f'style="display:inline">'
+        f'<button type="submit" class="link-button">Save</button>'
+        f'</form> '
+        f'<button class="link-button" '
+        f'hx-get="/api/flight/flights/html?view=table" '
+        f'hx-target="#flight-table" '
+        f'hx-swap="innerHTML">'
+        f'Cancel</button>'
+        f'</td>'
+    )
+
+    parts.append('</tr>')
 
     return "".join(parts)
