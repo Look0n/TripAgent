@@ -1,0 +1,235 @@
+name: Attractions Service CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "student-25693742/**"
+      - "docker-compose.yml"
+      - ".github/workflows/student-25693742-ci.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "student-25693742/**"
+      - "docker-compose.yml"
+      - ".github/workflows/student-25693742-ci.yml"
+
+
+jobs:
+  attractions-service-ci:
+    name: Test Attractions Service
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ---------------------------------------------------
+      # 1. Checkout repository
+      # ---------------------------------------------------
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # ---------------------------------------------------
+      # 2. Set up Python
+      # ---------------------------------------------------
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+
+      # ---------------------------------------------------
+      # 3. Check Python syntax
+      # ---------------------------------------------------
+
+      - name: Check backend Python syntax
+        run: |
+          python -m compileall student-25693742/attractions-backend
+
+      - name: Check database Python syntax
+        run: |
+          python -m compileall student-25693742/attractions-database
+
+
+      # ---------------------------------------------------
+      # 4. Validate Docker Compose
+      # ---------------------------------------------------
+
+      - name: Validate Docker Compose
+        run: |
+          docker compose config
+
+
+      # ---------------------------------------------------
+      # 5. Build Attractions containers
+      # ---------------------------------------------------
+
+      - name: Build Attractions services
+        run: |
+          docker compose build \
+            attractions-database \
+            attractions-backend \
+            attractions-frontend
+
+
+      # ---------------------------------------------------
+      # 6. Start Attractions services
+      # ---------------------------------------------------
+
+      - name: Start Attractions services
+        run: |
+          docker compose up -d \
+            attractions-database \
+            attractions-backend \
+            attractions-frontend
+
+
+      # ---------------------------------------------------
+      # 7. Show container status
+      # ---------------------------------------------------
+
+      - name: Show Docker containers
+        run: |
+          docker compose ps
+
+
+      # ---------------------------------------------------
+      # 8. Wait for database
+      # ---------------------------------------------------
+
+      - name: Wait for Attractions Database
+        run: |
+          for i in {1..30}; do
+
+            if curl --fail --silent http://localhost:6003/health; then
+              echo ""
+              echo "Attractions database is healthy."
+              exit 0
+            fi
+
+            echo "Waiting for attractions database..."
+            sleep 2
+
+          done
+
+          echo "Attractions database failed to become healthy."
+          docker compose logs attractions-database
+          exit 1
+
+
+      # ---------------------------------------------------
+      # 9. Wait for backend
+      # ---------------------------------------------------
+
+      - name: Wait for Attractions Backend
+        run: |
+          for i in {1..30}; do
+
+            if curl --fail --silent http://localhost:5003/health; then
+              echo ""
+              echo "Attractions backend is healthy."
+              exit 0
+            fi
+
+            echo "Waiting for attractions backend..."
+            sleep 2
+
+          done
+
+          echo "Attractions backend failed to become healthy."
+          docker compose logs attractions-backend
+          exit 1
+
+
+      # ---------------------------------------------------
+      # 10. Check frontend
+      # ---------------------------------------------------
+
+      - name: Check Attractions Frontend
+        run: |
+          curl --fail http://localhost:3003/attractions/
+
+
+      # ---------------------------------------------------
+      # 11. Verify seed data
+      # ---------------------------------------------------
+
+      - name: Verify database seed records
+        run: |
+          ATTRACTION_COUNT=$(docker compose exec -T attractions-database \
+            python -c "import sqlite3; conn=sqlite3.connect('/data/attractions.db'); print(conn.execute('SELECT COUNT(*) FROM attractions').fetchone()[0])")
+
+          echo "Attraction records: $ATTRACTION_COUNT"
+
+          if [ "$ATTRACTION_COUNT" -lt 10 ]; then
+            echo "Expected at least 10 attraction records."
+            exit 1
+          fi
+
+
+      # ---------------------------------------------------
+      # 12. Test Attractions API
+      # ---------------------------------------------------
+
+      - name: Test get all attractions
+        run: |
+          curl --fail \
+            http://localhost:5003/api/attractions
+
+      - name: Test attraction by ID
+        run: |
+          curl --fail \
+            http://localhost:5003/api/attractions/1
+
+      - name: Test attraction search
+        run: |
+          curl --fail \
+            "http://localhost:5003/api/attractions?city=Paris"
+
+
+      # ---------------------------------------------------
+      # 13. Install pytest dependencies
+      # ---------------------------------------------------
+
+      - name: Install backend test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r student-25693742/attractions-backend/requirements.txt
+
+      # ---------------------------------------------------
+      # 14. Run pytest
+      # ---------------------------------------------------
+
+      - name: Run Attractions pytest
+        working-directory: student-25693742/attractions-backend
+        env:
+          DATABASE_API_URL: http://localhost:6003
+        run: |
+          pytest -v
+
+
+      # ---------------------------------------------------
+      # 15. Display logs if something failed
+      # ---------------------------------------------------
+
+      - name: Show Docker logs on failure
+        if: failure()
+        run: |
+          docker compose logs attractions-database
+          docker compose logs attractions-backend
+          docker compose logs attractions-frontend
+
+
+      # ---------------------------------------------------
+      # 16. Clean up
+      # ---------------------------------------------------
+
+      - name: Stop Attractions services
+        if: always()
+        run: |
+          docker compose down -v
