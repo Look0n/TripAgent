@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>TripAgent - Manage Flights</title>
+
+    <link rel="stylesheet" href="/flight/css/styles.css">
+
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <style>
+        .htmx-indicator { display: none; }
+        .htmx-request .htmx-indicator { display: inline; }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <a href="/" class="brand">TripAgent</a>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/flight/search">Search</a>
+        <a href="/flight/manage">Manage</a>
+    </nav>
+
+</header>
+
+
+<main class="account-layout">
+
+    <aside class="sidebar">
+
+        <h2>Flights</h2>
+
+        <a href="/flight/search">AI Search</a>
+        <a href="/flight/manage" class="active">Manage Flights</a>
+
+    </aside>
+
+
+    <section class="content">
+
+        <h1>Manage Flights</h1>
+
+
+        <h2>Add a flight</h2>
+
+        <form
+            hx-post="/api/flight/flights/html"
+            hx-target="#flight-table"
+            hx-swap="innerHTML"
+            hx-on::after-request="this.reset()"
+            class="crud-form"
+        >
+
+            <div class="field-row">
+                <label>
+                    Airline
+                    <input type="text" name="airline" required>
+                </label>
+
+                <label>
+                    From
+                    <input type="text" name="origin" maxlength="3" required>
+                </label>
+
+                <label>
+                    To
+                    <input type="text" name="destination" maxlength="3" required>
+                </label>
+            </div>
+
+            <div class="field-row">
+                <label>
+                    Departure
+                    <input type="datetime-local" name="departure_time" required>
+                </label>
+
+                <label>
+                    Arrival
+                    <input type="datetime-local" name="arrival_time" required>
+                </label>
+            </div>
+
+            <div class="field-row">
+                <label>
+                    Price (AUD)
+                    <input type="number" name="price" step="0.01" min="0" required>
+                </label>
+
+                <label>
+                    Duration (min)
+                    <input type="number" name="duration" min="1" required>
+                </label>
+
+                <label>
+                    Seats
+                    <input type="number" name="seat_availability" min="0" required>
+                </label>
+            </div>
+
+            <label>
+                Image filename
+                <input type="text" name="image" placeholder="qantas-737.jpg">
+            </label>
+
+            <button type="submit" class="primary-button">
+                Create flight
+            </button>
+
+            <span class="htmx-indicator">Saving...</span>
+
+        </form>
+
+
+        <h2>Current flights</h2>
+
+        <div
+            id="flight-table"
+            hx-get="/api/flight/flights/html?view=table"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+        >
+            <p>Loading flights...</p>
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+    <p>TripAgent</p>
+</footer>
+
+</body>
+</html>

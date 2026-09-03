@@ -177,6 +177,32 @@ def accommodation_proxy(path):
                 "Accommodation service unavailable"
         }), 503
 
+@gateway_bp.route(
+    "/api/flight/<path:path>",
+    methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+    ]
+)
+def flight_proxy(path):
+
+    session_data = validate_session()
+
+    if session_data is None:
+
+        return jsonify({
+            "error":
+                "Authentication required"
+        }), 401
+
+    return forward_request(
+        "flight",
+        path,
+        session_data["customer_id"]
+    )
+
     # Browser:
     # /api/accommodation/accommodations/123
     #

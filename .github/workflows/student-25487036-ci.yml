@@ -1,0 +1,206 @@
+name: Student 5 - Flight Service CI
+
+on:
+  push:
+    branches:
+      - main
+      - student-5-flight-service
+    paths:
+      - 'student-5/**'
+      - '.github/workflows/student-5.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'student-5/**'
+      - '.github/workflows/student-5.yml'
+  workflow_dispatch:
+
+jobs:
+
+  validate-services:
+    name: Build and validate flight microservices
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install database service dependencies
+        run: pip install -r student-5/flight-database/requirements.txt
+
+      - name: Install backend service dependencies
+        run: pip install -r student-5/flight-backend/requirements.txt
+
+      - name: Start flight-database service
+        working-directory: student-5/flight-database
+        env:
+          DATABASE_PATH: ./flight.db
+        run: |
+          python app.py > database.log 2>&1 &
+          echo $! > database.pid
+
+      - name: Wait for flight-database health
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:6005/health > /dev/null; then
+              echo "flight-database is healthy after ${attempt} attempts"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "flight-database did not become healthy"
+          cat student-5/flight-database/database.log
+          exit 1
+
+      - name: Verify database seed data
+        run: |
+          COUNT=$(curl -sf http://127.0.0.1:6005/flights | python -c "import json,sys; print(len(json.load(sys.stdin)))")
+          echo "Flights in database: ${COUNT}"
+          if [ "${COUNT}" -lt 10 ]; then
+            echo "Expected at least 10 seeded flights, found ${COUNT}"
+            exit 1
+          fi
+
+      - name: Validate database CRUD operations
+        run: |
+          echo "Testing GET /flights/1"
+          curl -sf http://127.0.0.1:6005/flights/1 > /dev/null
+
+          echo "Testing GET /flights with filters"
+          curl -sf "http://127.0.0.1:6005/flights?origin=SYD&destination=MEL" > /dev/null
+
+          echo "Testing POST /flights"
+          NEW_ID=$(curl -sf -X POST http://127.0.0.1:6005/flights \
+            -H "Content-Type: application/json" \
+            -d '{"airline":"CI Airways","origin":"CIX","destination":"CIY","departure_time":"2026-12-01T09:00:00","arrival_time":"2026-12-01T10:30:00","price":199.00,"duration":90,"seat_availability":25}' \
+            | python -c "import json,sys; print(json.load(sys.stdin)['flight_id'])")
+          echo "Created flight ${NEW_ID}"
+
+          echo "Testing PUT /flights/${NEW_ID}"
+          curl -sf -X PUT "http://127.0.0.1:6005/flights/${NEW_ID}" \
+            -H "Content-Type: application/json" \
+            -d '{"airline":"CI Airways","origin":"CIX","destination":"CIY","departure_time":"2026-12-01T09:00:00","arrival_time":"2026-12-01T11:00:00","price":215.00,"duration":120,"seat_availability":20}' > /dev/null
+
+          echo "Testing DELETE /flights/${NEW_ID}"
+          curl -sf -X DELETE "http://127.0.0.1:6005/flights/${NEW_ID}" > /dev/null
+
+          echo "Testing 404 handling"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:6005/flights/999999)
+          if [ "${STATUS}" != "404" ]; then
+            echo "Expected 404 for missing flight, got ${STATUS}"
+            exit 1
+          fi
+
+          echo "All CRUD operations validated"
+
+      - name: Start flight-backend service
+        working-directory: student-5/flight-backend
+        env:
+          FLIGHT_DATABASE_URL: http://127.0.0.1:6005
+          OLLAMA_BASE_URL: http://127.0.0.1:11434/v1
+        run: |
+          python app.py > backend.log 2>&1 &
+          echo $! > backend.pid
+
+      - name: Wait for flight-backend health
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:5005/health > /dev/null; then
+              echo "flight-backend is healthy after ${attempt} attempts"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "flight-backend did not become healthy"
+          cat student-5/flight-backend/backend.log
+          exit 1
+
+      - name: Validate backend API integration
+        run: |
+          echo "Testing backend to database integration"
+          curl -sf http://127.0.0.1:5005/api/flight/flights > /dev/null
+
+          echo "Testing filtered search"
+          curl -sf "http://127.0.0.1:5005/api/flight/flights?origin=SYD&destination=MEL" > /dev/null
+
+          echo "Testing HTML table endpoint"
+          curl -sf http://127.0.0.1:5005/api/flight/flights/html | grep -q "flight-table"
+
+          echo "Testing 404 propagation"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5005/api/flight/flights/999999)
+          if [ "${STATUS}" != "404" ]; then
+            echo "Expected 404 propagation, got ${STATUS}"
+            exit 1
+          fi
+
+          echo "Backend integration validated"
+
+      - name: Validate agentic workflow stages
+        run: |
+          RESPONSE=$(curl -sf -X POST http://127.0.0.1:5005/api/flight/ai/recommend \
+            -H "Content-Type: application/json" \
+            -d '{"message":"cheapest flight to Melbourne","origin":"SYD","destination":"MEL"}')
+
+          echo "${RESPONSE}" | python -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          for stage in ['plan', 'act', 'observe', 'adapt']:
+              assert stage in data, f'Missing agentic stage: {stage}'
+          assert data['plan']['priority'] == 'price', 'Plan did not resolve price priority'
+          assert data['act']['flights_retrieved'] > 0, 'Act retrieved no flights'
+          assert data['observe']['flights_found'] > 0, 'Observe found no flights'
+          print('Plan, Act, Observe, Adapt stages all present')
+          print('Priority resolved as:', data['plan']['priority'])
+          print('Flights retrieved:', data['act']['flights_retrieved'])
+          print('AI model available:', data['ai_available'])
+          "
+
+      - name: Validate missing message returns 400
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:5005/api/flight/ai/recommend \
+            -H "Content-Type: application/json" -d '{}')
+          if [ "${STATUS}" != "400" ]; then
+            echo "Expected 400 for missing message, got ${STATUS}"
+            exit 1
+          fi
+          echo "Validation error handling confirmed"
+
+      - name: Stop services
+        if: always()
+        run: |
+          if [ -f student-5/flight-backend/backend.pid ]; then
+            kill "$(cat student-5/flight-backend/backend.pid)" || true
+          fi
+          if [ -f student-5/flight-database/database.pid ]; then
+            kill "$(cat student-5/flight-database/database.pid)" || true
+          fi
+
+      - name: Build flight-database image
+        run: docker build -f student-5/flight-database/dockerfile -t flight-database:ci student-5/flight-database
+
+      - name: Build flight-backend image
+        run: docker build -f student-5/flight-backend/dockerfile -t flight-backend:ci student-5/flight-backend
+
+      - name: Build flight-frontend image
+        run: docker build -f student-5/flight-frontend/dockerfile -t flight-frontend:ci student-5/flight-frontend
+
+      - name: Validate nginx configuration
+        run: |
+          docker run --rm --entrypoint nginx flight-frontend:ci -t -c /etc/nginx/nginx.conf
+
+      - name: Upload service logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-5-service-logs
+          path: |
+            student-5/flight-database/database.log
+            student-5/flight-backend/backend.log
+          if-no-files-found: ignore

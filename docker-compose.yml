@@ -20,6 +20,9 @@ services:
       accommodation-frontend:
         condition: service_healthy
 
+      flight-frontend:
+        condition: service_started
+
     restart: unless-stopped
 
 
@@ -37,6 +40,7 @@ services:
       SHARED_DATABASE_URL: http://shared-database:6000
       ACCOUNT_BACKEND_URL: http://account-backend:5001
       ACCOMMODATION_BACKEND_URL: http://accommodation-backend:5002
+      FLIGHT_BACKEND_URL: http://flight-backend:5005
 
     depends_on:
       shared-database:
@@ -46,6 +50,9 @@ services:
         condition: service_healthy
 
       accommodation-backend:
+        condition: service_healthy
+
+      flight-backend:
         condition: service_healthy
 
     healthcheck:
@@ -100,8 +107,6 @@ services:
     build:
       context: ./student-25992405/account-frontend
 
-    # Optional direct access for debugging:
-    # http://localhost:3001
     ports:
       - "3001:80"
 
@@ -177,6 +182,7 @@ services:
       start_period: 5s
 
     restart: unless-stopped
+
 
   # =================================================
   # ACCOMMODATION FRONTEND
@@ -273,6 +279,90 @@ services:
 
 
   # =================================================
+  # FLIGHT FRONTEND
+  # =================================================
+  flight-frontend:
+    build:
+      context: ./student-25487036/flight-frontend
+
+    ports:
+      - "3005:80"
+
+    depends_on:
+      flight-backend:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # FLIGHT BACKEND
+  # =================================================
+  flight-backend:
+    build:
+      context: ./student-25487036/flight-backend
+
+    ports:
+      - "5005:5005"
+
+    environment:
+      FLIGHT_DATABASE_URL: http://flight-database:6005
+      OLLAMA_BASE_URL: http://ollama:11434/v1
+      OLLAMA_MODEL: qwen2.5:0.5b
+
+    depends_on:
+      flight-database:
+        condition: service_healthy
+
+      ollama:
+        condition: service_started
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5005/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # FLIGHT DATABASE
+  # =================================================
+  flight-database:
+    build:
+      context: ./student-25487036/flight-database
+
+    ports:
+      - "6005:6005"
+
+    volumes:
+      - flight-database-data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:6005/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
   # OLLAMA
   # =================================================
   ollama:
@@ -285,6 +375,7 @@ services:
       - ollama-data:/root/.ollama
 
     restart: unless-stopped
+
 
   # =================================================
   # OLLAMA MODEL INITIALISATION
@@ -327,5 +418,7 @@ volumes:
   shared-database-data:
 
   account-database-data:
+
+  flight-database-data:
 
   ollama-data:

@@ -21,6 +21,11 @@ SERVICE_ROUTES = {
     "itinerary": os.getenv(
         "ITINERARY_BACKEND_URL",
         "http://itinerary-backend:5004"
+    ),
+
+    "flight": os.getenv(
+        "FLIGHT_BACKEND_URL",
+        "http://flight-backend:5005"
     )
 }
 
