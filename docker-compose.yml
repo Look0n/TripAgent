@@ -43,6 +43,7 @@ services:
       SHARED_DATABASE_URL: http://shared-database:6000
       ACCOUNT_BACKEND_URL: http://account-backend:5001
       ACCOMMODATION_BACKEND_URL: http://accommodation-backend:5002
+      ATTRACTIONS_BACKEND_URL: http://attractions-backend:5003
       CHECKLIST_BACKEND_URL: http://checklist-backend:5004
       FLIGHT_BACKEND_URL: http://flight-backend:5005
 
@@ -54,6 +55,9 @@ services:
         condition: service_healthy
 
       accommodation-backend:
+        condition: service_healthy
+
+      attractions-backend:
         condition: service_healthy
 
       checklist-backend:
@@ -282,6 +286,107 @@ services:
           "python",
           "-c",
           "import urllib.request; urllib.request.urlopen('http://localhost:6002/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ATTRACTIONS FRONTEND
+  # =================================================
+  attractions-frontend:
+    build:
+      context: ./student-25693742/attractions-frontend
+
+    ports:
+      - "3003:80"
+
+    depends_on:
+      attractions-backend:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost/health"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ATTRACTIONS BACKEND
+  # =================================================
+  attractions-backend:
+    build:
+      context: ./student-25693742/attractions-backend
+
+    ports:
+      - "5003:5003"
+
+    environment:
+      DATABASE_API_URL: http://attractions-database:6003
+      OLLAMA_URL: http://ollama:11434/api/generate
+      OLLAMA_MODEL: qwen2.5:0.5b
+
+    depends_on:
+      attractions-database:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5003/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ATTRACTIONS DATABASE
+  # =================================================
+  attractions-database:
+    build:
+      context: ./student-25693742/attractions-database
+
+    ports:
+      - "6003:6003"
+
+    environment:
+      DATABASE_PATH: /data/attractions.db
+
+    volumes:
+      - attractions-database-data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:6003/health')"
         ]
       interval: 10s
       timeout: 5s
@@ -540,6 +645,8 @@ volumes:
   flight-database-data:
 
   accommodation-database-data:
+
+  attractions-database-data:
 
   checklist-database-data:
 
