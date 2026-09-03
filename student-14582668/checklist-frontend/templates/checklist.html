@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pre-Trip Checklist | TripAgent</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/checklist.css') }}"
+    >
+    <script
+        src="{{ url_for('static', filename='js/checklist.js') }}"
+        defer
+    ></script>
+</head>
+<body data-api-url="{{ api_url }}">
+    <main class="page-container">
+        <header class="page-header">
+            <p class="eyebrow">TripAgent</p>
+            <h1>Pre-Trip Checklist</h1>
+            <p>
+                Manage important tasks and packing items before your
+                journey.
+            </p>
+        </header>
+
+        <section
+            class="summary-panel"
+            aria-labelledby="summary-heading"
+        >
+            <h2 id="summary-heading">Trip progress</h2>
+            <p>
+                <strong id="completed-count">0</strong>
+                of
+                <strong id="total-count">0</strong>
+                items completed
+            </p>
+        </section>
+
+        <nav class="filter-bar" aria-label="Checklist filters">
+            <button type="button" data-filter="all" aria-pressed="true">
+                All
+            </button>
+            <button type="button" data-filter="task" aria-pressed="false">
+                Tasks
+            </button>
+            <button
+                type="button"
+                data-filter="packing"
+                aria-pressed="false"
+            >
+                Packing
+            </button>
+        </nav>
+
+        <section
+            class="form-panel"
+            aria-labelledby="item-form-heading"
+        >
+            <h2 id="item-form-heading">Add checklist item</h2>
+
+            <form id="item-form">
+                <div class="form-field">
+                    <label for="title">Title</label>
+                    <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        maxlength="120"
+                        required
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="item-type">Type</label>
+                    <select id="item-type" name="item_type" required>
+                        <option value="task">Task</option>
+                        <option value="packing">Packing</option>
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="category">Category</label>
+                    <input
+                        id="category"
+                        name="category"
+                        type="text"
+                        maxlength="80"
+                    >
+                </div>
+
+                <div class="form-field">
+                    <label for="priority">Priority</label>
+                    <select id="priority" name="priority">
+                        <option value="High">High</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+
+                <div class="form-field form-field-wide">
+                    <label for="description">Description</label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="3"
+                        maxlength="400"
+                    ></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button id="save-item-button" type="submit">
+                        Save item
+                    </button>
+                    <button
+                        id="cancel-edit-button"
+                        type="button"
+                        hidden
+                    >
+                        Cancel edit
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section
+            class="checklist-panel"
+            aria-labelledby="checklist-heading"
+        >
+            <div class="section-heading">
+                <h2 id="checklist-heading">Checklist items</h2>
+                <button id="refresh-button" type="button">
+                    Refresh
+                </button>
+            </div>
+
+            <div id="checklist-items">
+                <p id="checklist-empty-message">
+                    Checklist items will appear here.
+                </p>
+            </div>
+        </section>
+
+        <section
+            class="ai-panel"
+            aria-labelledby="ai-heading"
+        >
+            <h2 id="ai-heading">AI checklist assistant</h2>
+            <p>
+                Describe your trip to receive additional checklist
+                suggestions. Suggestions are not saved automatically.
+            </p>
+
+            <form id="ai-form">
+                <div class="form-field">
+                    <label for="travel-message">Travel details</label>
+                    <textarea
+                        id="travel-message"
+                        name="message"
+                        rows="4"
+                        placeholder="I am travelling to Japan for seven days in winter."
+                        required
+                    ></textarea>
+                </div>
+
+                <button id="ask-ai-button" type="submit">
+                    Ask AI
+                </button>
+            </form>
+
+            <div id="ai-results" hidden>
+                <h3>AI suggestions</h3>
+                <p id="ai-reply"></p>
+                <div id="ai-suggestions"></div>
+            </div>
+        </section>
+
+        <p
+            id="app-status"
+            role="status"
+            aria-live="polite"
+        ></p>
+    </main>
+</body>
+</html>
