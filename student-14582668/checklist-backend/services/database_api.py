@@ -5,7 +5,7 @@ import requests
 
 CHECKLIST_DATABASE_URL = os.getenv(
     "CHECKLIST_DATABASE_URL",
-    "http://127.0.0.1:6004"
+    "http://127.0.0.1:6005"
 ).rstrip("/")
 
 DEFAULT_TIMEOUT = 5

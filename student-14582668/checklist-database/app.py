@@ -13,7 +13,7 @@ DATABASE_PATH = os.getenv(
 )
 
 CHECKLIST_DATABASE_PORT = int(
-    os.getenv("CHECKLIST_DATABASE_PORT", "6004")
+    os.getenv("CHECKLIST_DATABASE_PORT", "6005")
 )
 
 VALID_ITEM_TYPES = {

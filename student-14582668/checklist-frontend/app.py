@@ -14,7 +14,7 @@ def create_app():
     def checklist_page():
         api_url = os.getenv(
             "CHECKLIST_API_URL",
-            "http://localhost:5004/api/checklist-items"
+            "http://localhost:5005/api/checklist-items"
         ).rstrip("/")
 
         return render_template(
@@ -38,7 +38,7 @@ app = create_app()
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
-        port=int(os.getenv("CHECKLIST_FRONTEND_PORT", "3004")),
+        port=int(os.getenv("CHECKLIST_FRONTEND_PORT", "3005")),
         debug=False,
         use_reloader=False
     )

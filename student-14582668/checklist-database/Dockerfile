@@ -11,8 +11,8 @@ COPY app.py schema.sql init.sql ./
 RUN mkdir -p /data
 
 ENV DATABASE_PATH=/data/checklist.db
-ENV CHECKLIST_DATABASE_PORT=6004
+ENV CHECKLIST_DATABASE_PORT=6005
 
-EXPOSE 6004
+EXPOSE 6005
 
 CMD ["python", "app.py"]
