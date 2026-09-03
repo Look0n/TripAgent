@@ -27,6 +27,40 @@ body {
     line-height: 1.5;
 }
 
+.navbar {
+    min-height: 70px;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.navbar a {
+    color: #1f2937;
+    text-decoration: none;
+}
+
+.navbar .brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.navbar nav {
+    display: flex;
+    gap: 25px;
+}
+
+.navbar nav a {
+    font-size: 1rem;
+}
+
+.navbar nav a:hover {
+    color: #2563eb;
+}
+
 button,
 input,
 select,
@@ -379,6 +413,11 @@ textarea {
 }
 
 @media (max-width: 42rem) {
+    .navbar {
+        min-height: 60px;
+        padding: 0 20px;
+    }
+
     .page-container {
         width: min(100% - 1rem, 70rem);
         padding-top: 1.25rem;
