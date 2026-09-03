@@ -34,7 +34,7 @@ services:
       context: ./shared/gateway
 
     ports:
-      - "5000:5000"
+      - "5050:5000"
 
     environment:
       SHARED_DATABASE_URL: http://shared-database:6000
@@ -227,7 +227,7 @@ services:
     environment:
       DATABASE_API_URL: http://accommodation-database:6002
       OLLAMA_URL: http://ollama:11434/api/generate
-      OLLAMA_MODEL: llama3.1:8b
+      OLLAMA_MODEL: llama3.2:3b
 
     depends_on:
       accommodation-database:
@@ -261,6 +261,12 @@ services:
 
     ports:
       - "6002:6002"
+
+    environment:
+      DATABASE_PATH: /data/accommodation.db
+
+    volumes:
+      - accommodation-database-data:/data
 
     healthcheck:
       test:
@@ -420,5 +426,7 @@ volumes:
   account-database-data:
 
   flight-database-data:
+
+  accommodation-database-data:
 
   ollama-data:

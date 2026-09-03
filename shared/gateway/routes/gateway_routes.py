@@ -231,7 +231,7 @@ def flight_proxy(path):
                 silent=True
             ),
             headers=headers,
-            timeout=10
+            timeout=180
         )
 
     except requests.RequestException:

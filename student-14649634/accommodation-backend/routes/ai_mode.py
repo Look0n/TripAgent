@@ -26,7 +26,9 @@ ai_bp = Blueprint(
 )
 def accommodation_chat():
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    
+    print("AI REQUEST DATA:", data, flush=True)
 
     if not data or not data.get("message"):
         return jsonify({
@@ -38,52 +40,85 @@ def accommodation_chat():
 
     # PLAN
 
-    print("\nPLAN")
+    print("\nPLAN", flush=True)
     print(
         "Understand the traveller's "
-        "accommodation request."
+        "accommodation request.", 
+        flush=True
     )
 
-    extraction_prompt = (
-        build_extraction_prompt(
-            user_message
+    # Quick Recommendation sends structured data.
+    # In that case, do not call the LLM for extraction.
+    if data.get("city"):
+
+        requirements = {
+            "city": data.get("city"),
+            "budget": data.get("budget"),
+            "guests": data.get("guests"),
+            "type": data.get("type"),
+            "preferences": data.get(
+                "preferences",
+                []
+            )
+        }
+
+        print(
+            "Using structured requirements:",
+            requirements
         )
-    )
 
-    try:
-        extraction_text = generate_text(
-            extraction_prompt,
-            timeout=60,
-            json_format=True,
-            num_predict=150,
-            temperature=0.1
+    # Chat sends natural language,
+    # so use the LLM to extract requirements.
+    else:
+
+        extraction_prompt = (
+            build_extraction_prompt(
+                user_message
+            )
         )
         
-        print(
-            "Raw extraction response:",
-            extraction_text
-        )
+        try:
+            print(
+                "Calling LLM for extraction...",
+                flush=True
+            )
 
-        requirements = json.loads(
-            extraction_text
-        )
+            extraction_text = generate_text(
+                extraction_prompt,
+                timeout=120,
+                json_format=True,
+                num_predict=100,
+                temperature=0.1
+            )
+            
+            print(
+                "LLM extraction completed.",
+                flush=True
+            )
 
-    except (
-        requests.RequestException,
-        json.JSONDecodeError,
-        KeyError
-    ) as error:
+            print(
+                "Raw extraction response:",
+                extraction_text, flush=True
+            )
 
-        print(
-            "Requirement extraction error:",
-            repr(error)
-        )
+            requirements = json.loads(
+                extraction_text
+            )
 
-        return jsonify({
-            "error":
-                "Unable to understand "
-                "the accommodation request."
-        }), 503
+        except Exception as error:
+
+            print(
+                "Requirement extraction error:",
+                repr(error),
+                flush=True
+            )
+
+            return jsonify({
+                "error":
+                    "Unable to understand "
+                    "the accommodation request."
+            }), 503
+
 
     # Make sure preferences always exists
 
@@ -93,9 +128,19 @@ def accommodation_chat():
     if requirements["preferences"] is None:
         requirements["preferences"] = []
 
+    guests = requirements.get("guests")
+
+    if guests is not None:
+        try:
+            requirements["guests"] = int(
+                guests
+            )
+        except (ValueError, TypeError):
+            requirements["guests"] = None
+
     print(
         "Extracted requirements:",
-        requirements
+        requirements, flush=True
     )
 
 
@@ -116,14 +161,6 @@ def accommodation_chat():
     # City / budget / guests are hard filters.
     # Type / vibe / family / CBD etc.
     # are considered later by the AI.
-
-    guests = requirements.get("guests")
-
-    if guests is not None:
-        try:
-            requirements["guests"] = int(guests)
-        except (ValueError, TypeError):
-            requirements["guests"] = None
 
     accommodations = search_for_recommendation(
         city=requirements.get("city"),
@@ -165,7 +202,8 @@ def accommodation_chat():
     print(
         "Ranking database results using "
         "traveller preferences and "
-        "accommodation descriptions..."
+        "accommodation descriptions...", 
+        flush=True
     )
 
     recommendation_prompt = (
@@ -180,9 +218,14 @@ def accommodation_chat():
     try:
         reply = generate_text(
             recommendation_prompt,
-            timeout=120,
-            num_predict=150,
-            temperature=0.3
+            timeout=180,
+            num_predict=100,
+            temperature=0.2
+        )
+        
+        print(
+            "LLM recommendation completed.",
+            flush=True
         )
 
         return jsonify({
@@ -191,11 +234,12 @@ def accommodation_chat():
             "matches": len(accommodations)
         }), 200
 
-    except requests.RequestException as error:
+    except Exception as error:
 
         print(
             "Recommendation error:",
-            error
+            error,
+            flush=True
         )
 
         return jsonify({
