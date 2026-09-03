@@ -177,6 +177,66 @@ def accommodation_proxy(path):
         }), 503
 
 @gateway_bp.route(
+    "/api/checklist-items",
+    defaults={"path": ""},
+    methods=["GET", "POST"]
+)
+@gateway_bp.route(
+    "/api/checklist-items/<path:path>",
+    methods=["GET", "POST", "PUT", "DELETE"]
+)
+def checklist_proxy(path):
+
+    session_data = validate_session()
+
+    if session_data is None:
+        return jsonify({
+            "error": "Authentication required"
+        }), 401
+
+    service_url = get_service_url("checklist")
+
+    if not service_url:
+        return jsonify({
+            "error": "Checklist service unavailable"
+        }), 503
+
+    target_url = f"{service_url}/api/checklist-items"
+
+    if path:
+        target_url += f"/{path}"
+
+    try:
+        response = requests.request(
+            method=request.method,
+            url=target_url,
+            params=request.args,
+            json=request.get_json(silent=True),
+            headers={
+                "X-Customer-ID": str(
+                    session_data["customer_id"]
+                )
+            },
+            timeout=10
+        )
+
+    except requests.RequestException:
+        return jsonify({
+            "error": "Checklist service unavailable"
+        }), 503
+
+    return (
+        response.content,
+        response.status_code,
+        {
+            "Content-Type": response.headers.get(
+                "Content-Type",
+                "application/json"
+            )
+        }
+    )
+
+@gateway_bp.route(
     "/api/flight/<path:path>",
     methods=[
         "GET",
