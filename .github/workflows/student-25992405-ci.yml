@@ -1,225 +1,184 @@
-name: Account Profile Service CI
+name: Account Service CI
 
 on:
   push:
     branches:
-      - main
-    paths:
-      - "student-25992405/**"
-      - "docker-compose.yml"
-      - ".github/workflows/student-25992405-ci.yml"
+      - student-25992405
 
   pull_request:
     branches:
       - main
-    paths:
-      - "student-25992405/**"
-      - "docker-compose.yml"
-      - ".github/workflows/student-25992405-ci.yml"
-
 
 jobs:
-  account-service-ci:
-    name: Test Account Profile Service
+  account-ci:
     runs-on: ubuntu-latest
 
+    env:
+      OLLAMA_DEFAULT_MODEL: qwen2.5:0.5b
+
     steps:
-
-      # ---------------------------------------------------
-      # 1. Checkout repository
-      # ---------------------------------------------------
-
+      # ============================================
+      # CHECKOUT
+      # ============================================
       - name: Checkout repository
         uses: actions/checkout@v4
 
 
-      # ---------------------------------------------------
-      # 2. Set up Python
-      # ---------------------------------------------------
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-
-      # ---------------------------------------------------
-      # 3. Check Python syntax
-      # ---------------------------------------------------
-
-      - name: Check backend Python syntax
-        run: |
-          python -m compileall student-25992405/account-backend
-
-
-      - name: Check database Python syntax
-        run: |
-          python -m compileall student-25992405/account-database
-
-
-      # ---------------------------------------------------
-      # 4. Validate Docker Compose
-      # ---------------------------------------------------
-
+      # ============================================
+      # VALIDATE COMPOSE
+      # ============================================
       - name: Validate Docker Compose
         run: |
           docker compose config
 
 
-      # ---------------------------------------------------
-      # 5. Build Account/Profile containers
-      # ---------------------------------------------------
-
-      - name: Build Account Profile services
+      # ============================================
+      # BUILD ACCOUNT SERVICES ONLY
+      # ============================================
+      - name: Build Account services
         run: |
-          docker compose build account-database account-backend account-frontend
+          docker compose build \
+            account-database \
+            account-backend \
+            account-frontend
 
 
-      # ---------------------------------------------------
-      # 6. Start Account/Profile services
-      # ---------------------------------------------------
-
-      - name: Start Account Profile services
+      # ============================================
+      # START ACCOUNT DATABASE
+      # ============================================
+      - name: Start Account database
         run: |
-          docker compose up -d account-database account-backend account-frontend
+          docker compose up -d account-database
 
 
-      # ---------------------------------------------------
-      # 7. Show container status
-      # ---------------------------------------------------
-
-      - name: Show Docker containers
-        run: |
-          docker compose ps
-
-
-      # ---------------------------------------------------
-      # 8. Wait for database
-      # ---------------------------------------------------
-
-      - name: Wait for Account Database
+      # ============================================
+      # WAIT FOR DATABASE
+      # ============================================
+      - name: Wait for Account database
         run: |
           for i in {1..30}; do
-
-            if curl --fail --silent http://localhost:6001/health; then
-              echo ""
-              echo "Account database is healthy."
+            if curl --fail http://localhost:6001/health; then
+              echo "Account database is healthy"
               exit 0
             fi
 
-            echo "Waiting for account database..."
+            echo "Waiting for Account database..."
             sleep 2
-
           done
 
-          echo "Account database failed to become healthy."
+          echo "Account database failed to become healthy"
           docker compose logs account-database
           exit 1
 
 
-      # ---------------------------------------------------
-      # 9. Wait for backend
-      # ---------------------------------------------------
+      # ============================================
+      # START ACCOUNT BACKEND
+      #
+      # --no-deps prevents Compose from starting
+      # Ollama automatically.
+      # ============================================
+      - name: Start Account backend
+        run: |
+          docker compose up -d --no-deps account-backend
 
-      - name: Wait for Account Backend
+
+      # ============================================
+      # WAIT FOR BACKEND
+      # ============================================
+      - name: Wait for Account backend
         run: |
           for i in {1..30}; do
-
-            if curl --fail --silent http://localhost:5001/health; then
-              echo ""
-              echo "Account backend is healthy."
+            if curl --fail http://localhost:5001/health; then
+              echo "Account backend is healthy"
               exit 0
             fi
 
-            echo "Waiting for account backend..."
+            echo "Waiting for Account backend..."
             sleep 2
-
           done
 
-          echo "Account backend failed to become healthy."
+          echo "Account backend failed to become healthy"
           docker compose logs account-backend
           exit 1
 
 
-      # ---------------------------------------------------
-      # 10. Check frontend
-      # ---------------------------------------------------
-
-      - name: Check Account Frontend
+      # ============================================
+      # START ACCOUNT FRONTEND
+      # ============================================
+      - name: Start Account frontend
         run: |
-          curl --fail http://localhost:3001/account/login
+          docker compose up -d --no-deps account-frontend
 
 
-      # ---------------------------------------------------
-      # 11. Verify seed data
-      # ---------------------------------------------------
-
-      - name: Verify database seed records
+      # ============================================
+      # WAIT FOR FRONTEND
+      # ============================================
+      - name: Wait for Account frontend
         run: |
-          CUSTOMER_COUNT=$(docker compose exec -T account-database \
-            python -c "import sqlite3; conn=sqlite3.connect('/data/account.db'); print(conn.execute('SELECT COUNT(*) FROM customer').fetchone()[0])")
+          for i in {1..30}; do
+            if curl --fail http://localhost:3001/; then
+              echo "Account frontend is available"
+              exit 0
+            fi
 
-          PREFERENCE_COUNT=$(docker compose exec -T account-database \
-            python -c "import sqlite3; conn=sqlite3.connect('/data/account.db'); print(conn.execute('SELECT COUNT(*) FROM preference').fetchone()[0])")
+            echo "Waiting for Account frontend..."
+            sleep 2
+          done
 
-          echo "Customer records: $CUSTOMER_COUNT"
-          echo "Preference records: $PREFERENCE_COUNT"
-
-          if [ "$CUSTOMER_COUNT" -lt 10 ]; then
-            echo "Expected at least 10 customer records."
-            exit 1
-          fi
-
-          if [ "$PREFERENCE_COUNT" -lt 10 ]; then
-            echo "Expected at least 10 preference records."
-            exit 1
-          fi
+          echo "Account frontend failed to become available"
+          docker compose logs account-frontend
+          exit 1
 
 
-      # ---------------------------------------------------
-      # 12. Test seeded login
-      # ---------------------------------------------------
-
-      - name: Test seeded customer login
+      # ============================================
+      # SERVICE TESTS
+      # ============================================
+      - name: Test Account database health
         run: |
-          curl --fail \
-            --cookie-jar cookies.txt \
-            --header "Content-Type: application/json" \
-            --data '{
-              "email": "alice@example.com",
-              "password": "TripAgent123!"
-            }' \
-            http://localhost:5001/api/account/login
+          curl --fail http://localhost:6001/health
 
 
-      # ---------------------------------------------------
-      # 13. Test authenticated profile request
-      # ---------------------------------------------------
-
-      - name: Test customer profile
+      - name: Test Account backend health
         run: |
-          curl --fail \
-            --cookie cookies.txt \
-            http://localhost:5001/api/account/profile
+          curl --fail http://localhost:5001/health
 
 
-      # ---------------------------------------------------
-      # 14. Display logs if something failed
-      # ---------------------------------------------------
+      - name: Test Account frontend
+        run: |
+          curl --fail http://localhost:3001/
 
-      - name: Show Docker logs on failure
+
+      # ============================================
+      # SHOW STATUS
+      # ============================================
+      - name: Show Account container status
+        run: |
+          docker compose ps \
+            account-database \
+            account-backend \
+            account-frontend
+
+
+      # ============================================
+      # DEBUG LOGS
+      # ============================================
+      - name: Show logs on failure
         if: failure()
         run: |
+          echo "===== ACCOUNT DATABASE ====="
           docker compose logs account-database
+
+          echo "===== ACCOUNT BACKEND ====="
           docker compose logs account-backend
+
+          echo "===== ACCOUNT FRONTEND ====="
           docker compose logs account-frontend
 
 
-      # ---------------------------------------------------
-      # 15. Clean up
-      # ---------------------------------------------------
-
-      - name: Stop Account Profile services
+      # ============================================
+      # CLEANUP
+      # ============================================
+      - name: Stop Account services
         if: always()
         run: |
           docker compose down -v

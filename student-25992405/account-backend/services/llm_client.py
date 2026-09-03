@@ -10,7 +10,7 @@ OLLAMA_URL = os.getenv(
 
 OLLAMA_MODEL = os.getenv(
     "OLLAMA_MODEL",
-    "llama3.2"
+    "qwen2.5:0.5b"
 )
 
 
@@ -22,7 +22,7 @@ def generate_response(prompt):
             "prompt": prompt,
             "stream": False
         },
-        timeout=60
+        timeout=120
     )
 
     response.raise_for_status()
