@@ -183,13 +183,13 @@ jobs:
           fi
 
       - name: Build flight-database image
-        run: docker build -f student-25487036/flight-database/dockerfile -t flight-database:ci student-25487036/flight-database
+        run: docker build -f student-25487036/flight-database/Dockerfile -t flight-database:ci student-25487036/flight-database
 
       - name: Build flight-backend image
-        run: docker build -f student-25487036/flight-backend/dockerfile -t flight-backend:ci student-25487036/flight-backend
+        run: docker build -f student-25487036/flight-backend/Dockerfile -t flight-backend:ci student-25487036/flight-backend
 
       - name: Build flight-frontend image
-        run: docker build -f student-25487036/flight-frontend/dockerfile -t flight-frontend:ci student-25487036/flight-frontend
+        run: docker build -f student-25487036/flight-frontend/Dockerfile -t flight-frontend:ci student-25487036/flight-frontend
 
       - name: Validate nginx configuration
         run: |
