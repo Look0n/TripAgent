@@ -71,25 +71,24 @@ def forward_request(
 
     headers = {
         "X-Customer-ID":
-            str(customer_id),
-
-        "Content-Type":
-            request.headers.get(
-                "Content-Type",
-                "application/json"
-            )
+            str(customer_id)
     }
+
+    content_type = request.headers.get(
+        "Content-Type"
+    )
+
+    if content_type:
+        headers["Content-Type"] = content_type
 
     try:
         response = requests.request(
             method=request.method,
             url=target_url,
             params=request.args,
-            json=request.get_json(
-                silent=True
-            ),
+            data=request.get_data(),
             headers=headers,
-            timeout=10
+            timeout=120
         )
 
     except requests.RequestException:
@@ -190,17 +189,16 @@ def flight_proxy(path):
 
     session_data = validate_session()
 
-    if session_data is None:
-
-        return jsonify({
-            "error":
-                "Authentication required"
-        }), 401
+    customer_id = (
+        session_data["customer_id"]
+        if session_data
+        else "anonymous"
+    )
 
     return forward_request(
         "flight",
         path,
-        session_data["customer_id"]
+        customer_id
     )
 
     # Browser:
