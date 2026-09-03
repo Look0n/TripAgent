@@ -1,0 +1,306 @@
+name: Pre-Trip Checklist Service CI
+
+on:
+  push:
+    paths:
+      - "student-14582668/**"
+      - "docker-compose.yml"
+      - ".github/workflows/student-14582668-ci.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "student-14582668/**"
+      - "docker-compose.yml"
+      - ".github/workflows/student-14582668-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  checklist-service-ci:
+    name: Test Pre-Trip Checklist Service
+    runs-on: ubuntu-latest
+
+    env:
+      OLLAMA_DEFAULT_MODEL: qwen2.5:0.5b
+      CHECKLIST_NETWORK: checklist-ci-network
+      DATABASE_CONTAINER: checklist-database-ci
+      BACKEND_CONTAINER: checklist-backend-ci
+      FRONTEND_CONTAINER: checklist-frontend-ci
+
+    steps:
+      # ---------------------------------------------------
+      # 1. Checkout repository
+      # ---------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------
+      # 2. Set up Python
+      # ---------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            student-14582668/checklist-backend/requirements.txt
+            student-14582668/checklist-database/requirements.txt
+            student-14582668/checklist-frontend/requirements.txt
+
+      # ---------------------------------------------------
+      # 3. Check Python syntax
+      # ---------------------------------------------------
+      - name: Check Checklist Python syntax
+        run: |
+          python -m compileall -q student-14582668/checklist-database
+          python -m compileall -q student-14582668/checklist-backend
+          python -m compileall -q student-14582668/checklist-frontend
+
+      # ---------------------------------------------------
+      # 4. Run backend unit tests
+      # ---------------------------------------------------
+      - name: Install backend test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r student-14582668/checklist-backend/requirements.txt
+
+      - name: Run Checklist pytest
+        working-directory: student-14582668/checklist-backend
+        run: |
+          pytest -v
+
+      # ---------------------------------------------------
+      # 5. Validate the shared Docker Compose file
+      # ---------------------------------------------------
+      - name: Validate Docker Compose
+        run: |
+          docker compose config --quiet
+
+      # ---------------------------------------------------
+      # 6. Build Checklist container images
+      # ---------------------------------------------------
+      - name: Build Checklist services
+        run: |
+          docker build \
+            -t checklist-database-ci \
+            student-14582668/checklist-database
+
+          docker build \
+            -t checklist-backend-ci \
+            student-14582668/checklist-backend
+
+          docker build \
+            -t checklist-frontend-ci \
+            student-14582668/checklist-frontend
+
+      # ---------------------------------------------------
+      # 7. Create an isolated Checklist network
+      # ---------------------------------------------------
+      - name: Create Checklist Docker network
+        run: |
+          docker network create "$CHECKLIST_NETWORK"
+
+      # ---------------------------------------------------
+      # 8. Start and verify the database
+      # ---------------------------------------------------
+      - name: Start Checklist database
+        run: |
+          docker run -d \
+            --name "$DATABASE_CONTAINER" \
+            --network "$CHECKLIST_NETWORK" \
+            -p 6005:6005 \
+            checklist-database-ci
+
+      - name: Wait for Checklist database
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:6005/health; then
+              echo ""
+              echo "Checklist database is healthy."
+              exit 0
+            fi
+
+            echo "Waiting for Checklist database..."
+            sleep 2
+          done
+
+          echo "Checklist database failed to become healthy."
+          docker logs "$DATABASE_CONTAINER"
+          exit 1
+
+      - name: Verify Checklist seed records
+        run: |
+          CHECKLIST_COUNT=$(
+            curl --fail --silent http://localhost:6005/checklist-items \
+              | python -c "import json, sys; print(len(json.load(sys.stdin)))"
+          )
+
+          echo "Checklist seed records: $CHECKLIST_COUNT"
+
+          if [ "$CHECKLIST_COUNT" -lt 10 ]; then
+            echo "Expected at least 10 checklist records."
+            exit 1
+          fi
+
+      # ---------------------------------------------------
+      # 9. Start and verify the backend
+      # ---------------------------------------------------
+      - name: Start Checklist backend
+        run: |
+          docker run -d \
+            --name "$BACKEND_CONTAINER" \
+            --network "$CHECKLIST_NETWORK" \
+            -p 5005:5005 \
+            -e CHECKLIST_DATABASE_URL="http://$DATABASE_CONTAINER:6005" \
+            -e OLLAMA_URL="http://ollama:11434/api/generate" \
+            -e OLLAMA_MODEL="$OLLAMA_DEFAULT_MODEL" \
+            checklist-backend-ci
+
+      - name: Wait for Checklist backend
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:5005/health; then
+              echo ""
+              echo "Checklist backend is healthy."
+              exit 0
+            fi
+
+            echo "Waiting for Checklist backend..."
+            sleep 2
+          done
+
+          echo "Checklist backend failed to become healthy."
+          docker logs "$BACKEND_CONTAINER"
+          exit 1
+
+      # ---------------------------------------------------
+      # 10. Start and verify the frontend
+      # ---------------------------------------------------
+      - name: Start Checklist frontend
+        run: |
+          docker run -d \
+            --name "$FRONTEND_CONTAINER" \
+            --network "$CHECKLIST_NETWORK" \
+            -p 3005:3005 \
+            -e CHECKLIST_API_URL="http://localhost:5005/api/checklist-items" \
+            checklist-frontend-ci
+
+      - name: Wait for Checklist frontend
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:3005/health; then
+              echo ""
+              echo "Checklist frontend is healthy."
+              exit 0
+            fi
+
+            echo "Waiting for Checklist frontend..."
+            sleep 2
+          done
+
+          echo "Checklist frontend failed to become healthy."
+          docker logs "$FRONTEND_CONTAINER"
+          exit 1
+
+      - name: Verify Checklist frontend page
+        run: |
+          curl --fail --silent http://localhost:3005/ \
+            | grep --quiet "Pre-Trip Checklist"
+
+      # ---------------------------------------------------
+      # 11. Run API smoke tests
+      # ---------------------------------------------------
+      - name: Test Checklist read and filters
+        run: |
+          curl --fail --silent \
+            http://localhost:5005/api/checklist-items
+
+          curl --fail --silent \
+            "http://localhost:5005/api/checklist-items?item_type=packing"
+
+          curl --fail --silent \
+            http://localhost:5005/api/checklist-items/1
+
+      - name: Test Checklist create update and delete
+        run: |
+          CREATED_ITEM=$(
+            curl --fail --silent \
+              -X POST \
+              -H "Content-Type: application/json" \
+              -d '{"title":"CI Test Item","item_type":"task","category":"Testing","description":"Created by GitHub Actions","priority":"Low","is_completed":false}' \
+              http://localhost:5005/api/checklist-items
+          )
+
+          ITEM_ID=$(
+            printf '%s' "$CREATED_ITEM" \
+              | python -c "import json, sys; print(json.load(sys.stdin)['item_id'])"
+          )
+
+          echo "Created checklist item: $ITEM_ID"
+
+          curl --fail --silent \
+            -X PUT \
+            -H "Content-Type: application/json" \
+            -d '{"title":"Updated CI Test Item","is_completed":true}' \
+            "http://localhost:5005/api/checklist-items/$ITEM_ID" \
+            | grep --quiet 'Updated CI Test Item'
+
+          curl --fail --silent \
+            -X DELETE \
+            "http://localhost:5005/api/checklist-items/$ITEM_ID" \
+            | grep --quiet 'deleted successfully'
+
+      - name: Test AI endpoint validation
+        run: |
+          STATUS_CODE=$(
+            curl --silent \
+              --output /tmp/checklist-ai-response.json \
+              --write-out "%{http_code}" \
+              -X POST \
+              -H "Content-Type: application/json" \
+              -d '{}' \
+              http://localhost:5005/api/checklist-items/recommend
+          )
+
+          cat /tmp/checklist-ai-response.json
+
+          if [ "$STATUS_CODE" != "400" ]; then
+            echo "Expected HTTP 400 for an empty AI request."
+            exit 1
+          fi
+
+      # ---------------------------------------------------
+      # 12. Show status and failure logs
+      # ---------------------------------------------------
+      - name: Show Checklist container status
+        run: |
+          docker ps --filter "name=checklist-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+      - name: Show Checklist logs on failure
+        if: failure()
+        run: |
+          echo "===== CHECKLIST DATABASE ====="
+          docker logs "$DATABASE_CONTAINER" || true
+
+          echo "===== CHECKLIST BACKEND ====="
+          docker logs "$BACKEND_CONTAINER" || true
+
+          echo "===== CHECKLIST FRONTEND ====="
+          docker logs "$FRONTEND_CONTAINER" || true
+
+      # ---------------------------------------------------
+      # 13. Clean up only Checklist CI resources
+      # ---------------------------------------------------
+      - name: Stop Checklist services
+        if: always()
+        run: |
+          docker rm -f \
+            "$FRONTEND_CONTAINER" \
+            "$BACKEND_CONTAINER" \
+            "$DATABASE_CONTAINER" \
+            2>/dev/null || true
+
+          docker network rm "$CHECKLIST_NETWORK" 2>/dev/null || true
