@@ -17,6 +17,9 @@ services:
       account-frontend:
         condition: service_started
 
+      accommodation-frontend:
+        condition: service_healthy
+
     restart: unless-stopped
 
 
@@ -33,12 +36,16 @@ services:
     environment:
       SHARED_DATABASE_URL: http://shared-database:6000
       ACCOUNT_BACKEND_URL: http://account-backend:5001
+      ACCOMMODATION_BACKEND_URL: http://accommodation-backend:5002
 
     depends_on:
       shared-database:
         condition: service_healthy
 
       account-backend:
+        condition: service_healthy
+
+      accommodation-backend:
         condition: service_healthy
 
     healthcheck:
@@ -163,6 +170,99 @@ services:
           "python",
           "-c",
           "import urllib.request; urllib.request.urlopen('http://localhost:6001/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+  # =================================================
+  # ACCOMMODATION FRONTEND
+  # =================================================
+  accommodation-frontend:
+    build:
+      context: ./student-14649634/accommodation-frontend
+
+    ports:
+      - "3002:3002"
+
+    depends_on:
+      accommodation-backend:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:3002/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ACCOMMODATION BACKEND
+  # =================================================
+  accommodation-backend:
+    build:
+      context: ./student-14649634/accommodation-backend
+
+    ports:
+      - "5002:5002"
+
+    environment:
+      DATABASE_API_URL: http://accommodation-database:6002
+      OLLAMA_URL: http://ollama:11434/api/generate
+      OLLAMA_MODEL: llama3.1:8b
+
+    depends_on:
+      accommodation-database:
+        condition: service_healthy
+
+      ollama:
+        condition: service_started
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5002/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ACCOMMODATION DATABASE
+  # =================================================
+  accommodation-database:
+    build:
+      context: ./student-14649634/accommodation-database
+
+    ports:
+      - "6002:6002"
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:6002/health')"
         ]
       interval: 10s
       timeout: 5s

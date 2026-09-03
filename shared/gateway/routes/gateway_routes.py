@@ -146,3 +146,94 @@ def account_proxy(path):
         path,
         session_data["customer_id"]
     )
+@gateway_bp.route(
+    "/api/accommodation/<path:path>",
+    methods=[
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+    ]
+)
+def accommodation_proxy(path):
+
+    session_data = validate_session()
+
+    if session_data is None:
+
+        return jsonify({
+            "error":
+                "Authentication required"
+        }), 401
+
+    service_url = get_service_url(
+        "accommodation"
+    )
+
+    if not service_url:
+
+        return jsonify({
+            "error":
+                "Accommodation service unavailable"
+        }), 503
+
+    # Browser:
+    # /api/accommodation/accommodations/123
+    #
+    # Backend:
+    # /api/accommodations/123
+    target_url = (
+        f"{service_url}/api/{path}"
+    )
+
+    headers = {
+        "X-Customer-ID":
+            str(session_data["customer_id"]),
+
+        "Content-Type":
+            request.headers.get(
+                "Content-Type",
+                "application/json"
+            )
+    }
+
+    try:
+
+        response = requests.request(
+            method=request.method,
+            url=target_url,
+            params=request.args,
+            json=request.get_json(
+                silent=True
+            ),
+            headers=headers,
+            timeout=10
+        )
+
+    except requests.RequestException:
+
+        return jsonify({
+            "error":
+                "Accommodation service unavailable"
+        }), 503
+
+    excluded_headers = {
+        "content-encoding",
+        "content-length",
+        "transfer-encoding",
+        "connection"
+    }
+
+    response_headers = [
+        (key, value)
+        for key, value
+        in response.headers.items()
+        if key.lower()
+        not in excluded_headers
+    ]
+
+    return Response(
+        response.content,
+        response.status_code,
+        response_headers
+    )
