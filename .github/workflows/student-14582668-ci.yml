@@ -111,13 +111,13 @@ jobs:
           docker run -d \
             --name "$DATABASE_CONTAINER" \
             --network "$CHECKLIST_NETWORK" \
-            -p 6005:6005 \
+            -p 6004:6004 \
             checklist-database-ci
 
       - name: Wait for Checklist database
         run: |
           for i in {1..30}; do
-            if curl --fail --silent http://localhost:6005/health; then
+            if curl --fail --silent http://localhost:6004/health; then
               echo ""
               echo "Checklist database is healthy."
               exit 0
@@ -134,7 +134,7 @@ jobs:
       - name: Verify Checklist seed records
         run: |
           CHECKLIST_COUNT=$(
-            curl --fail --silent http://localhost:6005/checklist-items \
+            curl --fail --silent http://localhost:6004/checklist-items \
               | python -c "import json, sys; print(len(json.load(sys.stdin)))"
           )
 
@@ -154,7 +154,7 @@ jobs:
             --name "$BACKEND_CONTAINER" \
             --network "$CHECKLIST_NETWORK" \
             -p 5005:5005 \
-            -e CHECKLIST_DATABASE_URL="http://$DATABASE_CONTAINER:6005" \
+            -e CHECKLIST_DATABASE_URL="http://$DATABASE_CONTAINER:6004" \
             -e OLLAMA_URL="http://ollama:11434/api/generate" \
             -e OLLAMA_MODEL="$OLLAMA_DEFAULT_MODEL" \
             checklist-backend-ci
