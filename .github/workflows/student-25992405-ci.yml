@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - student-25992405
+      - main
 
   pull_request:
     branches:
