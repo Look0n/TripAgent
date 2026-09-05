@@ -26,7 +26,7 @@ jobs:
 
 
       # ============================================
-      # VALIDATE COMPOSE
+      # VALIDATE DOCKER COMPOSE
       # ============================================
       - name: Validate Docker Compose
         run: |
@@ -34,14 +34,48 @@ jobs:
 
 
       # ============================================
-      # BUILD ACCOUNT SERVICES ONLY
+      # BUILD REQUIRED SERVICES
+      #
+      # Account frontend requires shared-gateway
+      # to exist because its nginx config resolves
+      # the service name "shared-gateway".
       # ============================================
-      - name: Build Account services
+      - name: Build Account and required shared services
         run: |
           docker compose build \
+            shared-database \
+            shared-gateway \
             account-database \
             account-backend \
             account-frontend
+
+
+      # ============================================
+      # START SHARED DATABASE
+      # ============================================
+      - name: Start Shared database
+        run: |
+          docker compose up -d shared-database
+
+
+      # ============================================
+      # WAIT FOR SHARED DATABASE
+      # ============================================
+      - name: Wait for Shared database
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:6000/health; then
+              echo "Shared database is healthy"
+              exit 0
+            fi
+
+            echo "Waiting for Shared database..."
+            sleep 2
+          done
+
+          echo "Shared database failed to become healthy"
+          docker compose logs shared-database
+          exit 1
 
 
       # ============================================
@@ -53,12 +87,12 @@ jobs:
 
 
       # ============================================
-      # WAIT FOR DATABASE
+      # WAIT FOR ACCOUNT DATABASE
       # ============================================
       - name: Wait for Account database
         run: |
           for i in {1..30}; do
-            if curl --fail http://localhost:6001/health; then
+            if curl --fail --silent http://localhost:6001/health; then
               echo "Account database is healthy"
               exit 0
             fi
@@ -75,8 +109,8 @@ jobs:
       # ============================================
       # START ACCOUNT BACKEND
       #
-      # --no-deps prevents Compose from starting
-      # Ollama automatically.
+      # --no-deps prevents Docker Compose from
+      # automatically starting Ollama.
       # ============================================
       - name: Start Account backend
         run: |
@@ -84,12 +118,12 @@ jobs:
 
 
       # ============================================
-      # WAIT FOR BACKEND
+      # WAIT FOR ACCOUNT BACKEND
       # ============================================
       - name: Wait for Account backend
         run: |
           for i in {1..30}; do
-            if curl --fail http://localhost:5001/health; then
+            if curl --fail --silent http://localhost:5001/health; then
               echo "Account backend is healthy"
               exit 0
             fi
@@ -104,7 +138,41 @@ jobs:
 
 
       # ============================================
+      # START SHARED GATEWAY
+      #
+      # --no-deps prevents Compose from starting
+      # all other feature backends.
+      # ============================================
+      - name: Start Shared gateway
+        run: |
+          docker compose up -d --no-deps shared-gateway
+
+
+      # ============================================
+      # WAIT FOR SHARED GATEWAY
+      # ============================================
+      - name: Wait for Shared gateway
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:5050/health; then
+              echo "Shared gateway is healthy"
+              exit 0
+            fi
+
+            echo "Waiting for Shared gateway..."
+            sleep 2
+          done
+
+          echo "Shared gateway failed to become healthy"
+          docker compose logs shared-gateway
+          exit 1
+
+
+      # ============================================
       # START ACCOUNT FRONTEND
+      #
+      # shared-gateway is already running, so nginx
+      # can resolve the Docker service name.
       # ============================================
       - name: Start Account frontend
         run: |
@@ -112,12 +180,12 @@ jobs:
 
 
       # ============================================
-      # WAIT FOR FRONTEND
+      # WAIT FOR ACCOUNT FRONTEND
       # ============================================
       - name: Wait for Account frontend
         run: |
           for i in {1..30}; do
-            if curl --fail http://localhost:3001/; then
+            if curl --fail --silent http://localhost:3001/; then
               echo "Account frontend is available"
               exit 0
             fi
@@ -134,6 +202,11 @@ jobs:
       # ============================================
       # SERVICE TESTS
       # ============================================
+      - name: Test Shared database health
+        run: |
+          curl --fail http://localhost:6000/health
+
+
       - name: Test Account database health
         run: |
           curl --fail http://localhost:6001/health
@@ -144,17 +217,24 @@ jobs:
           curl --fail http://localhost:5001/health
 
 
+      - name: Test Shared gateway health
+        run: |
+          curl --fail http://localhost:5050/health
+
+
       - name: Test Account frontend
         run: |
           curl --fail http://localhost:3001/
 
 
       # ============================================
-      # SHOW STATUS
+      # SHOW CONTAINER STATUS
       # ============================================
-      - name: Show Account container status
+      - name: Show Account CI container status
         run: |
           docker compose ps \
+            shared-database \
+            shared-gateway \
             account-database \
             account-backend \
             account-frontend
@@ -166,20 +246,26 @@ jobs:
       - name: Show logs on failure
         if: failure()
         run: |
+          echo "===== SHARED DATABASE ====="
+          docker compose logs shared-database || true
+
+          echo "===== SHARED GATEWAY ====="
+          docker compose logs shared-gateway || true
+
           echo "===== ACCOUNT DATABASE ====="
-          docker compose logs account-database
+          docker compose logs account-database || true
 
           echo "===== ACCOUNT BACKEND ====="
-          docker compose logs account-backend
+          docker compose logs account-backend || true
 
           echo "===== ACCOUNT FRONTEND ====="
-          docker compose logs account-frontend
+          docker compose logs account-frontend || true
 
 
       # ============================================
       # CLEANUP
       # ============================================
-      - name: Stop Account services
+      - name: Stop CI services
         if: always()
         run: |
           docker compose down -v
