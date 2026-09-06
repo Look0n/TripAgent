@@ -1,13 +1,13 @@
 from datetime import datetime, timezone
 import json
 
-from collectors.architecture_collector import collect_architecture_context
-from config.review_config import ARCHITECTURE_PROMPTS, IMPLEMENTATION_MODEL, REVIEW_MODEL
+from collectors.endpoints_collector import collect_endpoints_context
+from config.review_config import ENDPOINT_PROMPTS, IMPLEMENTATION_MODEL, REVIEW_MODEL
 from core.prompt_registry import load_prompt, render_prompt
 from core.ai_runner import run_implementation, run_review
 
 
-def run_architecture_pipeline(service_config, checks_only=False, project_context=None):
+def run_endpoints_pipeline(service_config, checks_only=False):
     result = {
         "service": service_config["name"],
         "started_at": datetime.now(timezone.utc).isoformat(),
@@ -18,32 +18,32 @@ def run_architecture_pipeline(service_config, checks_only=False, project_context
     }
     stage = "observe"
     try:
-        print("[ARCHITECTURE][OBSERVE] Inspecting files, Compose configuration and runtime", flush=True)
-        available, evidence = collect_architecture_context(service_config, project_context)
+        print("[ENDPOINTS][OBSERVE] Running read-only HTTP checks", flush=True)
+        available, evidence = collect_endpoints_context(service_config)
         result["evidence"] = evidence
         result["validation_status"] = evidence["validation_status"]
         if not available:
-            raise RuntimeError("No usable Compose configuration; see architecture evidence")
+            raise RuntimeError("No usable HTTP response; see evidence")
         result["stages"][stage] = "COLLECTED"
         if not checks_only:
             stage = "prompts"
-            templates = {key: load_prompt(path) for key, path in ARCHITECTURE_PROMPTS.items()}
+            templates = {key: load_prompt(path) for key, path in ENDPOINT_PROMPTS.items()}
             values = {"REVIEW_TARGET": service_config["name"], "VALIDATION_EVIDENCE": json.dumps(evidence, ensure_ascii=False)}
-            impl_prompt = templates["system"] + "\n\n" + render_prompt(templates["implementation"], values)
+            impl_prompt = render_prompt(templates["implementation"], values)
             render_prompt(templates["review"], {**values, "IMPLEMENTATION_RECOMMENDATION": "Pending"})
-            result["prompt_files"] = dict(ARCHITECTURE_PROMPTS)
+            result["prompt_files"] = dict(ENDPOINT_PROMPTS)
             result["models"] = {"implementation": IMPLEMENTATION_MODEL, "review": REVIEW_MODEL}
             result["stages"][stage] = "PASSED"
             stage = "implementation"
             result["model_status"] = "RUNNING"
-            print(f"[ARCHITECTURE][IMPLEMENTATION] Calling {IMPLEMENTATION_MODEL}", flush=True)
+            print(f"[ENDPOINTS][IMPLEMENTATION] Calling {IMPLEMENTATION_MODEL}", flush=True)
             result["implementation_prompt"] = impl_prompt
             result["impl"] = run_implementation(impl_prompt)
             result["stages"][stage] = "PASSED"
             stage = "review"
             review_prompt = render_prompt(templates["review"], {**values, "IMPLEMENTATION_RECOMMENDATION": result["impl"]})
             result["review_prompt"] = review_prompt
-            print(f"[ARCHITECTURE][REVIEW] Calling {REVIEW_MODEL}", flush=True)
+            print(f"[ENDPOINTS][REVIEW] Calling {REVIEW_MODEL}", flush=True)
             result["review"] = run_review(review_prompt)
             result["stages"][stage] = "PASSED"
             result["model_status"] = "COMPLETED"
@@ -59,5 +59,5 @@ def run_architecture_pipeline(service_config, checks_only=False, project_context
         if stage in ("implementation", "review"):
             result["model_status"] = "FAILED"
     result["finished_at"] = datetime.now(timezone.utc).isoformat()
-    print(f"[ARCHITECTURE][{result['execution_status']}] Architecture: {result.get('validation_status', 'UNAVAILABLE')}", flush=True)
+    print(f"[ENDPOINTS][{result['execution_status']}] HTTP: {result.get('validation_status', 'UNAVAILABLE')}", flush=True)
     return result

@@ -1,0 +1,13 @@
+Review target: {{REVIEW_TARGET}}
+
+Architecture evidence:
+{{VALIDATION_EVIDENCE}}
+
+Distinguish configuration_status from runtime_status and the not_verified list.
+Identify at most ONE minimal improvement supported by a FAIL finding.
+PASS is not a defect. Unavailable information must not be described as verified.
+If no change is supported, return: No evidence-backed improvement identified.
+Otherwise return:
+- Issue: [specific failed check and supporting evidence]
+- Recommendation: [smallest relevant correction and next verification]
+Maximum 60 words.

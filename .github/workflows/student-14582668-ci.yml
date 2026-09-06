@@ -184,14 +184,14 @@ jobs:
           docker run -d \
             --name "$FRONTEND_CONTAINER" \
             --network "$CHECKLIST_NETWORK" \
-            -p 3005:3005 \
+            -p 3004:3004 \
             -e CHECKLIST_API_URL="http://localhost:5005/api/checklist-items" \
             checklist-frontend-ci
 
       - name: Wait for Checklist frontend
         run: |
           for i in {1..30}; do
-            if curl --fail --silent http://localhost:3005/health; then
+            if curl --fail --silent http://localhost:3004/health; then
               echo ""
               echo "Checklist frontend is healthy."
               exit 0
@@ -207,7 +207,7 @@ jobs:
 
       - name: Verify Checklist frontend page
         run: |
-          curl --fail --silent http://localhost:3005/ \
+          curl --fail --silent http://localhost:3004/ \
             | grep --quiet "Pre-Trip Checklist"
 
       # ---------------------------------------------------
@@ -216,13 +216,13 @@ jobs:
       - name: Test Checklist read and filters
         run: |
           curl --fail --silent \
-            http://localhost:5005/api/checklist-items
+            http://localhost:5004/api/checklist-items
 
           curl --fail --silent \
-            "http://localhost:5005/api/checklist-items?item_type=packing"
+            "http://localhost:5004/api/checklist-items?item_type=packing"
 
           curl --fail --silent \
-            http://localhost:5005/api/checklist-items/1
+            http://localhost:5004/api/checklist-items/1
 
       - name: Test Checklist create update and delete
         run: |
@@ -231,7 +231,7 @@ jobs:
               -X POST \
               -H "Content-Type: application/json" \
               -d '{"title":"CI Test Item","item_type":"task","category":"Testing","description":"Created by GitHub Actions","priority":"Low","is_completed":false}' \
-              http://localhost:5005/api/checklist-items
+              http://localhost:5004/api/checklist-items
           )
 
           ITEM_ID=$(
@@ -245,12 +245,12 @@ jobs:
             -X PUT \
             -H "Content-Type: application/json" \
             -d '{"title":"Updated CI Test Item","is_completed":true}' \
-            "http://localhost:5005/api/checklist-items/$ITEM_ID" \
+            "http://localhost:5004/api/checklist-items/$ITEM_ID" \
             | grep --quiet 'Updated CI Test Item'
 
           curl --fail --silent \
             -X DELETE \
-            "http://localhost:5005/api/checklist-items/$ITEM_ID" \
+            "http://localhost:5004/api/checklist-items/$ITEM_ID" \
             | grep --quiet 'deleted successfully'
 
       - name: Test AI endpoint validation
@@ -262,7 +262,7 @@ jobs:
               -X POST \
               -H "Content-Type: application/json" \
               -d '{}' \
-              http://localhost:5005/api/checklist-items/recommend
+              http://localhost:5004/api/checklist-items/recommend
           )
 
           cat /tmp/checklist-ai-response.json
