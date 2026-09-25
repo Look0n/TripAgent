@@ -14,6 +14,7 @@ COPY templates/login.html /usr/share/nginx/html/login.html
 COPY templates/register.html /usr/share/nginx/html/register.html
 COPY templates/profile.html /usr/share/nginx/html/profile.html
 COPY templates/preference.html /usr/share/nginx/html/preference.html
+COPY templates/mcp.html /usr/share/nginx/html/mcp.html
 
 EXPOSE 80
 

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TripAgent - MCP Tools</title>
+    <link rel="stylesheet" href="/account/css/styles.css">
+</head>
+<body>
+<header class="topbar">
+    <a href="/" class="brand">TripAgent</a>
+    <nav>
+        <a href="/">Home</a>
+        <button id="logout-button" class="link-button">Logout</button>
+    </nav>
+</header>
+
+<main class="account-layout">
+    <aside class="sidebar">
+        <h2>Account</h2>
+        <a href="/account/profile">Profile</a>
+        <a href="/account/preferences">Preferences</a>
+        <a href="/account/mcp" class="active">MCP Service</a>
+    </aside>
+
+    <section class="content-card">
+        <h1>MCP Service</h1>
+        <p class="subtitle">
+            Explore the Account and shared TripAgent tools available through the shared MCP server.
+        </p>
+
+        <div class="mcp-mode-card">
+            <div>
+                <strong>MCP Mode</strong>
+                <p id="mcp-mode-text">Loading MCP mode...</p>
+            </div>
+            <label class="toggle-switch" aria-label="Toggle MCP mode">
+                <input type="checkbox" id="mcp-toggle">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="mcp-status-card">
+            <div>
+                <strong>Server status</strong>
+                <p id="mcp-status-text">Checking MCP server...</p>
+            </div>
+            <span id="mcp-status-dot" class="status-dot"></span>
+        </div>
+
+        <section class="mcp-section">
+            <h2>Available Tools</h2>
+            <p id="tool-count" class="subtitle"></p>
+            <div id="tool-list" class="tool-list"></div>
+        </section>
+
+        <section class="mcp-section">
+            <h2>Call a Tool</h2>
+
+            <label for="tool-select">Tool</label>
+            <select id="tool-select" class="mcp-action">
+                <option value="">Select a tool</option>
+            </select>
+
+            <p id="tool-description" class="tool-description"></p>
+
+            <label for="tool-arguments">Arguments (JSON)</label>
+            <textarea
+                id="tool-arguments"
+                class="mcp-action"
+                rows="8"
+                spellcheck="false"
+                placeholder='{}'
+            >{}</textarea>
+
+            <p class="ai-note">
+                Customer ID is supplied securely by the Account backend and does not need to be entered here.
+            </p>
+
+            <button id="call-tool-button" class="mcp-action" type="button">Call Tool</button>
+
+            <h3>Result</h3>
+            <pre id="tool-result" class="mcp-result">No tool called yet.</pre>
+        </section>
+    </section>
+</main>
+
+<script>
+let availableTools = [];
+let mcpEnabled = false;
+
+async function ensureAuthenticated() {
+    const response = await fetch("/api/account/session", {
+        credentials: "include"
+    });
+
+    if (response.status === 401) {
+        window.location.href = "/account/login";
+        return false;
+    }
+
+    return true;
+}
+
+function setMcpControlsEnabled(enabled) {
+    document.querySelectorAll(".mcp-action").forEach((element) => {
+        element.disabled = !enabled;
+    });
+}
+
+function clearTools() {
+    availableTools = [];
+
+    document.getElementById("tool-count").textContent =
+        "MCP mode is disabled.";
+    document.getElementById("tool-list").innerHTML = "";
+
+    const select = document.getElementById("tool-select");
+    select.innerHTML = '<option value="">Select a tool</option>';
+
+    document.getElementById("tool-description").textContent = "";
+    document.getElementById("tool-arguments").value = "{}";
+}
+
+function updateModeInterface(enabled) {
+    mcpEnabled = enabled;
+
+    const toggle = document.getElementById("mcp-toggle");
+    const modeText = document.getElementById("mcp-mode-text");
+
+    toggle.checked = enabled;
+    modeText.textContent = enabled
+        ? "MCP tools are enabled for the Account feature."
+        : "MCP tools are disabled. No MCP server calls will be made.";
+
+    setMcpControlsEnabled(enabled);
+
+    if (!enabled) {
+        clearTools();
+
+        const statusText = document.getElementById("mcp-status-text");
+        const statusDot = document.getElementById("mcp-status-dot");
+
+        statusText.textContent = "MCP mode disabled";
+        statusDot.classList.remove("online", "offline");
+        statusDot.classList.add("disabled");
+    }
+}
+
+async function loadMode() {
+    const response = await fetch("/api/account/mcp/mode", {
+        credentials: "include"
+    });
+
+    if (response.status === 401) {
+        window.location.href = "/account/login";
+        return false;
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || "Unable to load MCP mode.");
+    }
+
+    updateModeInterface(Boolean(data.enabled));
+    return Boolean(data.enabled);
+}
+
+async function changeMode(enabled) {
+    const response = await fetch("/api/account/mcp/mode", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        credentials: "include",
+        body: JSON.stringify({ enabled })
+    });
+
+    if (response.status === 401) {
+        window.location.href = "/account/login";
+        return;
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || "Unable to change MCP mode.");
+    }
+
+    updateModeInterface(Boolean(data.enabled));
+
+    if (data.enabled) {
+        await loadStatus();
+        await loadTools();
+    }
+}
+
+async function loadStatus() {
+    const statusText = document.getElementById("mcp-status-text");
+    const statusDot = document.getElementById("mcp-status-dot");
+
+    statusDot.classList.remove("online", "offline", "disabled");
+
+    if (!mcpEnabled) {
+        statusText.textContent = "MCP mode disabled";
+        statusDot.classList.add("disabled");
+        return;
+    }
+
+    statusText.textContent = "Checking MCP server...";
+
+    try {
+        const response = await fetch("/api/account/mcp/status", {
+            credentials: "include"
+        });
+
+        if (response.status === 401) {
+            window.location.href = "/account/login";
+            return;
+        }
+
+        const data = await response.json();
+
+        if (response.ok && data.available) {
+            statusText.textContent =
+                `Connected - ${data.tool_count} tools registered`;
+            statusDot.classList.add("online");
+        } else {
+            statusText.textContent =
+                data.error || data.message || "MCP server unavailable";
+            statusDot.classList.add("offline");
+        }
+    } catch (error) {
+        statusText.textContent = "Unable to contact the MCP service";
+        statusDot.classList.add("offline");
+    }
+}
+
+async function loadTools() {
+    if (!mcpEnabled) {
+        clearTools();
+        return;
+    }
+
+    const response = await fetch("/api/account/mcp/tools", {
+        credentials: "include"
+    });
+
+    if (response.status === 401) {
+        window.location.href = "/account/login";
+        return;
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        document.getElementById("tool-list").textContent =
+            data.error || "Unable to load MCP tools.";
+        return;
+    }
+
+    availableTools = data.tools || [];
+
+    document.getElementById("tool-count").textContent =
+        `${data.count} tools available to the Account feature.`;
+
+    const list = document.getElementById("tool-list");
+    const select = document.getElementById("tool-select");
+
+    list.innerHTML = "";
+    select.innerHTML = '<option value="">Select a tool</option>';
+
+    for (const tool of availableTools) {
+        const card = document.createElement("div");
+        card.className = "tool-card";
+
+        const name = document.createElement("strong");
+        name.textContent = tool.name;
+
+        const description = document.createElement("p");
+        description.textContent =
+            tool.description || "No description provided.";
+
+        card.appendChild(name);
+        card.appendChild(description);
+        list.appendChild(card);
+
+        const option = document.createElement("option");
+        option.value = tool.name;
+        option.textContent = tool.name;
+        select.appendChild(option);
+    }
+}
+
+function buildArgumentTemplate(tool) {
+    if (!tool || !tool.input_schema) {
+        return {};
+    }
+
+    const properties = tool.input_schema.properties || {};
+    const template = {};
+
+    for (const [name, schema] of Object.entries(properties)) {
+        if (name === "customer_id" || name === "feature") {
+            continue;
+        }
+
+        if (schema.type === "object") {
+            template[name] = {};
+        } else if (schema.type === "integer" || schema.type === "number") {
+            template[name] = 0;
+        } else if (schema.type === "boolean") {
+            template[name] = false;
+        } else if (schema.default !== undefined) {
+            template[name] = schema.default;
+        } else {
+            template[name] = "";
+        }
+    }
+
+    return template;
+}
+
+document.getElementById("mcp-toggle").addEventListener("change", async (event) => {
+    const requestedMode = event.target.checked;
+    event.target.disabled = true;
+
+    try {
+        await changeMode(requestedMode);
+    } catch (error) {
+        event.target.checked = !requestedMode;
+        document.getElementById("mcp-mode-text").textContent = error.message;
+    } finally {
+        event.target.disabled = false;
+    }
+});
+
+document.getElementById("tool-select").addEventListener("change", (event) => {
+    const tool = availableTools.find(item => item.name === event.target.value);
+
+    document.getElementById("tool-description").textContent =
+        tool ? (tool.description || "") : "";
+
+    document.getElementById("tool-arguments").value = JSON.stringify(
+        buildArgumentTemplate(tool),
+        null,
+        2
+    );
+});
+
+document.getElementById("call-tool-button").addEventListener("click", async () => {
+    const toolName = document.getElementById("tool-select").value;
+    const resultBox = document.getElementById("tool-result");
+
+    if (!mcpEnabled) {
+        resultBox.textContent = "Enable MCP mode before calling a tool.";
+        return;
+    }
+
+    if (!toolName) {
+        resultBox.textContent = "Select a tool first.";
+        return;
+    }
+
+    let argumentsObject;
+
+    try {
+        argumentsObject = JSON.parse(
+            document.getElementById("tool-arguments").value || "{}"
+        );
+    } catch (error) {
+        resultBox.textContent = "Arguments must contain valid JSON.";
+        return;
+    }
+
+    resultBox.textContent = "Calling tool...";
+
+    try {
+        const response = await fetch("/api/account/mcp/call", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify({
+                tool: toolName,
+                arguments: argumentsObject
+            })
+        });
+
+        if (response.status === 401) {
+            window.location.href = "/account/login";
+            return;
+        }
+
+        const data = await response.json();
+        resultBox.textContent = JSON.stringify(data, null, 2);
+    } catch (error) {
+        resultBox.textContent = "Unable to call the MCP tool.";
+    }
+});
+
+document.getElementById("logout-button").addEventListener("click", async () => {
+    await fetch("/api/access/logout", {
+        method: "POST",
+        credentials: "include"
+    });
+
+    window.location.href = "/account/login";
+});
+
+(async function initialisePage() {
+    const authenticated = await ensureAuthenticated();
+
+    if (!authenticated) {
+        return;
+    }
+
+    try {
+        const enabled = await loadMode();
+
+        if (enabled) {
+            await loadStatus();
+            await loadTools();
+        }
+    } catch (error) {
+        document.getElementById("mcp-mode-text").textContent = error.message;
+        setMcpControlsEnabled(false);
+    }
+})();
+</script>
+</body>
+</html>

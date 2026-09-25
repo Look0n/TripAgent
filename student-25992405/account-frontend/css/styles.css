@@ -450,3 +450,155 @@ button:hover,
         padding: 24px;
     }
 }
+/* =========================================
+   MCP SERVICE
+   ========================================= */
+
+.mcp-status-card {
+    margin-top: 24px;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.mcp-status-card p {
+    margin: 6px 0 0;
+    color: #6b7280;
+}
+
+.status-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #9ca3af;
+}
+
+.status-dot.online {
+    background: #22c55e;
+}
+
+.status-dot.offline {
+    background: #ef4444;
+}
+
+.mcp-section {
+    margin-top: 30px;
+}
+
+.tool-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.tool-card {
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.tool-card p,
+.tool-description {
+    margin-bottom: 0;
+    color: #6b7280;
+}
+
+.mcp-result {
+    min-height: 120px;
+    padding: 16px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #111827;
+    color: #f9fafb;
+}
+
+@media (max-width: 800px) {
+    .tool-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* MCP mode toggle */
+.mcp-mode-card {
+    margin-top: 24px;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.mcp-mode-card p {
+    margin: 6px 0 0;
+    color: #6b7280;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    flex: 0 0 auto;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background: #9ca3af;
+    border-radius: 28px;
+    transition: 0.2s;
+}
+
+.toggle-slider::before {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 4px;
+    bottom: 4px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: #2563eb;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(24px);
+}
+
+.toggle-switch input:disabled + .toggle-slider {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+.status-dot.disabled {
+    background: #9ca3af;
+}
+
+.mcp-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

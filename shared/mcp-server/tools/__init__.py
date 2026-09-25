@@ -1,0 +1,1 @@
+"""MCP tools exposed by the TripAgent shared MCP server."""

@@ -14,8 +14,16 @@ jobs:
   account-ci:
     runs-on: ubuntu-latest
 
+    # ============================================
+    # CI ENVIRONMENT
+    #
+    # MCP and RAG integrations remain in the
+    # application but are disabled during CI/CD.
+    # ============================================
     env:
       OLLAMA_DEFAULT_MODEL: qwen2.5:0.5b
+      MCP_ENABLED: "false"
+      RAG_ENABLED: "false"
 
     steps:
       # ============================================
@@ -36,9 +44,12 @@ jobs:
       # ============================================
       # BUILD REQUIRED SERVICES
       #
+      # MCP and RAG servers are intentionally not
+      # started in CI.
+      #
       # Account frontend requires shared-gateway
-      # to exist because its nginx config resolves
-      # the service name "shared-gateway".
+      # because its nginx config resolves the
+      # service name "shared-gateway".
       # ============================================
       - name: Build Account and required shared services
         run: |
@@ -110,7 +121,11 @@ jobs:
       # START ACCOUNT BACKEND
       #
       # --no-deps prevents Docker Compose from
-      # automatically starting Ollama.
+      # automatically starting Ollama or unrelated
+      # services.
+      #
+      # MCP_ENABLED=false and RAG_ENABLED=false
+      # are inherited from the CI environment.
       # ============================================
       - name: Start Account backend
         run: |
@@ -135,6 +150,38 @@ jobs:
           echo "Account backend failed to become healthy"
           docker compose logs account-backend
           exit 1
+
+
+      # ============================================
+      # VERIFY AI INTEGRATION MODES
+      #
+      # CI must execute with MCP and RAG disabled.
+      # This also verifies docker-compose correctly
+      # passed the environment variables into the
+      # Account backend container.
+      # ============================================
+      - name: Verify MCP and RAG are disabled in CI
+        run: |
+          MCP_VALUE=$(docker compose exec -T account-backend \
+            printenv MCP_ENABLED)
+
+          RAG_VALUE=$(docker compose exec -T account-backend \
+            printenv RAG_ENABLED)
+
+          echo "MCP_ENABLED=$MCP_VALUE"
+          echo "RAG_ENABLED=$RAG_VALUE"
+
+          if [ "$MCP_VALUE" != "false" ]; then
+            echo "ERROR: MCP must be disabled during CI"
+            exit 1
+          fi
+
+          if [ "$RAG_VALUE" != "false" ]; then
+            echo "ERROR: RAG must be disabled during CI"
+            exit 1
+          fi
+
+          echo "MCP and RAG are correctly disabled for CI"
 
 
       # ============================================
@@ -170,9 +217,6 @@ jobs:
 
       # ============================================
       # START ACCOUNT FRONTEND
-      #
-      # shared-gateway is already running, so nginx
-      # can resolve the Docker service name.
       # ============================================
       - name: Start Account frontend
         run: |

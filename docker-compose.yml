@@ -142,6 +142,11 @@ services:
       ACCOUNT_DATABASE_URL: http://account-database:6001
       OLLAMA_URL: http://ollama:11434
       OLLAMA_MODEL: ${OLLAMA_DEFAULT_MODEL}
+      MCP_SERVER_URL: http://host.docker.internal:7001/mcp
+      MCP_ENABLED: ${MCP_ENABLED:-true}
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     depends_on:
       account-database:
