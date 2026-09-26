@@ -1,0 +1,7 @@
+{
+  "name": "tripagent-shared-rag",
+  "command": "python",
+  "args": [
+    "rag_server.py"
+  ]
+}

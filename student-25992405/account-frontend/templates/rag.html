@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TripAgent - RAG Knowledge</title>
+<link rel="stylesheet" href="/account/css/styles.css">
+</head>
+<body>
+<header class="topbar"><a href="/" class="brand">TripAgent</a>
+<nav><a href="/">Home</a><button id="logout-button" class="link-button">Logout</button></nav></header>
+<main class="account-layout">
+<aside class="sidebar"><h2>Account</h2>
+<a href="/account/profile">Profile</a><a href="/account/preferences">Preferences</a>
+<a href="/account/mcp">MCP Service</a><a href="/account/rag" class="active">RAG Service</a></aside>
+<section class="content-card">
+<h1>Account RAG Service</h1>
+<p class="subtitle">Ask questions using only the Account feature knowledge corpus.</p>
+<div class="mcp-status-card"><div><strong>RAG status</strong>
+<p id="rag-status">Checking shared RAG service...</p></div>
+<label class="rag-switch"><input id="rag-toggle" type="checkbox"><span class="rag-slider"></span></label></div>
+<section class="mcp-section"><h2>Ask Account Knowledge</h2>
+<label for="rag-question">Question</label>
+<textarea id="rag-question" rows="4" placeholder="What are travel preferences?"></textarea>
+<label for="rag-k">Retrieved passages</label>
+<select id="rag-k"><option value="3">3</option><option value="5" selected>5</option><option value="8">8</option></select>
+<div class="rag-actions">
+<button id="answer-button" class="rag-action" type="button">Answer with RAG</button>
+<button id="retrieve-button" class="rag-action secondary-button" type="button">Retrieve Context</button>
+<button id="refresh-button" class="rag-action secondary-button" type="button">Refresh Account Corpus</button>
+</div>
+<h3>Result</h3><pre id="rag-result" class="mcp-result">No RAG request yet.</pre></section>
+</section></main>
+<script>
+const toggle=document.getElementById("rag-toggle"),statusText=document.getElementById("rag-status"),result=document.getElementById("rag-result");
+async function ensureAuthenticated(){const r=await fetch("/api/account/session",{credentials:"include"});if(r.status===401){location.href="/account/login";return false}return true}
+function updateControls(e){document.querySelectorAll(".rag-action").forEach(b=>b.disabled=!e);document.getElementById("rag-question").disabled=!e;document.getElementById("rag-k").disabled=!e}
+async function loadMode(){const r=await fetch("/api/account/rag/mode",{credentials:"include"}),d=await r.json();toggle.checked=!!d.enabled;updateControls(!!d.enabled)}
+async function loadStatus(){const r=await fetch("/api/account/rag/status",{credentials:"include"}),d=await r.json();statusText.textContent=!d.enabled?"RAG mode is disabled.":d.available?"Connected to shared RAG service.":(d.error||"Shared RAG service unavailable.")}
+toggle.addEventListener("change",async()=>{const r=await fetch("/api/account/rag/mode",{method:"PUT",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({enabled:toggle.checked})}),d=await r.json();toggle.checked=!!d.enabled;updateControls(!!d.enabled);await loadStatus()});
+async function postRag(path,body={}){result.textContent="Working...";const r=await fetch(path,{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();result.textContent=JSON.stringify(d,null,2)}
+document.getElementById("answer-button").onclick=()=>postRag("/api/account/rag/answer",{query:document.getElementById("rag-question").value,k:Number(document.getElementById("rag-k").value)});
+document.getElementById("retrieve-button").onclick=()=>postRag("/api/account/rag/retrieve",{query:document.getElementById("rag-question").value,k:Number(document.getElementById("rag-k").value)});
+document.getElementById("refresh-button").onclick=()=>postRag("/api/account/rag/refresh");
+document.getElementById("logout-button").onclick=async()=>{await fetch("/api/account/logout",{method:"POST",credentials:"include"});location.href="/account/login"};
+(async()=>{if(await ensureAuthenticated()){await loadMode();await loadStatus()}})();
+</script></body></html>
