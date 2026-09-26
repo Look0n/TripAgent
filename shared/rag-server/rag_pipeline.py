@@ -182,67 +182,37 @@ def _normalise_records(payload: Any) -> list[dict[str, Any]]:
 
 
 def load_account_database_chunks() -> list[dict[str, Any]]:
-    """Tier 1: retrieve Account database facts without storing sensitive field values."""
+    """Tier 1: record Account database service availability without indexing customer data."""
     base_url = FEATURE_DATABASE_URLS["account"].rstrip("/")
-    chunks: list[dict[str, Any]] = []
-    # Try common collection endpoints. If none is available, record availability only.
-    records: list[dict[str, Any]] = []
-    source_endpoint = None
-    for endpoint in ("/customers", "/api/customers"):
-        try:
-            response = requests.get(f"{base_url}{endpoint}", timeout=5)
-            if response.ok:
-                candidate = _normalise_records(response.json())
-                if candidate:
-                    records = candidate
-                    source_endpoint = endpoint
-                    break
-        except Exception:
-            continue
-
-    if records:
-        field_names = sorted({str(k) for row in records for k in row.keys()})
-        chunks.extend([
-            {
-                "chunk_id": "account_db_customer_count",
-                "source_id": f"account-database:{source_endpoint}",
-                "authority_tier": "tier_1",
-                "text": f"Account database contains {len(records)} customer records.",
-                "metadata": {"source_type": "database_service", "metric": "count"},
-                "indexed_at": now_iso(),
+    try:
+        response = requests.get(f"{base_url}/health", timeout=5)
+        response.raise_for_status()
+        return [{
+            "chunk_id": "account_db_health",
+            "source_id": "account-database:/health",
+            "authority_tier": "tier_1",
+            "text": "The TripAgent Account database service is available.",
+            "metadata": {
+                "source_type": "database_service",
+                "metric": "health",
+                "privacy_scope": "service-only",
             },
-            {
-                "chunk_id": "account_db_customer_schema",
-                "source_id": f"account-database:{source_endpoint}",
-                "authority_tier": "tier_1",
-                "text": "Account customer records expose fields: " + ", ".join(field_names) + ".",
-                "metadata": {"source_type": "database_service", "metric": "schema"},
-                "indexed_at": now_iso(),
+            "indexed_at": now_iso(),
+        }]
+    except Exception as exc:
+        return [{
+            "chunk_id": "account_db_unavailable",
+            "source_id": "account-database:/health",
+            "authority_tier": "tier_1",
+            "text": "The TripAgent Account database service was unavailable when the corpus was refreshed.",
+            "metadata": {
+                "source_type": "database_service",
+                "available": False,
+                "privacy_scope": "service-only",
+                "error_type": type(exc).__name__,
             },
-        ])
-    else:
-        try:
-            response = requests.get(f"{base_url}/health", timeout=5)
-            response.raise_for_status()
-            chunks.append({
-                "chunk_id": "account_db_health",
-                "source_id": "account-database:/health",
-                "authority_tier": "tier_1",
-                "text": "The TripAgent Account database service is available.",
-                "metadata": {"source_type": "database_service", "metric": "health"},
-                "indexed_at": now_iso(),
-            })
-        except Exception as exc:
-            chunks.append({
-                "chunk_id": "account_db_unavailable",
-                "source_id": "account-database",
-                "authority_tier": "tier_1",
-                "text": f"Account database service was unavailable while the corpus was refreshed: {exc}",
-                "metadata": {"source_type": "database_service", "available": False},
-                "indexed_at": now_iso(),
-            })
-    return chunks
-
+            "indexed_at": now_iso(),
+        }]
 
 def load_database_chunks(feature: str) -> list[dict[str, Any]]:
     feature = validate_feature(feature)
@@ -481,14 +451,9 @@ def retrieve_context(query: str, feature: str, k: int = 5, caller: str = "studen
                     "distance": distances[i] if i < len(distances) else None,
                     "text": docs[i] if i < len(docs) else "",
                 })
-            tier_weight = {"tier_1": 3, "tier_2": 2, "tier_3": 1}
-            ranked.sort(
-                key=lambda x: (
-                    tier_weight.get(x.get("authority_tier"), 0),
-                    -(x.get("distance") if isinstance(x.get("distance"), (int, float)) else 1e9),
-                ),
-                reverse=True,
-            )
+            # Chroma already returns results in semantic relevance order.
+            # Preserve that order so the best semantic match remains the top chunk.
+            # Authority tier is retained as metadata and is used by confidence scoring.
         except Exception:
             retrieval_mode = "lexical_fallback"
             if not _last_corpus_chunks.get(feature) and not corpus_path(feature).exists():
@@ -532,22 +497,24 @@ def confidence_from_results(results: list[dict[str, Any]]) -> str:
 def generate_with_ollama(query: str, context: str) -> str:
     model_name = os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")
     ollama_generate_url = os.getenv("OLLAMA_GENERATE_URL", "http://localhost:11434/api/generate")
-    prompt = f"""You are a retrieval-grounded TripAgent assistant.
-Use only the provided context.
-If evidence is missing, return exactly: Insufficient evidence.
+    prompt = f"""You are the TripAgent retrieval-grounded assistant.
+
+Answer the user's question using only the retrieved context below.
+
+Rules:
+- If any retrieved passage directly answers the question, use that evidence and answer concisely.
+- Some retrieved passages may be unrelated. Ignore unrelated passages instead of treating them as a reason to reject the answer.
+- Do not add facts that are not supported by the retrieved context.
+- Only return exactly "Insufficient evidence." when none of the retrieved passages contains enough information to answer the question.
+- Return only the answer text. Do not add headings such as "Answer" or "Evidence".
 
 QUESTION:
 {query}
 
-CONTEXT:
+RETRIEVED CONTEXT:
 {context}
 
-Return exactly:
-Answer:
-<answer>
-
-Evidence:
-<summary>
+ANSWER:
 """
     try:
         resp = requests.post(
