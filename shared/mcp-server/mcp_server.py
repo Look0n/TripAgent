@@ -1,6 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 
-from tool_registry import ACCOUNT_TOOLS, SHARED_TOOLS
+from tool_registry import ACCOUNT_TOOLS, ACCOMMODATION_TOOLS, SHARED_TOOLS
 from tools.account_tools import (
     check_profile_completeness as check_profile_completeness_impl,
     get_customer_preferences as get_customer_preferences_impl,
@@ -8,6 +8,11 @@ from tools.account_tools import (
     get_customer_summary as get_customer_summary_impl,
     update_customer_preferences as update_customer_preferences_impl,
 )
+
+from tools.accommodation_tools import (
+    search_accommodations as search_accommodations_impl,
+)
+
 from tools.tripagent_tools import (
     get_service_status as get_service_status_impl,
     get_system_summary as get_system_summary_impl,
@@ -65,6 +70,24 @@ def check_profile_completeness(customer_id: int) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Accommodation feature tools
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def search_accommodations(
+    city: str,
+    max_price: float | None = None,
+    guests: int | None = None,
+) -> dict:
+    """Search TripAgent accommodation records."""
+    return search_accommodations_impl(
+        city=city,
+        max_price=max_price,
+        guests=guests,
+    )
+    
+
+# ---------------------------------------------------------------------------
 # Shared TripAgent tools
 # ---------------------------------------------------------------------------
 
@@ -109,6 +132,10 @@ if __name__ == "__main__":
     print("\nAccount tools:")
     for tool_name in ACCOUNT_TOOLS:
         print(f"- {tool_name}")
+        
+    print("\nAccommodation tools:")
+    for tool_name in ACCOMMODATION_TOOLS:
+        print(f"- {tool_name}")
 
     print("\nShared TripAgent tools:")
     for tool_name in SHARED_TOOLS:
@@ -116,7 +143,7 @@ if __name__ == "__main__":
 
     print(
         f"\nTotal registered tools: "
-        f"{len(ACCOUNT_TOOLS) + len(SHARED_TOOLS)}"
+        f"{len(ACCOUNT_TOOLS) + len(ACCOMMODATION_TOOLS) + len(SHARED_TOOLS)}"
     )
     print("=" * 60)
 

@@ -26,7 +26,7 @@ SUPPORTED_FEATURES = {
 
 FEATURE_DIRS = {
     "account": REPO_DIR / "student-25992405",
-    "accommodation": REPO_DIR / "student-25992402",
+    "accommodation": REPO_DIR / "student-14649634",
     "attractions": REPO_DIR / "student-25992374",
     "checklist": REPO_DIR / "student-25992424",
     "flight": REPO_DIR / "student-25992381",
@@ -60,7 +60,37 @@ FEATURE_KNOWLEDGE = {
             "text": "Account profile and preference operations require an authenticated customer session and should operate on that customer's data.",
         },
     ],
-    "accommodation": [],
+    "accommodation": [
+        {
+            "chunk_id": "accommodation_knowledge_search",
+            "text": (
+                "TripAgent Accommodation allows users to browse, "
+                "search, filter, and view accommodation records."
+            ),
+        },
+        {
+            "chunk_id": "accommodation_knowledge_filters",
+            "text": (
+                "Accommodation records can be searched using travel "
+                "requirements including city, budget, and guest capacity."
+            ),
+        },
+        {
+            "chunk_id": "accommodation_knowledge_availability",
+            "text": (
+                "If accommodation availability information is missing "
+                "or incomplete, the system returns an unknown availability "
+                "status rather than assuming the accommodation is unavailable."
+            ),
+        },
+        {
+            "chunk_id": "accommodation_knowledge_ai",
+            "text": (
+                "The Accommodation Service provides AI-assisted "
+                "recommendations using stored accommodation records."
+            ),
+        },
+    ],
     "attractions": [],
     "checklist": [],
     "flight": [],
@@ -213,11 +243,55 @@ def load_account_database_chunks() -> list[dict[str, Any]]:
             },
             "indexed_at": now_iso(),
         }]
+        
+def load_accommodation_database_chunks() -> list[dict[str, Any]]:
+    base_url = FEATURE_DATABASE_URLS["accommodation"].rstrip("/")
+
+    try:
+        response = requests.get(
+            f"{base_url}/health",
+            timeout=5,
+        )
+        response.raise_for_status()
+
+        return [{
+            "chunk_id": "accommodation_db_health",
+            "source_id": "accommodation-database:/health",
+            "authority_tier": "tier_1",
+            "text": (
+                "The TripAgent Accommodation database "
+                "service is available."
+            ),
+            "metadata": {
+                "source_type": "database_service",
+                "metric": "health",
+            },
+            "indexed_at": now_iso(),
+        }]
+
+    except Exception as exc:
+        return [{
+            "chunk_id": "accommodation_db_unavailable",
+            "source_id": "accommodation-database:/health",
+            "authority_tier": "tier_1",
+            "text": (
+                "The TripAgent Accommodation database service "
+                "was unavailable when the corpus was refreshed."
+            ),
+            "metadata": {
+                "source_type": "database_service",
+                "available": False,
+                "error_type": type(exc).__name__,
+            },
+            "indexed_at": now_iso(),
+        }]
 
 def load_database_chunks(feature: str) -> list[dict[str, Any]]:
     feature = validate_feature(feature)
     if feature == "account":
         return load_account_database_chunks()
+    if feature == "accommodation":
+        return load_accommodation_database_chunks()
 
     # Placeholder for team features until their database contracts are known.
     return [{
@@ -541,6 +615,21 @@ def answer_question(query: str, feature: str, k: int = 5, caller: str = "student
         return output
 
     results = retrieval.get("results", [])
+    
+    if feature == "accommodation":
+        relevant_results = [
+            r for r in results
+            if (
+                r.get("source_id") == "rag-knowledge:accommodation"
+                and r.get("distance") is not None
+                and r.get("distance") <= 1.50
+            )
+        ]
+        
+        if not relevant_results:
+            result = []
+            answer = "Insufficient evidence."
+    
     context = "\n\n".join(r.get("text", "") for r in results)
     answer = generate_with_ollama(query, context)
     citations = [{
