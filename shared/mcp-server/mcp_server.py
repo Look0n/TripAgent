@@ -11,6 +11,9 @@ from tools.account_tools import (
 
 from tools.accommodation_tools import (
     search_accommodations as search_accommodations_impl,
+    get_accommodations as get_accommodations_impl,
+    get_accommodation_by_city as get_accommodation_by_city_impl,
+    check_accommodation_availability as check_accommodation_availability_impl,
 )
 
 from tools.tripagent_tools import (
@@ -74,16 +77,45 @@ def check_profile_completeness(customer_id: int) -> dict:
 # ---------------------------------------------------------------------------
 
 @mcp.tool()
+def get_accommodations() -> dict:
+    return get_accommodations_impl()
+
+
+@mcp.tool()
+def get_accommodation_by_city(
+    city: str,
+) -> dict:
+    return get_accommodation_by_city_impl(
+        city
+    )
+    
+    
+@mcp.tool()
 def search_accommodations(
     city: str,
     max_price: float | None = None,
     guests: int | None = None,
+    type: str | None = None,
 ) -> dict:
     """Search TripAgent accommodation records."""
     return search_accommodations_impl(
         city=city,
         max_price=max_price,
         guests=guests,
+        type=type,
+    )
+    
+    
+@mcp.tool()
+def check_accommodation_availability(
+    accommodation_id: int,
+    check_in: str,
+    check_out: str,
+) -> dict:
+    return check_accommodation_availability_impl(
+        accommodation_id,
+        check_in,
+        check_out,
     )
     
 
