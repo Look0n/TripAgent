@@ -10,7 +10,10 @@ ACCOUNT_TOOLS = [
 ]
 
 ACCOMMODATION_TOOLS = [
+    "get_accommodations",
+    "get_accommodations_by_city",
     "search_accommodations",
+    "get_available_accommodations",
 ]
 
 SHARED_TOOLS = [
