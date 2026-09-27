@@ -11,6 +11,18 @@ MCP_SERVER_URL = os.getenv(
 )
 
 
+def call_mcp_tool(
+    tool_name: str,
+    arguments: dict | None = None,
+):
+    return asyncio.run(
+        _call_mcp_tool_async(
+            tool_name,
+            arguments or {},
+        )
+    )
+    
+
 async def _call_mcp_tool_async(
     tool_name: str,
     arguments: dict,
@@ -47,11 +59,6 @@ async def _call_mcp_tool_async(
                     if hasattr(item, "text"):
                         messages.append(item.text)
 
-                # raise RuntimeError(
-                #     "MCP tool call failed: "
-                #     + " | ".join(messages)
-                # )
-                
                 error_message = (
                     "MCP tool call failed: "
                     + " | ".join(messages)

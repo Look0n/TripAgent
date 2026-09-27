@@ -35,6 +35,20 @@ def accommodation_edit(accommodation_id):
         "accommodation_edit.html",
         accommodation_id=accommodation_id
     )
+    
+    
+@app.route("/mcp")
+def mcp_page():
+    return render_template(
+        "mcp.html"
+    )
+
+
+@app.route("/rag")
+def rag_page():
+    return render_template(
+        "rag.html"
+    )
 
 
 @app.route("/health")
