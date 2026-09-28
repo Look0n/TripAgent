@@ -617,18 +617,26 @@ def answer_question(query: str, feature: str, k: int = 5, caller: str = "student
     results = retrieval.get("results", [])
     
     if feature == "accommodation":
-        relevant_results = [
-            r for r in results
-            if (
-                r.get("source_id") == "rag-knowledge:accommodation"
-                and r.get("distance") is not None
-                and r.get("distance") <= 1.50
-            )
-        ]
-        
-        if not relevant_results:
-            result = []
-            answer = "Insufficient evidence."
+        query_words = {
+            word.strip(".,?!").rstrip("s")
+            for word in query.lower().split()
+        }
+
+        relevant_results = []
+
+        for r in results:
+            if r.get("source_id") != "rag-knowledge:accommodation":
+                continue
+
+            text_words = {
+                word.rstrip("s")
+                for word in r.get("text", "").lower().split()
+            }
+
+            if len(query_words & text_words) >= 2:
+                relevant_results.append(r)
+
+        results = relevant_results
     
     context = "\n\n".join(r.get("text", "") for r in results)
     answer = generate_with_ollama(query, context)

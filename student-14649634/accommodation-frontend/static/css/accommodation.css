@@ -98,6 +98,7 @@ button:active {
 
     text-align: left;
     font-weight: 500;
+    font-size: 14px;
 
     cursor: pointer;
 }
@@ -722,4 +723,132 @@ button:active {
 .chat-message strong {
     display: inline;
     margin-right: 6px;
+}
+
+.mcp-tool-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+
+    margin-bottom: 28px;
+}
+
+.mcp-tool-card {
+    padding: 16px;
+
+    border: 1px solid #d9dee8;
+    border-radius: 9px;
+
+    background: white;
+}
+
+.mcp-tool-card p {
+    margin-bottom: 0;
+    color: #667085;
+}
+
+.mcp-call-section {
+    margin-top: 30px;
+}
+
+.mcp-call-section label {
+    display: block;
+
+    margin-top: 14px;
+    margin-bottom: 6px;
+
+    font-weight: 600;
+}
+
+.mcp-call-section select,
+.mcp-call-section textarea {
+    width: 100%;
+
+    padding: 10px;
+
+    border: 1px solid #cfd5df;
+    border-radius: 7px;
+
+    box-sizing: border-box;
+}
+
+.mcp-call-section button {
+    margin-top: 14px;
+}
+
+.result {
+    min-height: 100px;
+
+    padding: 16px;
+
+    border-radius: 8px;
+
+    background: #111827;
+    color: white;
+
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
+.status-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px;
+    margin: 20px 0;
+
+    border: 1px solid #d9dee8;
+    border-radius: 10px;
+
+    background: #f8fafc;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+
+    border-radius: 50%;
+}
+
+.status-on {
+    background: #22c55e;
+}
+
+.status-off {
+    background: #9ca3af;
+}
+
+.status-error {
+    background: #ef4444;
+}
+
+.rag-mode-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+#ragQuestion,
+#ragK {
+    width: 100%;
+    box-sizing: border-box;
+
+    margin-top: 6px;
+    margin-bottom: 16px;
+
+    padding: 12px;
+
+    border: 1px solid #cfd5df;
+    border-radius: 8px;
+}
+
+.rag-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
 }

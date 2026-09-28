@@ -11,6 +11,46 @@ MCP_SERVER_URL = os.getenv(
 )
 
 
+def check_mcp_health():
+    return asyncio.run(
+        _check_mcp_health_async()
+    )
+
+
+async def _check_mcp_health_async():
+
+    async with streamable_http_client(
+        MCP_SERVER_URL
+    ) as (
+        read_stream,
+        write_stream,
+        _
+    ):
+
+        async with ClientSession(
+            read_stream,
+            write_stream
+        ) as session:
+
+            await session.initialize()
+
+            return {
+                "status": "connected"
+            }
+
+
+def call_mcp_tool(
+    tool_name: str,
+    arguments: dict | None = None,
+):
+    return asyncio.run(
+        _call_mcp_tool_async(
+            tool_name,
+            arguments or {},
+        )
+    )
+    
+
 async def _call_mcp_tool_async(
     tool_name: str,
     arguments: dict,
@@ -47,11 +87,6 @@ async def _call_mcp_tool_async(
                     if hasattr(item, "text"):
                         messages.append(item.text)
 
-                # raise RuntimeError(
-                #     "MCP tool call failed: "
-                #     + " | ".join(messages)
-                # )
-                
                 error_message = (
                     "MCP tool call failed: "
                     + " | ".join(messages)
