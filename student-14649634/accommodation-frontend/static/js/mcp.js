@@ -59,7 +59,6 @@ document.addEventListener(
             mcpResult
         });
 
-
         const mcpExamples = {
 
             get_accommodations: {},
@@ -100,98 +99,163 @@ document.addEventListener(
             get_system_summary: {}
         };
 
+        let mcpServerConnected = false;
+
+        async function checkMCPServer() {
+
+            try {
+        
+                const response = await fetch(
+                    `${API_URL}/mcp/health`
+                );
+        
+                if (!response.ok) {
+                    throw new Error(
+                        "MCP server unavailable"
+                    );
+                }
+        
+                mcpServerConnected = true;
+        
+                mcpServerStatusText.textContent =
+                    "Connected to shared MCP server";
+        
+                mcpServerStatusDot.classList.remove(
+                    "status-off",
+                    "status-error"
+                );
+        
+                mcpServerStatusDot.classList.add(
+                    "status-on"
+                );
+        
+                mcpTool.disabled = false;
+                mcpArguments.disabled = false;
+        
+                mcpToolGrid.style.display =
+                    "block";
+        
+                mcpToolText.textContent =
+                    "MCP Mode is available with tools below:";
+        
+                mcpResult.textContent =
+                    "No tool called yet.";
+        
+            } catch (error) {
+        
+                mcpServerConnected = false;
+        
+                mcpServerStatusText.textContent =
+                    "Error - MCP server unavailable";
+        
+                mcpServerStatusDot.classList.remove(
+                    "status-on",
+                    "status-off"
+                );
+        
+                mcpServerStatusDot.classList.add(
+                    "status-error"
+                );
+        
+                mcpTool.disabled = true;
+                mcpArguments.disabled = true;
+        
+                mcpToolGrid.style.display =
+                    "none";
+        
+                mcpToolText.textContent =
+                    "Unable to connect to MCP server.";
+        
+                mcpResult.textContent =
+                    "Unable to connect to the shared MCP server.";
+            }
+        }
+
+
+        function updateMCPUI() {
+
+            if (mcpEnabled.checked) {
+        
+                mcpModeStatus.textContent =
+                    "ON";
+        
+                checkMCPServer();
+        
+            } else {
+        
+                mcpServerConnected = false;
+        
+                mcpModeStatus.textContent =
+                    "OFF";
+        
+                mcpTool.disabled = true;
+                mcpArguments.disabled = true;
+        
+                mcpServerStatusText.textContent =
+                    "Disconnected";
+        
+                mcpServerStatusDot.classList.remove(
+                    "status-on",
+                    "status-error"
+                );
+        
+                mcpServerStatusDot.classList.add(
+                    "status-off"
+                );
+        
+                mcpToolGrid.style.display =
+                    "none";
+        
+                mcpToolText.textContent =
+                    "MCP Mode is disabled.";
+        
+                mcpResult.textContent =
+                    "MCP Mode is disabled.";
+            }
+        }
+
 
         mcpEnabled.addEventListener(
             "change",
-            function () {
-
-                if (mcpEnabled.checked) {
-
-                    mcpModeStatus.textContent = "ON";
-
-                    mcpTool.disabled = false;
-
-                    mcpArguments.disabled = false;
-
-                    mcpServerStatusText.textContent = 
-                        "Connected to MCP server";
-
-                    mcpServerStatusDot.classList.remove(
-                        "mcp-status-off"
-                    );
-
-                    mcpServerStatusDot.classList.add(
-                        "mcp-status-on"
-                    );
-
-                    mcpToolGrid.style.display = "block";
-
-                    mcpToolText.textContent = 
-                        "MCP Mode is available with tools below:";
-
-
-                } else {
-
-                    mcpModeStatus.textContent = "OFF";
-
-                    mcpTool.disabled = true;
-
-                    mcpArguments.disabled = true;
-
-                    mcpServerStatusText.textContent = 
-                        "Disconnected to MCP server";
-
-                    mcpServerStatusDot.classList.remove(
-                        "mcp-status-on"
-                    );
-        
-                    mcpServerStatusDot.classList.add(
-                        "mcp-status-off"
-                    );
-
-                    mcpToolGrid.style.display = "none";
-
-                    mcpToolText.textContent = 
-                        "MCP Mode is disabled.";
-
-                    mcpResult.textContent =
-                        "MCP Mode is disabled.";
-                }
-            }
+            updateMCPUI
         );
+        
+        updateMCPUI();
 
 
+        function updateMCPArguments() {
+
+            const example =
+                mcpExamples[
+                    mcpTool.value
+                ] || {};
+        
+            mcpArguments.value =
+                JSON.stringify(
+                    example,
+                    null,
+                    2
+                );
+        }
+        
+        
         mcpTool.addEventListener(
             "change",
-            function () {
-
-                console.log(
-                    "Selected MCP tool:",
-                    mcpTool.value
-                );
-
-                const example =
-                    mcpExamples[
-                        mcpTool.value
-                    ] || {};
-
-                mcpArguments.value =
-                    JSON.stringify(
-                        example,
-                        null,
-                        2
-                    );
-            }
+            updateMCPArguments
         );
+
+        updateMCPArguments();
 
 
         window.callMCPTool =
             async function () {
 
-                if (!mcpEnabled.checked) {
-
+                if (
+                    !mcpEnabled.checked ||
+                    !mcpServerConnected
+                ) {
                     mcpResult.textContent =
-                        "MCP Mode is disabled.";
+                        "MCP Mode is not connected.";
 
                     return;
                 }

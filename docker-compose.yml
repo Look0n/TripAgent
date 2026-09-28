@@ -245,7 +245,7 @@ services:
     environment:
       DATABASE_API_URL: http://accommodation-database:6002
       OLLAMA_URL: http://ollama:11434/api/generate
-      OLLAMA_MODEL: llama3.2:3b
+      OLLAMA_MODEL: qwen2.5:0.5b
       MCP_SERVER_URL: http://host.docker.internal:7001/mcp
       MCP_ENABLED: ${MCP_ENABLED:-true}
       RAG_SERVICE_URL: http://host.docker.internal:7002

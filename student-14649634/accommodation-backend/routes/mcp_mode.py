@@ -5,6 +5,7 @@ import json
 from flask import Blueprint, jsonify, request
 
 from services.mcp_client import (
+    check_mcp_health,
     get_accommodations_mcp,
     get_accommodation_by_city_mcp,
     search_accommodations_mcp,
@@ -58,6 +59,29 @@ def mcp_mode_is_enabled() -> bool:
         "on",
     )
     
+    
+@mcp_bp.route(
+    "/api/accommodations/mcp/health",
+    methods=["GET"]
+)
+def mcp_health():
+
+    try:
+
+        check_mcp_health()
+
+        return jsonify({
+            "status": "connected"
+        }), 200
+
+    except Exception:
+
+        return jsonify({
+            "status": "error",
+            "error":
+                "MCP server unavailable."
+        }), 503
+            
 
 @mcp_bp.route(
     "/api/accommodations/mcp/all",

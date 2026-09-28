@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Accommodation MCP Service | TripAgent
+    </title>
+    
+    <link
+        rel="stylesheet"
+        href="/css/styles.css"
+    >
+
+
+    <link
+        rel="stylesheet"
+        href="/accommodation/static/css/accommodation.css"
+    >
+</head>
+
+<body>
+
+    <header class="navbar">
+
+        <a href="/" class="brand">
+            TripAgent
+        </a>
+
+        <nav>
+            <a href="/">Home</a>
+            <button
+                id="logout-button"
+                class="link-button"
+            >
+                Logout
+            </button>
+        </nav>
+
+    </header>
+
+    <div class="accommodation-layout">
+
+        <aside class="accommodation-sidebar">
+
+            <h2>Accommodation</h2>
+
+            <a
+                class="sidebar-link"
+                id="browseTab"
+                href="/accommodation/"
+            >
+                Browse
+            </a>
+
+            <a
+                class="sidebar-link"
+                id="searchTab"
+                href="/accommodation/?view=search"
+            >
+                Search & Filter
+            </a>
+
+            <a
+                class="sidebar-link"
+                id="aiTab"
+                href="/accommodation/?view=ai"
+            >
+                AI Assistant
+            </a>
+
+            <a
+                class="sidebar-link"
+                id="adminTab"
+                href="/accommodation/?view=admin"
+            >
+                Admin View
+            </a>
+
+            <a
+                class="sidebar-link"
+                href="/accommodation/mcp"
+            >
+                MCP Service
+            </a>
+
+            <a
+                class="sidebar-link active"
+                href="/accommodation/rag"
+            >
+                RAG Service
+            </a>
+
+
+        </aside>
+
+
+        <main class="main-content">
+
+            <h1>RAG Service</h1>
+
+            <p class="subtitle">
+                Ask questions using only the
+                Accommodation feature knowledge corpus.
+            </p>
+    
+    
+            <div class="rag-mode-control">
+    
+                <label>
+                    <input
+                        type="checkbox"
+                        id="ragEnabled"
+                        checked
+                    >
+    
+                    RAG Enabled
+                </label>
+    
+                <span id="ragModeStatus">
+                    ON
+                </span>
+    
+            </div>
+    
+    
+            <div class="status-card">
+    
+                <div>
+    
+                    <strong>
+                        RAG status
+                    </strong>
+    
+                    <p id="ragServerStatusText">
+                        Connected to shared RAG server
+                    </p>
+    
+                </div>
+    
+                <span
+                    id="ragServerStatusDot"
+                    class="status-dot status-on"
+                ></span>
+    
+            </div>
+    
+    
+            <div>
+    
+                <h2>
+                    Ask Accommodation Knowledge
+                </h2>
+    
+                <label for="ragQuestion">
+                    Question
+                </label>
+    
+                <textarea
+                    id="ragQuestion"
+                    rows="5"
+                    placeholder="How can users search for accommodation?"
+                ></textarea>
+    
+    
+                <label for="ragK">
+                    Retrieved passages
+                </label>
+    
+                <select id="ragK">
+                    <option value="3">
+                        3
+                    </option>
+    
+                    <option
+                        value="5"
+                        selected
+                    >
+                        5
+                    </option>
+    
+                    <option value="10">
+                        10
+                    </option>
+                </select>
+    
+    
+                <div class="rag-actions">
+    
+                    <button onclick="answerWithRAG()">
+                        Answer with RAG
+                    </button>
+    
+                    <button onclick="retrieveRAGContext()">
+                        Retrieve Context
+                    </button>
+    
+                    <button onclick="refreshRAGCorpus()">
+                        Refresh Accommodation Corpus
+                    </button>
+    
+                </div>
+    
+    
+                <h2>
+                    Result
+                </h2>
+    
+                <pre
+                    id="ragResult"
+                    class="result"
+                >No RAG request yet.</pre>
+    
+            </div>
+    
+        </main>
+
+    </div>
+
+    <script src="/accommodation/static/js/rag.js"></script>
+    <script src="/accommodation/static/js/config.js"></script>
+
+</body>
+
+</html>

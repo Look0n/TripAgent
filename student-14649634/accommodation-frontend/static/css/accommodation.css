@@ -725,28 +725,6 @@ button:active {
     margin-right: 6px;
 }
 
-
-.mcp-status-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    padding: 18px;
-    margin: 20px 0;
-
-    border: 1px solid #d9dee8;
-    border-radius: 10px;
-
-    background: #f8fafc;
-}
-
-.mcp-status-dot {
-    width: 12px;
-    height: 12px;
-
-    border-radius: 50%;
-}
-
 .mcp-tool-grid {
     display: grid;
 
@@ -756,14 +734,6 @@ button:active {
     gap: 12px;
 
     margin-bottom: 28px;
-}
-
-.mcp-status-on {
-    background: #22c55e;
-}
-
-.mcp-status-off {
-    background: #9ca3af;
 }
 
 .mcp-tool-card {
@@ -809,7 +779,7 @@ button:active {
     margin-top: 14px;
 }
 
-.mcp-result {
+.result {
     min-height: 100px;
 
     padding: 16px;
@@ -821,4 +791,64 @@ button:active {
 
     white-space: pre-wrap;
     overflow-x: auto;
+}
+
+.status-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px;
+    margin: 20px 0;
+
+    border: 1px solid #d9dee8;
+    border-radius: 10px;
+
+    background: #f8fafc;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+
+    border-radius: 50%;
+}
+
+.status-on {
+    background: #22c55e;
+}
+
+.status-off {
+    background: #9ca3af;
+}
+
+.status-error {
+    background: #ef4444;
+}
+
+.rag-mode-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+#ragQuestion,
+#ragK {
+    width: 100%;
+    box-sizing: border-box;
+
+    margin-top: 6px;
+    margin-bottom: 16px;
+
+    padding: 12px;
+
+    border: 1px solid #cfd5df;
+    border-radius: 8px;
+}
+
+.rag-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
 }
