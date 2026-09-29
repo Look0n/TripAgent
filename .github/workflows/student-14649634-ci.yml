@@ -5,7 +5,10 @@ on:
     branches:
       - main
     paths:
+       # Release 1: trigger CI when shared MCP/RAG integration files are updated
       - "student-14649634/**"
+      - "shared/mcp-server/**"
+      - "shared/rag-server/**"
       - "docker-compose.yml"
       - ".github/workflows/student-14649634-ci.yml"
 
@@ -13,7 +16,10 @@ on:
     branches:
       - main
     paths:
+      # Release 1: trigger CI when shared MCP/RAG integration files are updated
       - "student-14649634/**"
+      - "shared/mcp-server/**"
+      - "shared/rag-server/**"
       - "docker-compose.yml"
       - ".github/workflows/student-14649634-ci.yml"
 
@@ -22,6 +28,11 @@ jobs:
   accommodation-service-ci:
     name: Test Accommodation Service
     runs-on: ubuntu-latest
+
+    # Release 1 CI: retain MCP/RAG integration but disable local services during CI
+    env:
+      MCP_ENABLED: "false"
+      RAG_ENABLED: "false"
 
     steps:
 
@@ -153,7 +164,28 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 10. Check frontend
+      # 10. Verify Release 1 CI configuration
+      # ---------------------------------------------------
+
+      - name: Verify MCP and RAG are disabled in CI
+        run: |
+          MCP_VALUE=$(docker compose exec -T accommodation-backend \
+            printenv MCP_ENABLED)
+
+          RAG_VALUE=$(docker compose exec -T accommodation-backend \
+            printenv RAG_ENABLED)
+
+          echo "MCP_ENABLED=$MCP_VALUE"
+          echo "RAG_ENABLED=$RAG_VALUE"
+
+          test "$MCP_VALUE" = "false"
+          test "$RAG_VALUE" = "false"
+
+          echo "MCP and RAG are correctly disabled for CI"
+
+
+      # ---------------------------------------------------
+      # 11. Check frontend
       # ---------------------------------------------------
 
       - name: Check Accommodation Frontend
@@ -162,7 +194,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 11. Verify seed data
+      # 12. Verify seed data
       # ---------------------------------------------------
 
       - name: Verify database seed records
@@ -188,7 +220,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 12. Test Accommodation API
+      # 13. Test Accommodation API
       # ---------------------------------------------------
 
       - name: Test get all accommodations
@@ -210,7 +242,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 13. Test Availability API
+      # 14. Test Availability API
       # ---------------------------------------------------
 
       - name: Test available dates
@@ -226,7 +258,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 14. Install pytest dependencies
+      # 15. Install pytest dependencies
       # ---------------------------------------------------
 
       - name: Install backend test dependencies
@@ -237,7 +269,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 15. Run pytest
+      # 16. Run pytest
       # ---------------------------------------------------
 
       - name: Run Accommodation pytest
@@ -249,7 +281,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 16. Display logs if something failed
+      # 17. Display logs if something failed
       # ---------------------------------------------------
 
       - name: Show Docker logs on failure
@@ -261,7 +293,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 17. Clean up
+      # 18. Clean up
       # ---------------------------------------------------
 
       - name: Stop Accommodation services
