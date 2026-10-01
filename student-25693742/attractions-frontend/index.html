@@ -46,6 +46,32 @@
             <div id="aiResults" class="ai-response-box hidden"></div>
         </section>
 
+        <!-- Release 1: MCP tool demo -->
+        <section class="ai-card">
+            <div class="ai-card-header">
+                <h3>MCP Tool: Top Rated Attractions</h3>
+                <p>Calls the shared MCP server through this feature's backend/API.</p>
+            </div>
+            <div class="ai-input-wrapper">
+                <input type="text" id="mcpCityInput" placeholder="City (optional, e.g. Sydney)">
+                <button class="btn-primary" onclick="callMcpTopRated()">Call MCP Tool</button>
+            </div>
+            <div id="mcpResults" class="ai-response-box hidden"></div>
+        </section>
+
+        <!-- Release 1: RAG grounded Q&A -->
+        <section class="ai-card">
+            <div class="ai-card-header">
+                <h3>Ask with RAG (grounded answer)</h3>
+                <p>Answers are grounded in retrieved context with citations and a confidence category.</p>
+            </div>
+            <div class="ai-input-wrapper">
+                <input type="text" id="ragQuestionInput" placeholder="e.g. What attraction categories are available?">
+                <button class="btn-primary" onclick="askRag()">Ask</button>
+            </div>
+            <div id="ragResults" class="ai-response-box hidden"></div>
+        </section>
+
         <!-- Search & Filter Controls -->
         <section class="filter-section">
             <div class="search-bar">
@@ -157,6 +183,93 @@
                 aiDiv.innerHTML = `<div class="ai-content"><strong>AI Insights:</strong> ${resultText}</div>`;
             } catch (err) {
                 aiDiv.innerHTML = '<div class="ai-content error">Error connecting to AI service.</div>';
+            }
+        }
+
+        // ---- Release 1: MCP tool call ----
+        // Calls the shared MCP server (get_top_rated_attractions tool)
+        // through our own backend/API, which proxies the call.
+        async function callMcpTopRated() {
+            const box = document.getElementById('mcpResults');
+            const city = document.getElementById('mcpCityInput').value.trim();
+
+            box.classList.remove('hidden');
+            box.innerHTML = '<div class="ai-loading"><em>Calling MCP tool...</em></div>';
+
+            try {
+                const res = await fetch('/api/attractions/mcp/top-rated', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ city: city || null, limit: 5 })
+                });
+
+                const data = await res.json();
+
+                if (data.status !== 'success') {
+                    box.innerHTML = `<div class="ai-content error">MCP error: ${data.error || 'unknown error'}</div>`;
+                    return;
+                }
+
+                // result.result comes back as { content: [...] } from the MCP session
+                const toolOutput = data.result;
+                box.innerHTML = `<div class="ai-content"><strong>MCP tool result:</strong><pre>${JSON.stringify(toolOutput, null, 2)}</pre></div>`;
+            } catch (err) {
+                box.innerHTML = '<div class="ai-content error">Error calling MCP server.</div>';
+            }
+        }
+
+        // ---- Release 1: RAG grounded Q&A ----
+        // Sends a question to the shared RAG server through our backend/API.
+        // Shows the answer, source citations, and a confidence category.
+        // If context is insufficient, shows that instead of a made-up answer.
+        async function askRag() {
+            const box = document.getElementById('ragResults');
+            const question = document.getElementById('ragQuestionInput').value.trim();
+
+            if (!question) {
+                return;
+            }
+
+            box.classList.remove('hidden');
+            box.innerHTML = '<div class="ai-loading"><em>Retrieving context and generating answer...</em></div>';
+
+            try {
+                const res = await fetch('/api/attractions/rag', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await res.json();
+
+                if (data.status !== 'success') {
+                    box.innerHTML = `<div class="ai-content error">RAG error: ${JSON.stringify(data.error || data.result)}</div>`;
+                    return;
+                }
+
+                const result = data.result;
+                const answer = result.answer || 'Insufficient evidence.';
+                const confidence = result.confidence_category || 'Unknown';
+                const citations = result.citations || [];
+
+                // Insufficient context -> show that clearly, don't dress it up.
+                const isInsufficient = answer.trim().toLowerCase().startsWith('insufficient');
+
+                const citationsHtml = citations.length > 0
+                    ? citations.map(c => `<li>${c.source_id || c.chunk_id} (${c.authority_tier || 'n/a'})</li>`).join('')
+                    : '<li>No sources retrieved.</li>';
+
+                box.innerHTML = `
+                    <div class="ai-content ${isInsufficient ? 'error' : ''}">
+                        <strong>Answer:</strong> ${answer}
+                        <br><br>
+                        <span class="rating-tag">Confidence: ${confidence}</span>
+                        <h4>Sources</h4>
+                        <ul>${citationsHtml}</ul>
+                    </div>
+                `;
+            } catch (err) {
+                box.innerHTML = '<div class="ai-content error">Error connecting to RAG service.</div>';
             }
         }
 

@@ -27,7 +27,7 @@ SUPPORTED_FEATURES = {
 FEATURE_DIRS = {
     "account": REPO_DIR / "student-25992405",
     "accommodation": REPO_DIR / "student-14649634",
-    "attractions": REPO_DIR / "student-25992374",
+    "attractions": REPO_DIR / "student-25693742",
     "checklist": REPO_DIR / "student-25992424",
     "flight": REPO_DIR / "student-25487036",
 }
@@ -91,7 +91,43 @@ FEATURE_KNOWLEDGE = {
             ),
         },
     ],
-    "attractions": [],
+    "attractions": [
+        {
+            "chunk_id": "attractions_knowledge_search",
+            "text": (
+                "TripAgent Attractions allows users to browse, search, "
+                "and filter attraction and tour records by city, "
+                "category, and maximum price."
+            ),
+        },
+        {
+            "chunk_id": "attractions_knowledge_categories",
+            "text": (
+                "Attraction categories include Sightseeing, Culture, "
+                "Adventure, Entertainment, and Food & Drink."
+            ),
+        },
+        {
+            "chunk_id": "attractions_knowledge_reviews",
+            "text": (
+                "Each attraction can have customer reviews with a rating "
+                "from 1 to 5. The average_rating field is recalculated "
+                "automatically whenever a new review is submitted."
+            ),
+        },
+        {
+            "chunk_id": "attractions_knowledge_ai",
+            "text": (
+                "The Attractions Service provides AI-assisted "
+                "recommendations using a Plan-Act-Observe-Adapt pattern: "
+                "it extracts city, category, budget and preferences from "
+                "a free-text request, filters real database candidates, "
+                "and only then asks the LLM to explain the best matches."
+            ),
+        },
+    ],
+    "checklist": [],
+    "flight": [],
     "checklist": [],
     "flight": [
         {
@@ -339,6 +375,49 @@ def load_accommodation_database_chunks() -> list[dict[str, Any]]:
             "indexed_at": now_iso(),
         }]
 
+def load_attractions_database_chunks() -> list[dict[str, Any]]:
+    base_url = FEATURE_DATABASE_URLS["attractions"].rstrip("/")
+
+    try:
+        response = requests.get(
+            f"{base_url}/health",
+            timeout=5,
+        )
+        response.raise_for_status()
+
+        return [{
+            "chunk_id": "attractions_db_health",
+            "source_id": "attractions-database:/health",
+            "authority_tier": "tier_1",
+            "text": (
+                "The TripAgent Attractions database "
+                "service is available."
+            ),
+            "metadata": {
+                "source_type": "database_service",
+                "metric": "health",
+            },
+            "indexed_at": now_iso(),
+        }]
+
+    except Exception as exc:
+        return [{
+            "chunk_id": "attractions_db_unavailable",
+            "source_id": "attractions-database:/health",
+            "authority_tier": "tier_1",
+            "text": (
+                "The TripAgent Attractions database service "
+                "was unavailable when the corpus was refreshed."
+            ),
+            "metadata": {
+                "source_type": "database_service",
+                "available": False,
+                "error_type": type(exc).__name__,
+            },
+            "indexed_at": now_iso(),
+        }]
+
+
 def load_flight_database_chunks() -> list[dict[str, Any]]:
     """Tier 1: record Flight database availability and non-sensitive route coverage."""
     base_url = FEATURE_DATABASE_URLS["flight"].rstrip("/")
@@ -449,6 +528,8 @@ def load_database_chunks(feature: str) -> list[dict[str, Any]]:
         return load_accommodation_database_chunks()
     if feature == "flight":
         return load_flight_database_chunks()
+    if feature == "attractions":
+        return load_attractions_database_chunks()
 
     # Placeholder for team features until their database contracts are known.
     return [{
