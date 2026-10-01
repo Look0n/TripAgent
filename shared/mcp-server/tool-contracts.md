@@ -2,13 +2,16 @@
 
 ## Scope
 
-The current shared MCP integration exposes **10 tools**:
+The current shared MCP integration exposes **19 tools**:
 
 - 5 Account feature tools.
+- 4 Accommodation feature tools.
+- 5 Attractions feature tools.
 - 5 shared TripAgent tools.
 
-The Account feature is intended to use only these Account and shared tools.
-Other feature-specific tools can be registered later by their owning features.
+Each feature is restricted (via `tool_registry.py`) to its own tools plus the
+5 shared TripAgent tools. Other feature-specific tools can be registered
+later by their owning features.
 
 The MCP server runs locally on port `7001` and uses Streamable HTTP at `/mcp`.
 
@@ -91,6 +94,53 @@ Checks the required Account profile fields and all six travel preference fields.
 Required profile fields are `first_name`, `last_name`, and `email`. `phone` and
 `country` remain optional because the current Account schema allows them to be
 empty.
+
+---
+
+## Attractions tools
+
+### `get_attractions`
+
+Returns all attraction and tour records.
+
+**Uses**
+
+- `GET http://localhost:6003/attractions`
+
+### `get_attractions_by_city`
+
+Returns attraction records for one city.
+
+**Input**
+
+- `city: str`
+
+### `search_attractions`
+
+Searches attraction records by city, category and maximum price.
+
+**Input**
+
+- `city: str | None`
+- `category: str | None`
+- `max_price: float | None`
+
+### `get_attraction_details`
+
+Returns one attraction record including its customer reviews.
+
+**Input**
+
+- `attraction_id: int`
+
+### `get_top_rated_attractions`
+
+Returns the highest-rated attractions, optionally filtered by city.
+
+**Input**
+
+- `city: str | None`
+- `limit: int` (defaults to `5`)
 
 ---
 

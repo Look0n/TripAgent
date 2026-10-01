@@ -24,6 +24,15 @@ FLIGHT_TOOLS = [
     "check_seat_availability",
 ]
 
+# Attractions feature tools (owned by student-25693742).
+ATTRACTIONS_TOOLS = [
+    "get_attractions",
+    "get_attractions_by_city",
+    "search_attractions",
+    "get_attraction_details",
+    "get_top_rated_attractions",
+]
+
 SHARED_TOOLS = [
     "list_tripagent_services",
     "get_service_status",
@@ -38,12 +47,14 @@ FEATURE_TOOL_ACCESS = {
     "account": ACCOUNT_TOOLS + SHARED_TOOLS,
     "accommodation": ACCOMMODATION_TOOLS + SHARED_TOOLS,
     "flight": FLIGHT_TOOLS + SHARED_TOOLS,
+    "attractions": ATTRACTIONS_TOOLS + SHARED_TOOLS,
 }
 
 TOOL_CATEGORY = {
     **{name: "account" for name in ACCOUNT_TOOLS},
     **{name: "accommodation" for name in ACCOMMODATION_TOOLS},
     **{name: "flight" for name in FLIGHT_TOOLS},
+    **{name: "attractions" for name in ATTRACTIONS_TOOLS},
     **{name: "shared" for name in SHARED_TOOLS},
 }
 
@@ -70,6 +81,7 @@ def get_registry_summary() -> dict:
         "account_tools": ACCOUNT_TOOLS.copy(),
         "accommodation_tools": ACCOMMODATION_TOOLS.copy(),
         "flight_tools": FLIGHT_TOOLS.copy(),
+        "attractions_tools": ATTRACTIONS_TOOLS.copy(),
         "shared_tools": SHARED_TOOLS.copy(),
         "feature_access": {
             feature: tools.copy()

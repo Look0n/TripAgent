@@ -4,6 +4,7 @@ from tool_registry import (
     ACCOUNT_TOOLS,
     ACCOMMODATION_TOOLS,
     FLIGHT_TOOLS,
+    ATTRACTIONS_TOOLS,
     SHARED_TOOLS,
 )
 from tools.account_tools import (
@@ -27,6 +28,14 @@ from tools.flight_tools import (
     get_flight_impl,
     get_flights_by_route_impl,
     search_flights_impl,
+)
+
+from tools.attractions_tools import (
+    get_attractions_impl as get_attractions_impl,
+    get_attractions_by_city_impl as get_attractions_by_city_impl,
+    search_attractions_impl as search_attractions_impl,
+    get_attraction_details_impl as get_attraction_details_impl,
+    get_top_rated_attractions_impl as get_top_rated_attractions_impl,
 )
 
 from tools.tripagent_tools import (
@@ -187,6 +196,62 @@ def check_seat_availability(flight_id: int) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Attractions feature tools
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_attractions() -> dict:
+    """Return all attraction and tour records."""
+    return get_attractions_impl()
+
+
+@mcp.tool()
+def get_attractions_by_city(
+    city: str,
+) -> dict:
+    """Return attraction records for one city."""
+    return get_attractions_by_city_impl(
+        city
+    )
+
+
+@mcp.tool()
+def search_attractions(
+    city: str | None = None,
+    category: str | None = None,
+    max_price: float | None = None,
+) -> dict:
+    """Search TripAgent attraction records by city, category and price."""
+    return search_attractions_impl(
+        city=city,
+        category=category,
+        max_price=max_price,
+    )
+
+
+@mcp.tool()
+def get_attraction_details(
+    attraction_id: int,
+) -> dict:
+    """Return one attraction record including its customer reviews."""
+    return get_attraction_details_impl(
+        attraction_id
+    )
+
+
+@mcp.tool()
+def get_top_rated_attractions(
+    city: str | None = None,
+    limit: int = 5,
+) -> dict:
+    """Return the highest-rated attractions, optionally filtered by city."""
+    return get_top_rated_attractions_impl(
+        city=city,
+        limit=limit,
+    )
+
+
+# ---------------------------------------------------------------------------
 # Shared TripAgent tools
 # ---------------------------------------------------------------------------
 
@@ -240,6 +305,10 @@ if __name__ == "__main__":
     for tool_name in FLIGHT_TOOLS:
         print(f"- {tool_name}")
 
+    print("\nAttractions tools:")
+    for tool_name in ATTRACTIONS_TOOLS:
+        print(f"- {tool_name}")
+
     print("\nShared TripAgent tools:")
     for tool_name in SHARED_TOOLS:
         print(f"- {tool_name}")
@@ -248,6 +317,7 @@ if __name__ == "__main__":
         len(ACCOUNT_TOOLS)
         + len(ACCOMMODATION_TOOLS)
         + len(FLIGHT_TOOLS)
+        + len(ATTRACTIONS_TOOLS)
         + len(SHARED_TOOLS)
     )
 

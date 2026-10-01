@@ -5,7 +5,10 @@ on:
     branches:
       - main
     paths:
+      # Release 1: trigger CI when shared MCP/RAG integration files are updated
       - "student-25693742/**"
+      - "shared/mcp-server/**"
+      - "shared/rag-server/**"
       - "docker-compose.yml"
       - ".github/workflows/student-25693742-ci.yml"
 
@@ -13,7 +16,10 @@ on:
     branches:
       - main
     paths:
+      # Release 1: trigger CI when shared MCP/RAG integration files are updated
       - "student-25693742/**"
+      - "shared/mcp-server/**"
+      - "shared/rag-server/**"
       - "docker-compose.yml"
       - ".github/workflows/student-25693742-ci.yml"
 
@@ -22,6 +28,11 @@ jobs:
   attractions-service-ci:
     name: Test Attractions Service
     runs-on: ubuntu-latest
+
+    # Release 1 CI: retain MCP/RAG integration but disable local services during CI
+    env:
+      MCP_ENABLED: "false"
+      RAG_ENABLED: "false"
 
     steps:
 
@@ -144,6 +155,27 @@ jobs:
           echo "Attractions backend failed to become healthy."
           docker compose logs attractions-backend
           exit 1
+
+
+      # ---------------------------------------------------
+      # 9b. Verify Release 1 CI configuration
+      # ---------------------------------------------------
+
+      - name: Verify MCP and RAG are disabled in CI
+        run: |
+          MCP_VALUE=$(docker compose exec -T attractions-backend \
+            printenv MCP_ENABLED)
+
+          RAG_VALUE=$(docker compose exec -T attractions-backend \
+            printenv RAG_ENABLED)
+
+          echo "MCP_ENABLED=$MCP_VALUE"
+          echo "RAG_ENABLED=$RAG_VALUE"
+
+          test "$MCP_VALUE" = "false"
+          test "$RAG_VALUE" = "false"
+
+          echo "MCP and RAG are correctly disabled for CI"
 
 
       # ---------------------------------------------------
