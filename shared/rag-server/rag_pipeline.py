@@ -964,7 +964,16 @@ def answer_question(query: str, feature: str, k: int = 5, caller: str = "student
                 relevant_results.append(r)
 
         results = relevant_results
-    
+
+    if feature == "attractions":
+        # The feature name appears in almost every attractions chunk, so it
+        # cannot count as evidence on its own; any other shared term can.
+        query_words = content_words(query) - {"attraction", "tripagent"}
+        results = [
+            r for r in results
+            if query_words & content_words(r.get("text", ""))
+        ]
+
     if not results:
         output = insufficient_context_response(feature, query, k, retrieval)
         append_audit(

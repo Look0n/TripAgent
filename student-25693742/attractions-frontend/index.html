@@ -210,9 +210,48 @@
                     return;
                 }
 
-                // result.result comes back as { content: [...] } from the MCP session
+                // result.result comes back as { content: ["<tool JSON as string>"] } from the MCP session
                 const toolOutput = data.result;
-                box.innerHTML = `<div class="ai-content"><strong>MCP tool result:</strong><pre>${JSON.stringify(toolOutput, null, 2)}</pre></div>`;
+                let parsed;
+                try {
+                    parsed = JSON.parse((toolOutput.content || [])[0]);
+                } catch (parseErr) {
+                    box.innerHTML = `<div class="ai-content"><strong>MCP tool result:</strong><pre>${JSON.stringify(toolOutput, null, 2)}</pre></div>`;
+                    return;
+                }
+
+                if (parsed.status !== 'success') {
+                    box.innerHTML = `<div class="ai-content error">MCP error: ${parsed.error || 'unknown error'}</div>`;
+                    return;
+                }
+
+                const items = parsed.results || [];
+                const heading = `Top ${items.length} rated${parsed.input && parsed.input.city ? ' in ' + parsed.input.city : ''}`;
+
+                if (items.length === 0) {
+                    box.innerHTML = `<div class="ai-content"><strong>${heading}</strong><p>No attractions found.</p></div>`;
+                    return;
+                }
+
+                const rows = items.map((item, i) => `
+                    <li class="mcp-item" onclick="openDetail(${item.attraction_id})">
+                        <span class="mcp-rank">${i + 1}</span>
+                        <div class="mcp-info">
+                            <span class="mcp-name">${item.name}</span>
+                            <span class="mcp-meta">📍 ${item.city} · ${item.category || 'General'}</span>
+                        </div>
+                        <span class="rating-tag">⭐ ${item.average_rating || 'New'}</span>
+                        <span class="price-tag">${item.price > 0 ? '$' + item.price : 'Free'}</span>
+                    </li>
+                `).join('');
+
+                box.innerHTML = `
+                    <div class="ai-content">
+                        <strong>${heading}</strong>
+                        <span class="mcp-source">via MCP tool ${parsed.tool}</span>
+                        <ol class="mcp-list">${rows}</ol>
+                    </div>
+                `;
             } catch (err) {
                 box.innerHTML = '<div class="ai-content error">Error calling MCP server.</div>';
             }
@@ -253,7 +292,8 @@
                 const citations = result.citations || [];
 
                 // Insufficient context -> show that clearly, don't dress it up.
-                const isInsufficient = answer.trim().toLowerCase().startsWith('insufficient');
+                const isInsufficient = result.insufficient_context === true
+                    || answer.trim().toLowerCase().startsWith('insufficient');
 
                 const citationsHtml = citations.length > 0
                     ? citations.map(c => `<li>${c.source_id || c.chunk_id} (${c.authority_tier || 'n/a'})</li>`).join('')

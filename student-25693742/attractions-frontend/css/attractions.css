@@ -166,6 +166,66 @@ body {
     display: none;
 }
 
+/* MCP top-rated result list */
+.mcp-source {
+    margin-left: 8px;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.mcp-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+}
+
+.mcp-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background-color: #ffffff;
+    border: 1px solid #dcfce7;
+    border-radius: 8px;
+    color: #0f172a;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.mcp-item:hover {
+    border-color: #2563eb;
+}
+
+.mcp-rank {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.mcp-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.mcp-name {
+    font-weight: 600;
+}
+
+.mcp-meta {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
 /* Filter / Search Bar */
 .filter-section {
     margin-bottom: 32px;
