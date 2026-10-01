@@ -4,6 +4,8 @@ from flask import Flask, jsonify
 
 from routes.ai_mode import ai_mode_bp
 from routes.normal_ui import normal_ui_bp
+from routes.mcp_routes import mcp_bp
+from routes.rag_routes import rag_bp
 
 
 def create_app():
@@ -25,6 +27,14 @@ def create_app():
 
     app.register_blueprint(
         ai_mode_bp
+    )
+
+    app.register_blueprint(
+        mcp_bp
+    )
+
+    app.register_blueprint(
+        rag_bp
     )
 
     @app.route(

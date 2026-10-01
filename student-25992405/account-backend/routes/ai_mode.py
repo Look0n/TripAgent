@@ -1,6 +1,6 @@
 import requests
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, jsonify, request
 
 from services.llm_client import generate_response
 from services.prompt_loader import load_preference_prompt
@@ -18,7 +18,14 @@ ai_mode_bp = Blueprint(
     methods=["POST"]
 )
 def preference_assistant():
-    if session.get("customer_id") is None:
+
+    # Customer identity is validated by the shared gateway
+    # and forwarded to the Account service.
+    customer_id = request.headers.get(
+        "X-Customer-ID"
+    )
+
+    if not customer_id:
         return jsonify({
             "error": "Authentication required"
         }), 401

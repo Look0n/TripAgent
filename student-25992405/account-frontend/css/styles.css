@@ -450,3 +450,90 @@ button:hover,
         padding: 24px;
     }
 }
+/* =========================================
+   MCP SERVICE
+   ========================================= */
+
+.mcp-status-card {
+    margin-top: 24px;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.mcp-status-card p {
+    margin: 6px 0 0;
+    color: #6b7280;
+}
+
+.status-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #9ca3af;
+}
+
+.status-dot.online {
+    background: #22c55e;
+}
+
+.status-dot.offline {
+    background: #ef4444;
+}
+
+.mcp-section {
+    margin-top: 30px;
+}
+
+.tool-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.tool-card {
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.tool-card p,
+.tool-description {
+    margin-bottom: 0;
+    color: #6b7280;
+}
+
+.mcp-result {
+    min-height: 120px;
+    padding: 16px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #111827;
+    color: #f9fafb;
+}
+
+@media (max-width: 800px) {
+    .tool-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* RAG SERVICE */
+.rag-actions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.secondary-button{background:#475569}
+.rag-switch{position:relative;display:inline-block;width:52px;height:28px}
+.rag-switch input{opacity:0;width:0;height:0}
+.rag-slider{position:absolute;inset:0;cursor:pointer;background:#9ca3af;border-radius:28px;transition:.2s}
+.rag-slider::before{content:"";position:absolute;width:20px;height:20px;left:4px;bottom:4px;background:white;border-radius:50%;transition:.2s}
+.rag-switch input:checked+.rag-slider{background:#2563eb}
+.rag-switch input:checked+.rag-slider::before{transform:translateX(24px)}
+.rag-action:disabled{opacity:.5;cursor:not-allowed}

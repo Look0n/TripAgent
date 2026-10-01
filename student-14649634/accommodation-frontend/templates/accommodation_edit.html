@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Edit Accommodation | TripAgent</title>
+
+    <!-- Shared TripAgent CSS -->
+    <link
+        rel="stylesheet"
+        href="/css/styles.css"
+    >
+
+    <!-- Accommodation CSS -->
+    <link
+        rel="stylesheet"
+        href="../../static/css/accommodation.css"
+    >
+</head>
+
+
+<body>
+
+    <!-- =========================================
+         TOP NAVIGATION
+         ========================================= -->
+
+         <header class="navbar">
+
+            <a href="/" class="brand">
+                TripAgent
+            </a>
+    
+            <nav>
+                <a href="/">Home</a>
+                <button
+                    id="logout-button"
+                    class="link-button"
+                >
+                    Logout
+                </button>
+            </nav>
+    
+        </header>
+
+
+
+    <!-- =========================================
+         EDIT FORM
+         ========================================= -->
+
+    <main class="form-page">
+
+        <section class="form-card">
+
+            <a
+                href="/accommodation/?view=admin"
+                class="back-link"
+            >
+                ← Back
+            </a>
+
+
+            <h1>
+                Edit Accommodation
+            </h1>
+
+
+            <p class="subtitle">
+                Update the accommodation information below.
+            </p>
+
+
+
+            <form id="editForm">
+
+
+                <!-- NAME -->
+
+                <label for="name">
+                    Accommodation Name
+                </label>
+
+                <input
+                    type="text"
+                    id="name"
+                    required
+                >
+
+
+
+                <!-- TYPE -->
+
+                <label for="type">
+                    Type
+                </label>
+
+                <select
+                    id="type"
+                    required
+                >
+
+                    <option value="Hotel">
+                        Hotel
+                    </option>
+
+                    <option value="Hostel">
+                        Hostel
+                    </option>
+
+                    <option value="Apartment">
+                        Apartment
+                    </option>
+
+                    <option value="Resort">
+                        Resort
+                    </option>
+
+                    <option value="Guesthouse">
+                        Guesthouse
+                    </option>
+
+                </select>
+
+
+
+                <!-- CITY -->
+
+                <label for="city">
+                    City
+                </label>
+
+                <input
+                    type="text"
+                    id="city"
+                    required
+                >
+
+
+
+                <!-- ADDRESS -->
+
+                <label for="address">
+                    Address
+                </label>
+
+                <input
+                    type="text"
+                    id="address"
+                >
+
+
+
+                <!-- PRICE / CAPACITY -->
+
+                <div class="form-grid">
+
+                    <div>
+
+                        <label for="price">
+                            Price Per Night
+                        </label>
+
+                        <input
+                            type="number"
+                            id="price"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div>
+
+                        <label for="capacity">
+                            Guest Capacity
+                        </label>
+
+                        <input
+                            type="number"
+                            id="capacity"
+                            min="1"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- RATING -->
+
+                <label for="rating">
+                    Rating
+                </label>
+
+                <input
+                    type="number"
+                    id="rating"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                >
+
+
+
+                <!-- IMAGE -->
+
+                <label for="image">
+                    Image Path
+                </label>
+
+                <input
+                    type="text"
+                    id="image"
+                    placeholder="static/images/hotel.png"
+                >
+
+
+
+                <!-- DESCRIPTION -->
+
+                <label for="description">
+                    Description
+                </label>
+
+                <textarea
+                    id="description"
+                    placeholder="Describe this accommodation..."
+                ></textarea>
+
+
+
+                <!-- BUTTONS -->
+
+                <div class="button-row">
+
+                    <button
+                        type="submit"
+                    >
+                        Save Changes
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        onclick="window.location.href='/accommodation/?view=admin'"
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+            </form>
+
+
+
+            <p
+                id="message"
+                class="message"
+            ></p>
+
+        </section>
+
+    </main>
+
+
+
+    <script>
+
+        const accommodationId =
+            {{ accommodation_id }};
+
+
+        const API_URL =
+            "/api/accommodation/accommodations";
+
+
+        /* =========================================
+           LOAD EXISTING ACCOMMODATION
+           ========================================= */
+
+        async function loadAccommodation() {
+
+            const message =
+                document.getElementById(
+                    "message"
+                );
+
+
+            try {
+
+                const response = await fetch(
+                    `${API_URL}/${accommodationId}`
+                );
+
+
+                if (!response.ok) {
+
+                    message.textContent =
+                        "Unable to load accommodation.";
+
+                    return;
+                }
+
+
+                const accommodation =
+                    await response.json();
+
+
+                document
+                    .getElementById("name")
+                    .value =
+                        accommodation
+                            .accommodation_name || "";
+
+
+                document
+                    .getElementById("type")
+                    .value =
+                        accommodation.type || "Hotel";
+
+
+                document
+                    .getElementById("city")
+                    .value =
+                        accommodation.city || "";
+
+
+                document
+                    .getElementById("address")
+                    .value =
+                        accommodation.address || "";
+
+
+                document
+                    .getElementById("price")
+                    .value =
+                        accommodation
+                            .price_per_night ?? "";
+
+
+                document
+                    .getElementById("capacity")
+                    .value =
+                        accommodation
+                            .guest_capacity ?? "";
+
+
+                document
+                    .getElementById("rating")
+                    .value =
+                        accommodation.rating ?? "";
+
+
+                document
+                    .getElementById("image")
+                    .value =
+                        accommodation.image_url || "";
+
+
+                document
+                    .getElementById("description")
+                    .value =
+                        accommodation.description || "";
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Load accommodation error:",
+                    error
+                );
+
+
+                message.textContent =
+                    "Unable to connect to the accommodation service.";
+            }
+        }
+
+
+
+        /* =========================================
+           UPDATE ACCOMMODATION
+           ========================================= */
+
+        document
+            .getElementById("editForm")
+            .addEventListener(
+                "submit",
+                async (event) => {
+
+                    event.preventDefault();
+
+
+                    const message =
+                        document.getElementById(
+                            "message"
+                        );
+
+
+                    message.textContent =
+                        "Saving changes...";
+
+
+                    const payload = {
+
+                        accommodation_name:
+                            document
+                                .getElementById("name")
+                                .value
+                                .trim(),
+
+                        type:
+                            document
+                                .getElementById("type")
+                                .value,
+
+                        city:
+                            document
+                                .getElementById("city")
+                                .value
+                                .trim(),
+
+                        address:
+                            document
+                                .getElementById("address")
+                                .value
+                                .trim(),
+
+                        price_per_night:
+                            Number(
+                                document
+                                    .getElementById("price")
+                                    .value
+                            ),
+
+                        guest_capacity:
+                            Number(
+                                document
+                                    .getElementById("capacity")
+                                    .value
+                            ),
+
+                        rating:
+                            document
+                                .getElementById("rating")
+                                .value
+                                ? Number(
+                                    document
+                                        .getElementById("rating")
+                                        .value
+                                )
+                                : null,
+
+                        image_url:
+                            document
+                                .getElementById("image")
+                                .value
+                                .trim(),
+
+                        description:
+                            document
+                                .getElementById("description")
+                                .value
+                                .trim()
+                    };
+
+
+                    try {
+
+                        const response = await fetch(
+                            `${API_URL}/${accommodationId}`,
+                            {
+                                method: "PUT",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify(payload)
+                            }
+                        );
+
+
+                        const data =
+                            await response.json();
+
+
+                        if (!response.ok) {
+
+                            message.textContent =
+                                data.error ||
+                                "Unable to update accommodation.";
+
+                            return;
+                        }
+
+
+                        message.textContent =
+                            "Accommodation updated successfully.";
+
+
+                        setTimeout(
+                            () => {
+
+                                window.location.href =
+                                    "/accommodation/?view=admin";
+
+                            },
+                            600
+                        );
+
+                    }
+
+                    catch (error) {
+
+                        console.error(
+                            "Update accommodation error:",
+                            error
+                        );
+
+
+                        message.textContent =
+                            "Unable to connect to the accommodation service.";
+                    }
+                }
+            );
+
+
+
+        loadAccommodation();
+
+    </script>
+
+</body>
+
+</html>

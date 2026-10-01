@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Accommodation Details | TripAgent</title>
+
+    <link
+        rel="stylesheet"
+        href="/css/styles.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../static/css/accommodation.css"
+    >
+</head>
+
+
+<body data-accommodation-id="{{ accommodation_id }}">
+
+    <header class="navbar">
+
+        <a href="/" class="brand">
+            TripAgent
+        </a>
+
+        <nav>
+            <a href="/">Home</a>
+            <button
+                id="logout-button"
+                class="link-button"
+            >
+                Logout
+            </button>
+        </nav>
+
+    </header>
+
+
+<main class="form-page">
+
+    <section class="form-card">
+
+        <a
+            id="backLink"
+            href="/accommodation/"
+            class="back-link"
+        >
+            ← Back to Accommodation
+        </a>
+
+        <div id="detailContent">
+            Loading accommodation...
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="/accommodation/static/js/accommodation_detail.js"></script>
+
+</body>
+</html>

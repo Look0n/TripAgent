@@ -13,14 +13,19 @@ SERVICE_ROUTES = {
         "http://accommodation-backend:5002"
     ),
 
-    "activities": os.getenv(
-        "ACTIVITIES_BACKEND_URL",
-        "http://activities-backend:5003"
+    "attractions": os.getenv(
+        "ATTRACTIONS_BACKEND_URL",
+        "http://attractions-backend:5003"
     ),
 
-    "itinerary": os.getenv(
-        "ITINERARY_BACKEND_URL",
-        "http://itinerary-backend:5004"
+    "checklist": os.getenv(
+        "CHECKLIST_BACKEND_URL",
+        "http://checklist-backend:5004"
+    ),
+
+    "flight": os.getenv(
+        "FLIGHT_BACKEND_URL",
+        "http://flight-backend:5005"
     )
 }
 

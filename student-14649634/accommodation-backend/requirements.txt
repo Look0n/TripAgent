@@ -1,0 +1,5 @@
+Flask
+flask-cors
+requests
+pytest
+mcp>=1.28,<2

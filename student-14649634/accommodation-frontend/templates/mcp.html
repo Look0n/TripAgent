@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Accommodation MCP Service | TripAgent
+    </title>
+    
+    <link
+        rel="stylesheet"
+        href="/css/styles.css"
+    >
+
+
+    <link
+        rel="stylesheet"
+        href="/accommodation/static/css/accommodation.css"
+    >
+</head>
+
+<body>
+
+    <header class="navbar">
+
+        <a href="/" class="brand">
+            TripAgent
+        </a>
+
+        <nav>
+            <a href="/">Home</a>
+            <button
+                id="logout-button"
+                class="link-button"
+            >
+                Logout
+            </button>
+        </nav>
+
+    </header>
+
+    <div class="accommodation-layout">
+
+        <aside class="accommodation-sidebar">
+
+            <h2>Accommodation</h2>
+
+            <a
+                class="sidebar-link"
+                id="browseTab"
+                href="/accommodation/"
+            >
+                Browse
+            </a>
+
+            <a
+                class="sidebar-link"
+                id="searchTab"
+                href="/accommodation/?view=search"
+            >
+                Search & Filter
+            </a>
+
+            <a
+                class="sidebar-link"
+                id="aiTab"
+                href="/accommodation/?view=ai"
+            >
+                AI Assistant
+            </a>
+
+            <a
+                class="sidebar-link"
+                id="adminTab"
+                href="/accommodation/?view=admin"
+            >
+                Admin View
+            </a>
+
+            <a
+                class="sidebar-link active"
+                href="/accommodation/mcp"
+            >
+                MCP Service
+            </a>
+
+            <a
+                class="sidebar-link"
+                href="/accommodation/rag"
+            >
+                RAG Service
+            </a>
+
+
+        </aside>
+
+
+        <main class="main-content">
+
+            <h1>MCP Service</h1>
+
+            <p class="subtitle">
+                Explore Accommodation and shared
+                TripAgent tools available through
+                the shared MCP server.
+            </p>
+
+
+            <div class="mcp-mode-control">
+
+                <label>
+                    <input
+                        type="checkbox"
+                        id="mcpEnabled"
+                        checked
+                    >
+            
+                    MCP Enabled
+                </label>
+            
+                <span
+                    id="mcpModeStatus"
+                >
+                    ON
+                </span>
+            
+            </div>
+
+            <div class="status-card">
+
+                <div>
+
+                    <strong>
+                        Server status
+                    </strong>
+
+                    <p id="mcpServerStatusText">
+                        Connected to shared MCP server
+                    </p>
+                </div>
+
+                <span
+                    id="mcpServerStatusDot"
+                    class="status-dot status-on"
+                ></span>
+
+            </div>
+
+
+            <h2>
+                Accommodation Tools
+            </h2>
+
+            <p id="mcpToolText"> 
+                MCP mode is available with tools below:
+            </p>
+
+            <div class="mcp-tool-grid"
+                id="mcpToolGrid">
+
+                <div class="mcp-tool-card">
+
+                    <strong>
+                        get_accommodations
+                    </strong>
+
+                    <p>
+                        Retrieve all accommodation 
+                        records.
+                    </p>
+
+                </div>
+
+
+                <div class="mcp-tool-card">
+
+                    <strong>
+                        get_accommodation_by_city
+                    </strong>
+
+                    <p>
+                        Retrieve accommodation
+                        records for a specified city.
+                    </p>
+
+                </div>
+
+
+                <div class="mcp-tool-card">
+
+                    <strong>
+                        search_accommodations
+                    </strong>
+
+                    <p>
+                        Search by city, maximum
+                        price, guests and type.
+                    </p>
+
+                </div>
+
+
+                <div class="mcp-tool-card">
+
+                    <strong>
+                        check_accommodation_availability
+                    </strong>
+
+                    <p>
+                        Check availability for an
+                        accommodation over a date
+                        range.
+                    </p>
+
+                </div>
+
+
+                <div class="mcp-tool-card">
+                    <strong>
+                        list_tripagent_services
+                    </strong>
+                    <p>
+                        List TripAgent feature
+                        services.
+                    </p>
+                </div>
+
+                <div class="mcp-tool-card">
+                    <strong>
+                        get_service_status
+                    </strong>
+                    <p>
+                        Check the health of a
+                        TripAgent feature service.
+                    </p>
+                </div>
+
+                <div class="mcp-tool-card">
+                    <strong>
+                        list_available_tools
+                    </strong>
+                    <p>
+                        List tools available to
+                        a TripAgent feature.
+                    </p>
+                </div>
+
+                <div class="mcp-tool-card">
+                    <strong>
+                        get_tripagent_help
+                    </strong>
+                    <p>
+                        Return help about TripAgent,
+                        MCP or RAG.
+                    </p>
+                </div>
+
+                <div class="mcp-tool-card">
+                    <strong>
+                        get_system_summary
+                    </strong>
+                    <p>
+                        Return non-sensitive
+                        TripAgent architecture
+                        information.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <section class="mcp-call-section">
+
+                <h2>
+                    Call a Tool
+                </h2>
+
+
+                <label for="mcpTool">
+                    Tool
+                </label>
+
+                <select id="mcpTool">
+
+                    <option value="">
+                        Select a tool
+                    </option>
+
+                    <optgroup
+                        label="Accommodation"
+                    >
+
+                        <option
+                            value="get_accommodations"
+                        >
+                            get_accommodations
+                        </option>
+
+                        <option
+                            value="get_accommodation_by_city"
+                        >
+                            get_accommodation_by_city
+                        </option>
+
+                        <option
+                            value="search_accommodations"
+                        >
+                            search_accommodations
+                        </option>
+
+                        <option
+                            value="check_accommodation_availability"
+                        >
+                            check_accommodation_availability
+                        </option>
+
+                    </optgroup>
+
+
+                    <optgroup
+                        label="Shared"
+                    >
+
+                        <option
+                            value="list_tripagent_services"
+                        >
+                            list_tripagent_services
+                        </option>
+
+                        <option
+                            value="get_service_status"
+                        >
+                            get_service_status
+                        </option>
+
+                        <option
+                            value="list_available_tools"
+                        >
+                            list_available_tools
+                        </option>
+
+                        <option
+                            value="get_tripagent_help"
+                        >
+                            get_tripagent_help
+                        </option>
+
+                        <option
+                            value="get_system_summary"
+                        >
+                            get_system_summary
+                        </option>
+
+                    </optgroup>
+
+                </select>
+
+
+                <label for="mcpArguments">
+                    Arguments (JSON)
+                </label>
+
+                <textarea
+                    id="mcpArguments"
+                    rows="8"
+                >{}</textarea>
+
+
+                <button
+                    onclick="callMCPTool()"
+                >
+                    Call Tool
+                </button>
+
+
+                <h3>
+                    Result
+                </h3>
+
+                <pre
+                    id="mcpResult"
+                    class="result"
+                >No tool called yet.</pre>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="/accommodation/static/js/mcp.js"></script>
+    <script src="/accommodation/static/js/config.js"></script>
+
+</body>
+
+</html>

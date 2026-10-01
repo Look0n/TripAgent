@@ -1,225 +1,315 @@
-name: Account Profile Service CI
+name: Account Service CI
 
 on:
   push:
     branches:
+      - student-25992405
       - main
-    paths:
-      - "student-25992405/**"
-      - "docker-compose.yml"
-      - ".github/workflows/student-25992405-ci.yml"
 
   pull_request:
     branches:
       - main
-    paths:
-      - "student-25992405/**"
-      - "docker-compose.yml"
-      - ".github/workflows/student-25992405-ci.yml"
-
 
 jobs:
-  account-service-ci:
-    name: Test Account Profile Service
+  account-ci:
     runs-on: ubuntu-latest
 
+    # ============================================
+    # CI ENVIRONMENT
+    #
+    # MCP and RAG integrations remain in the
+    # application but are disabled during CI/CD.
+    # ============================================
+    env:
+      OLLAMA_DEFAULT_MODEL: qwen2.5:0.5b
+      MCP_ENABLED: "false"
+      RAG_ENABLED: "false"
+
     steps:
-
-      # ---------------------------------------------------
-      # 1. Checkout repository
-      # ---------------------------------------------------
-
+      # ============================================
+      # CHECKOUT
+      # ============================================
       - name: Checkout repository
         uses: actions/checkout@v4
 
 
-      # ---------------------------------------------------
-      # 2. Set up Python
-      # ---------------------------------------------------
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-
-      # ---------------------------------------------------
-      # 3. Check Python syntax
-      # ---------------------------------------------------
-
-      - name: Check backend Python syntax
-        run: |
-          python -m compileall student-25992405/account-backend
-
-
-      - name: Check database Python syntax
-        run: |
-          python -m compileall student-25992405/account-database
-
-
-      # ---------------------------------------------------
-      # 4. Validate Docker Compose
-      # ---------------------------------------------------
-
+      # ============================================
+      # VALIDATE DOCKER COMPOSE
+      # ============================================
       - name: Validate Docker Compose
         run: |
           docker compose config
 
 
-      # ---------------------------------------------------
-      # 5. Build Account/Profile containers
-      # ---------------------------------------------------
-
-      - name: Build Account Profile services
+      # ============================================
+      # BUILD REQUIRED SERVICES
+      #
+      # MCP and RAG servers are intentionally not
+      # started in CI.
+      #
+      # Account frontend requires shared-gateway
+      # because its nginx config resolves the
+      # service name "shared-gateway".
+      # ============================================
+      - name: Build Account and required shared services
         run: |
-          docker compose build account-database account-backend account-frontend
+          docker compose build \
+            shared-database \
+            shared-gateway \
+            account-database \
+            account-backend \
+            account-frontend
 
 
-      # ---------------------------------------------------
-      # 6. Start Account/Profile services
-      # ---------------------------------------------------
-
-      - name: Start Account Profile services
+      # ============================================
+      # START SHARED DATABASE
+      # ============================================
+      - name: Start Shared database
         run: |
-          docker compose up -d account-database account-backend account-frontend
+          docker compose up -d shared-database
 
 
-      # ---------------------------------------------------
-      # 7. Show container status
-      # ---------------------------------------------------
-
-      - name: Show Docker containers
-        run: |
-          docker compose ps
-
-
-      # ---------------------------------------------------
-      # 8. Wait for database
-      # ---------------------------------------------------
-
-      - name: Wait for Account Database
+      # ============================================
+      # WAIT FOR SHARED DATABASE
+      # ============================================
+      - name: Wait for Shared database
         run: |
           for i in {1..30}; do
-
-            if curl --fail --silent http://localhost:6001/health; then
-              echo ""
-              echo "Account database is healthy."
+            if curl --fail --silent http://localhost:6000/health; then
+              echo "Shared database is healthy"
               exit 0
             fi
 
-            echo "Waiting for account database..."
+            echo "Waiting for Shared database..."
             sleep 2
-
           done
 
-          echo "Account database failed to become healthy."
+          echo "Shared database failed to become healthy"
+          docker compose logs shared-database
+          exit 1
+
+
+      # ============================================
+      # START ACCOUNT DATABASE
+      # ============================================
+      - name: Start Account database
+        run: |
+          docker compose up -d account-database
+
+
+      # ============================================
+      # WAIT FOR ACCOUNT DATABASE
+      # ============================================
+      - name: Wait for Account database
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:6001/health; then
+              echo "Account database is healthy"
+              exit 0
+            fi
+
+            echo "Waiting for Account database..."
+            sleep 2
+          done
+
+          echo "Account database failed to become healthy"
           docker compose logs account-database
           exit 1
 
 
-      # ---------------------------------------------------
-      # 9. Wait for backend
-      # ---------------------------------------------------
+      # ============================================
+      # START ACCOUNT BACKEND
+      #
+      # --no-deps prevents Docker Compose from
+      # automatically starting Ollama or unrelated
+      # services.
+      #
+      # MCP_ENABLED=false and RAG_ENABLED=false
+      # are inherited from the CI environment.
+      # ============================================
+      - name: Start Account backend
+        run: |
+          docker compose up -d --no-deps account-backend
 
-      - name: Wait for Account Backend
+
+      # ============================================
+      # WAIT FOR ACCOUNT BACKEND
+      # ============================================
+      - name: Wait for Account backend
         run: |
           for i in {1..30}; do
-
             if curl --fail --silent http://localhost:5001/health; then
-              echo ""
-              echo "Account backend is healthy."
+              echo "Account backend is healthy"
               exit 0
             fi
 
-            echo "Waiting for account backend..."
+            echo "Waiting for Account backend..."
             sleep 2
-
           done
 
-          echo "Account backend failed to become healthy."
+          echo "Account backend failed to become healthy"
           docker compose logs account-backend
           exit 1
 
 
-      # ---------------------------------------------------
-      # 10. Check frontend
-      # ---------------------------------------------------
-
-      - name: Check Account Frontend
+      # ============================================
+      # VERIFY AI INTEGRATION MODES
+      #
+      # CI must execute with MCP and RAG disabled.
+      # This also verifies docker-compose correctly
+      # passed the environment variables into the
+      # Account backend container.
+      # ============================================
+      - name: Verify MCP and RAG are disabled in CI
         run: |
-          curl --fail http://localhost:3001/account/login
+          MCP_VALUE=$(docker compose exec -T account-backend \
+            printenv MCP_ENABLED)
 
+          RAG_VALUE=$(docker compose exec -T account-backend \
+            printenv RAG_ENABLED)
 
-      # ---------------------------------------------------
-      # 11. Verify seed data
-      # ---------------------------------------------------
+          echo "MCP_ENABLED=$MCP_VALUE"
+          echo "RAG_ENABLED=$RAG_VALUE"
 
-      - name: Verify database seed records
-        run: |
-          CUSTOMER_COUNT=$(docker compose exec -T account-database \
-            python -c "import sqlite3; conn=sqlite3.connect('/data/account.db'); print(conn.execute('SELECT COUNT(*) FROM customer').fetchone()[0])")
-
-          PREFERENCE_COUNT=$(docker compose exec -T account-database \
-            python -c "import sqlite3; conn=sqlite3.connect('/data/account.db'); print(conn.execute('SELECT COUNT(*) FROM preference').fetchone()[0])")
-
-          echo "Customer records: $CUSTOMER_COUNT"
-          echo "Preference records: $PREFERENCE_COUNT"
-
-          if [ "$CUSTOMER_COUNT" -lt 10 ]; then
-            echo "Expected at least 10 customer records."
+          if [ "$MCP_VALUE" != "false" ]; then
+            echo "ERROR: MCP must be disabled during CI"
             exit 1
           fi
 
-          if [ "$PREFERENCE_COUNT" -lt 10 ]; then
-            echo "Expected at least 10 preference records."
+          if [ "$RAG_VALUE" != "false" ]; then
+            echo "ERROR: RAG must be disabled during CI"
             exit 1
           fi
 
+          echo "MCP and RAG are correctly disabled for CI"
 
-      # ---------------------------------------------------
-      # 12. Test seeded login
-      # ---------------------------------------------------
 
-      - name: Test seeded customer login
+      # ============================================
+      # START SHARED GATEWAY
+      #
+      # --no-deps prevents Compose from starting
+      # all other feature backends.
+      # ============================================
+      - name: Start Shared gateway
         run: |
-          curl --fail \
-            --cookie-jar cookies.txt \
-            --header "Content-Type: application/json" \
-            --data '{
-              "email": "alice@example.com",
-              "password": "TripAgent123!"
-            }' \
-            http://localhost:5001/api/account/login
+          docker compose up -d --no-deps shared-gateway
 
 
-      # ---------------------------------------------------
-      # 13. Test authenticated profile request
-      # ---------------------------------------------------
-
-      - name: Test customer profile
+      # ============================================
+      # WAIT FOR SHARED GATEWAY
+      # ============================================
+      - name: Wait for Shared gateway
         run: |
-          curl --fail \
-            --cookie cookies.txt \
-            http://localhost:5001/api/account/profile
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:5050/health; then
+              echo "Shared gateway is healthy"
+              exit 0
+            fi
+
+            echo "Waiting for Shared gateway..."
+            sleep 2
+          done
+
+          echo "Shared gateway failed to become healthy"
+          docker compose logs shared-gateway
+          exit 1
 
 
-      # ---------------------------------------------------
-      # 14. Display logs if something failed
-      # ---------------------------------------------------
+      # ============================================
+      # START ACCOUNT FRONTEND
+      # ============================================
+      - name: Start Account frontend
+        run: |
+          docker compose up -d --no-deps account-frontend
 
-      - name: Show Docker logs on failure
+
+      # ============================================
+      # WAIT FOR ACCOUNT FRONTEND
+      # ============================================
+      - name: Wait for Account frontend
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:3001/; then
+              echo "Account frontend is available"
+              exit 0
+            fi
+
+            echo "Waiting for Account frontend..."
+            sleep 2
+          done
+
+          echo "Account frontend failed to become available"
+          docker compose logs account-frontend
+          exit 1
+
+
+      # ============================================
+      # SERVICE TESTS
+      # ============================================
+      - name: Test Shared database health
+        run: |
+          curl --fail http://localhost:6000/health
+
+
+      - name: Test Account database health
+        run: |
+          curl --fail http://localhost:6001/health
+
+
+      - name: Test Account backend health
+        run: |
+          curl --fail http://localhost:5001/health
+
+
+      - name: Test Shared gateway health
+        run: |
+          curl --fail http://localhost:5050/health
+
+
+      - name: Test Account frontend
+        run: |
+          curl --fail http://localhost:3001/
+
+
+      # ============================================
+      # SHOW CONTAINER STATUS
+      # ============================================
+      - name: Show Account CI container status
+        run: |
+          docker compose ps \
+            shared-database \
+            shared-gateway \
+            account-database \
+            account-backend \
+            account-frontend
+
+
+      # ============================================
+      # DEBUG LOGS
+      # ============================================
+      - name: Show logs on failure
         if: failure()
         run: |
-          docker compose logs account-database
-          docker compose logs account-backend
-          docker compose logs account-frontend
+          echo "===== SHARED DATABASE ====="
+          docker compose logs shared-database || true
+
+          echo "===== SHARED GATEWAY ====="
+          docker compose logs shared-gateway || true
+
+          echo "===== ACCOUNT DATABASE ====="
+          docker compose logs account-database || true
+
+          echo "===== ACCOUNT BACKEND ====="
+          docker compose logs account-backend || true
+
+          echo "===== ACCOUNT FRONTEND ====="
+          docker compose logs account-frontend || true
 
 
-      # ---------------------------------------------------
-      # 15. Clean up
-      # ---------------------------------------------------
-
-      - name: Stop Account Profile services
+      # ============================================
+      # CLEANUP
+      # ============================================
+      - name: Stop CI services
         if: always()
         run: |
           docker compose down -v

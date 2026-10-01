@@ -19,6 +19,11 @@ a {
     color: inherit;
 }
 
+
+/* =================================================
+   NAVBAR
+   ================================================= */
+
 .navbar {
     min-height: 70px;
 
@@ -47,6 +52,11 @@ a {
 .navbar nav a:hover {
     color: #2563eb;
 }
+
+
+/* =================================================
+   HERO
+   ================================================= */
 
 .hero {
     min-height: 420px;
@@ -93,26 +103,31 @@ a {
     font-weight: 600;
 }
 
+
+/* =================================================
+   FEATURE CARDS
+   ================================================= */
+
 .features {
-    max-width: 1200px;
+    width: 100%;
+    max-width: 1500px;
 
     margin: 0 auto;
 
-    padding: 40px 24px 80px;
+    padding: 40px 30px 80px;
 
     display: grid;
 
     grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(230px, 1fr)
-        );
+        repeat(5, minmax(0, 1fr));
 
-    gap: 24px;
+    gap: 20px;
 }
 
 .feature-card {
-    padding: 28px;
+    min-width: 0;
+
+    padding: 24px;
 
     background: white;
 
@@ -144,6 +159,57 @@ a {
 .feature-card span {
     color: #9ca3af;
 }
+
+
+/* =================================================
+   RESPONSIVE LAYOUT
+   ================================================= */
+
+@media (max-width: 1100px) {
+
+    .features {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .navbar {
+        padding: 15px 20px;
+
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .navbar nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .hero {
+        min-height: 350px;
+    }
+
+    .hero h1 {
+        font-size: 2.2rem;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+}
+
+
+/* =================================================
+   FOOTER
+   ================================================= */
 
 footer {
     padding: 25px;

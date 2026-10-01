@@ -17,6 +17,15 @@ services:
       account-frontend:
         condition: service_started
 
+      accommodation-frontend:
+        condition: service_healthy
+
+      checklist-frontend:
+        condition: service_healthy
+
+      flight-frontend:
+        condition: service_started
+
     restart: unless-stopped
 
 
@@ -28,17 +37,33 @@ services:
       context: ./shared/gateway
 
     ports:
-      - "5000:5000"
+      - "5050:5000"
 
     environment:
       SHARED_DATABASE_URL: http://shared-database:6000
       ACCOUNT_BACKEND_URL: http://account-backend:5001
+      ACCOMMODATION_BACKEND_URL: http://accommodation-backend:5002
+      ATTRACTIONS_BACKEND_URL: http://attractions-backend:5003
+      CHECKLIST_BACKEND_URL: http://checklist-backend:5004
+      FLIGHT_BACKEND_URL: http://flight-backend:5005
 
     depends_on:
       shared-database:
         condition: service_healthy
 
       account-backend:
+        condition: service_healthy
+
+      accommodation-backend:
+        condition: service_healthy
+
+      attractions-backend:
+        condition: service_healthy
+
+      checklist-backend:
+        condition: service_healthy
+
+      flight-backend:
         condition: service_healthy
 
     healthcheck:
@@ -93,8 +118,6 @@ services:
     build:
       context: ./student-25992405/account-frontend
 
-    # Optional direct access for debugging:
-    # http://localhost:3001
     ports:
       - "3001:80"
 
@@ -118,6 +141,14 @@ services:
     environment:
       ACCOUNT_DATABASE_URL: http://account-database:6001
       OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_DEFAULT_MODEL}
+      MCP_SERVER_URL: http://host.docker.internal:7001/mcp
+      MCP_ENABLED: ${MCP_ENABLED:-true}
+      RAG_SERVICE_URL: http://host.docker.internal:7002
+      RAG_ENABLED: ${RAG_ENABLED:-true}
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     depends_on:
       account-database:
@@ -171,51 +202,397 @@ services:
     restart: unless-stopped
 
 
+  # =================================================
+  # ACCOMMODATION FRONTEND
+  # =================================================
+  accommodation-frontend:
+    build:
+      context: ./student-14649634/accommodation-frontend
+
+    ports:
+      - "3002:3002"
+
+    depends_on:
+      accommodation-backend:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:3002/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ACCOMMODATION BACKEND
+  # =================================================
+  accommodation-backend:
+    build:
+      context: ./student-14649634/accommodation-backend
+
+    ports:
+      - "5002:5002"
+
+    environment:
+      DATABASE_API_URL: http://accommodation-database:6002
+      OLLAMA_URL: http://ollama:11434/api/generate
+      OLLAMA_MODEL: qwen2.5:0.5b
+      MCP_SERVER_URL: http://host.docker.internal:7001/mcp
+      MCP_ENABLED: ${MCP_ENABLED:-true}
+      RAG_SERVICE_URL: http://host.docker.internal:7002
+      RAG_ENABLED: ${RAG_ENABLED:-true}
+
+    depends_on:
+      accommodation-database:
+        condition: service_healthy
+
+      ollama:
+        condition: service_started
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5002/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ACCOMMODATION DATABASE
+  # =================================================
+  accommodation-database:
+    build:
+      context: ./student-14649634/accommodation-database
+
+    ports:
+      - "6002:6002"
+
+    environment:
+      DATABASE_PATH: /data/accommodation.db
+
+    volumes:
+      - accommodation-database-data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:6002/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ATTRACTIONS FRONTEND
+  # =================================================
+  attractions-frontend:
+    build:
+      context: ./student-25693742/attractions-frontend
+
+    ports:
+      - "3003:80"
+
+    depends_on:
+      attractions-backend:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost/health"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ATTRACTIONS BACKEND
+  # =================================================
+  attractions-backend:
+    build:
+      context: ./student-25693742/attractions-backend
+
+    ports:
+      - "5003:5003"
+
+    environment:
+      DATABASE_API_URL: http://attractions-database:6003
+      OLLAMA_URL: http://ollama:11434/api/generate
+      OLLAMA_MODEL: qwen2.5:0.5b
+
+    depends_on:
+      attractions-database:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5003/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # ATTRACTIONS DATABASE
+  # =================================================
+  attractions-database:
+    build:
+      context: ./student-25693742/attractions-database
+
+    ports:
+      - "6003:6003"
+
+    environment:
+      DATABASE_PATH: /data/attractions.db
+
+    volumes:
+      - attractions-database-data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:6003/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+  # =================================================
+  # CHECKLIST FRONTEND
+  # =================================================
+  checklist-frontend:
+    build:
+      context: ./student-14582668/checklist-frontend
+
+    ports:
+      - "3004:3004"
+
+    environment:
+      CHECKLIST_FRONTEND_PORT: 3004
+      CHECKLIST_API_URL: /api/checklist-items
+
+    depends_on:
+      checklist-backend:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:3004/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # CHECKLIST BACKEND
+  # =================================================
+  checklist-backend:
+    build:
+      context: ./student-14582668/checklist-backend
+
+    ports:
+      - "5004:5004"
+
+    environment:
+      CHECKLIST_BACKEND_PORT: 5004
+      CHECKLIST_DATABASE_URL: http://checklist-database:6004
+      OLLAMA_URL: http://ollama:11434/api/generate
+      OLLAMA_MODEL: qwen2.5:0.5b
+
+    depends_on:
+      checklist-database:
+        condition: service_healthy
+
+      ollama:
+        condition: service_started
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5004/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # CHECKLIST DATABASE
+  # =================================================
+  checklist-database:
+    build:
+      context: ./student-14582668/checklist-database
+
+    ports:
+      - "6004:6004"
+
+    environment:
+      CHECKLIST_DATABASE_PORT: 6004
+      DATABASE_PATH: /data/checklist.db
+
+    volumes:
+      - checklist-database-data:/data
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:6004/health')"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+    restart: unless-stopped
+
+
+  # =================================================
+  # FLIGHT FRONTEND
+  # =================================================
   flight-frontend:
     build:
-      context: ./student-5/flight-frontend
+      context: ./student-25487036/flight-frontend
+
     ports:
       - "3005:80"
+
     depends_on:
       flight-backend:
         condition: service_healthy
+
     restart: unless-stopped
 
+
+  # =================================================
+  # FLIGHT BACKEND
+  # =================================================
   flight-backend:
     build:
-      context: ./student-5/flight-backend
+      context: ./student-25487036/flight-backend
+
     ports:
       - "5005:5005"
+
     environment:
       FLIGHT_DATABASE_URL: http://flight-database:6005
       OLLAMA_BASE_URL: http://ollama:11434/v1
       OLLAMA_MODEL: qwen2.5:0.5b
+
     depends_on:
       flight-database:
         condition: service_healthy
+
       ollama:
         condition: service_started
+
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5005/health')"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:5005/health')"
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 5s
+
     restart: unless-stopped
 
+
+  # =================================================
+  # FLIGHT DATABASE
+  # =================================================
   flight-database:
     build:
-      context: ./student-5/flight-database
+      context: ./student-25487036/flight-database
+
     ports:
       - "6005:6005"
+
     volumes:
       - flight-database-data:/data
+
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:6005/health')"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:6005/health')"
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 5s
+
     restart: unless-stopped
 
 
@@ -234,6 +611,39 @@ services:
     restart: unless-stopped
 
 
+  # =================================================
+  # OLLAMA MODEL INITIALISATION
+  # =================================================
+  ollama-init:
+    image: ollama/ollama:latest
+
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+
+    depends_on:
+      ollama:
+        condition: service_started
+
+    entrypoint: /bin/sh
+
+    command:
+      - -c
+      - |
+        echo "Waiting for Ollama..."
+
+        until ollama list > /dev/null 2>&1; do
+          sleep 2
+        done
+
+        echo "Ensuring qwen2.5:0.5b is available..."
+        ollama pull qwen2.5:0.5b
+
+        echo "Ensuring llama3.1:8b is available..."
+        ollama pull llama3.1:8b
+
+        echo "Ollama models are ready."
+
+
 # ===================================================
 # VOLUMES
 # ===================================================
@@ -243,6 +653,12 @@ volumes:
 
   account-database-data:
 
-  ollama-data:
-
   flight-database-data:
+
+  accommodation-database-data:
+
+  attractions-database-data:
+
+  checklist-database-data:
+
+  ollama-data:

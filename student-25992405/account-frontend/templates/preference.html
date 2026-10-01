@@ -60,7 +60,12 @@
             Preferences
         </a>
 
-    </aside>
+        <a href="/account/mcp">
+            MCP Service
+        </a>
+
+            <a href="/account/rag">RAG Service</a>
+</aside>
 
 
     <section class="content-card">
@@ -104,8 +109,7 @@
 
             <input
                 id="travel-style"
-                placeholder=
-                    "e.g. adventure, relaxation, culture"
+                placeholder="e.g. adventure, relaxation, culture"
             >
 
 
@@ -115,8 +119,7 @@
 
             <input
                 id="accommodation-type"
-                placeholder=
-                    "e.g. hotel, hostel, resort"
+                placeholder="e.g. hotel, hostel, resort"
             >
 
 
@@ -126,8 +129,7 @@
 
             <input
                 id="transport-preference"
-                placeholder=
-                    "e.g. train, public transport, car"
+                placeholder="e.g. train, public transport, car"
             >
 
 
@@ -137,8 +139,7 @@
 
             <input
                 id="food-preference"
-                placeholder=
-                    "e.g. local cuisine, vegetarian"
+                placeholder="e.g. local cuisine, vegetarian"
             >
 
 
@@ -207,8 +208,7 @@
             <textarea
                 id="ai-message"
                 rows="5"
-                placeholder=
-                    "For example: I enjoy quiet beach holidays, good food and a relaxed schedule."
+                placeholder="For example: I enjoy quiet beach holidays, good food and a relaxed schedule."
             ></textarea>
 
             <button
@@ -397,6 +397,7 @@ document
                 return;
             }
 
+
             const response = await fetch(
                 "/api/account/preferences",
                 {
@@ -482,8 +483,8 @@ document
                 return;
             }
 
-            responseBox.textContent =
-                data.response;
+            responseBox.innerHTML =
+                data.html;
         }
     );
 

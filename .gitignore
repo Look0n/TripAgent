@@ -3,7 +3,5 @@ __pycache__/
 .pytest_cache/
 .venv/
 .env
-database/*.db*.db
-.DS_Store
-__pycache__/
-*.pyc
+database/*.db
+shared/rag-server/chroma/
