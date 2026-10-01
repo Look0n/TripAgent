@@ -197,7 +197,7 @@
             box.innerHTML = '<div class="ai-loading"><em>Calling MCP tool...</em></div>';
 
             try {
-                const res = await fetch('/api/attractions/mcp/top-rated', {
+                const res = await fetch('/api/attractions/attractions/mcp/top-rated', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ city: city || null, limit: 5 })
@@ -234,7 +234,7 @@
             box.innerHTML = '<div class="ai-loading"><em>Retrieving context and generating answer...</em></div>';
 
             try {
-                const res = await fetch('/api/attractions/rag', {
+                const res = await fetch('/api/attractions/attractions/rag', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ question })

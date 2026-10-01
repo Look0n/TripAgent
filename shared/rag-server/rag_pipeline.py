@@ -103,8 +103,9 @@ FEATURE_KNOWLEDGE = {
         {
             "chunk_id": "attractions_knowledge_categories",
             "text": (
-                "Attraction categories include Sightseeing, Culture, "
-                "Adventure, Entertainment, and Food & Drink."
+                "The categories of attractions available are "
+                "Sightseeing, Culture, Adventure, Entertainment "
+                "and Food & Drink."
             ),
         },
         {
