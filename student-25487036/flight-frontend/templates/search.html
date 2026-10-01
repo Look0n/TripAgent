@@ -38,6 +38,8 @@
         <h2>Flights</h2>
 
         <a href="/flight/search" class="active">AI Search</a>
+        <a href="/flight/search#mcp">MCP Tools</a>
+        <a href="/flight/search#rag">Ask (RAG)</a>
         <a href="/flight/manage">Manage Flights</a>
 
     </aside>
@@ -109,6 +111,159 @@
 
 
         <div id="results"></div>
+
+
+        <h1 id="mcp">MCP Tools</h1>
+
+        <p class="lead">
+            Call a registered tool on the shared MCP server through this
+            feature's backend API. The flight feature may only call its own
+            five tools plus the shared TripAgent tools; any other tool is
+            rejected at the backend boundary.
+        </p>
+
+        <div
+            class="mcp-panel"
+            hx-get="/api/flight/mcp/tools/html"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+        >
+            <p>Loading registered tools...</p>
+        </div>
+
+        <form
+            hx-post="/api/flight/mcp/call/html"
+            hx-target="#mcp-result"
+            hx-swap="innerHTML"
+            class="search-form"
+        >
+
+            <label>
+                Tool
+                <select name="tool" required>
+                    <option value="search_flights">
+                        search_flights
+                    </option>
+                    <option value="get_flights_by_route">
+                        get_flights_by_route
+                    </option>
+                    <option value="get_cheapest_flight">
+                        get_cheapest_flight
+                    </option>
+                    <option value="get_flight">
+                        get_flight
+                    </option>
+                    <option value="check_seat_availability">
+                        check_seat_availability
+                    </option>
+                    <option value="get_system_summary">
+                        get_system_summary
+                    </option>
+                    <option value="list_tripagent_services">
+                        list_tripagent_services
+                    </option>
+                </select>
+            </label>
+
+            <div class="field-row">
+
+                <label>
+                    From
+                    <input
+                        type="text"
+                        name="origin"
+                        value="SYD"
+                        maxlength="3"
+                        placeholder="SYD"
+                    >
+                </label>
+
+                <label>
+                    To
+                    <input
+                        type="text"
+                        name="destination"
+                        maxlength="3"
+                        placeholder="MEL"
+                    >
+                </label>
+
+                <label>
+                    Flight ID
+                    <input
+                        type="number"
+                        name="flight_id"
+                        min="1"
+                        placeholder="2"
+                    >
+                </label>
+
+                <label>
+                    Max price
+                    <input
+                        type="number"
+                        name="max_price"
+                        step="0.01"
+                        min="0"
+                        placeholder="500"
+                    >
+                </label>
+
+            </div>
+
+            <button type="submit" class="primary-button">
+                Run MCP tool
+            </button>
+
+            <div class="htmx-indicator loading">
+                Calling the shared MCP server.
+            </div>
+
+        </form>
+
+        <div id="mcp-result"></div>
+
+
+        <h1 id="rag">Ask about this service</h1>
+
+        <p class="lead">
+            Ask a question about the Flight Search Service. The shared RAG
+            server retrieves project context and returns a grounded answer
+            with source citations and a confidence category. If no relevant
+            context is found, an insufficient-context response is shown
+            instead of a generated answer.
+        </p>
+
+        <form
+            hx-post="/api/flight/rag/answer/html"
+            hx-target="#rag-result"
+            hx-swap="innerHTML"
+            class="search-form"
+        >
+
+            <label>
+                Question
+                <input
+                    type="text"
+                    name="query"
+                    required
+                    placeholder="How does the flight service handle limited seat availability?"
+                >
+            </label>
+
+            <input type="hidden" name="k" value="5">
+
+            <button type="submit" class="primary-button">
+                Ask the RAG service
+            </button>
+
+            <div class="htmx-indicator loading">
+                Retrieving context and generating a grounded answer.
+            </div>
+
+        </form>
+
+        <div id="rag-result"></div>
 
     </section>
 

@@ -1,6 +1,11 @@
 from mcp.server.fastmcp import FastMCP
 
-from tool_registry import ACCOUNT_TOOLS, ACCOMMODATION_TOOLS, SHARED_TOOLS
+from tool_registry import (
+    ACCOUNT_TOOLS,
+    ACCOMMODATION_TOOLS,
+    FLIGHT_TOOLS,
+    SHARED_TOOLS,
+)
 from tools.account_tools import (
     check_profile_completeness as check_profile_completeness_impl,
     get_customer_preferences as get_customer_preferences_impl,
@@ -14,6 +19,14 @@ from tools.accommodation_tools import (
     get_accommodations as get_accommodations_impl,
     get_accommodation_by_city as get_accommodation_by_city_impl,
     check_accommodation_availability as check_accommodation_availability_impl,
+)
+
+from tools.flight_tools import (
+    check_seat_availability_impl,
+    get_cheapest_flight_impl,
+    get_flight_impl,
+    get_flights_by_route_impl,
+    search_flights_impl,
 )
 
 from tools.tripagent_tools import (
@@ -120,6 +133,60 @@ def check_accommodation_availability(
     
 
 # ---------------------------------------------------------------------------
+# Flight feature tools
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def search_flights(
+    origin: str,
+    destination: str | None = None,
+    max_price: float | None = None,
+) -> dict:
+    """Search TripAgent flight records by route and optional maximum price."""
+    return search_flights_impl(
+        origin=origin,
+        destination=destination,
+        max_price=max_price,
+    )
+
+
+@mcp.tool()
+def get_flight(flight_id: int) -> dict:
+    """Retrieve one flight record by its identifier."""
+    return get_flight_impl(flight_id)
+
+
+@mcp.tool()
+def get_flights_by_route(
+    origin: str,
+    destination: str,
+) -> dict:
+    """List every flight between two airports."""
+    return get_flights_by_route_impl(
+        origin,
+        destination,
+    )
+
+
+@mcp.tool()
+def get_cheapest_flight(
+    origin: str,
+    destination: str,
+) -> dict:
+    """Return the lowest priced flight on a route."""
+    return get_cheapest_flight_impl(
+        origin,
+        destination,
+    )
+
+
+@mcp.tool()
+def check_seat_availability(flight_id: int) -> dict:
+    """Report remaining seats and limited availability for one flight."""
+    return check_seat_availability_impl(flight_id)
+
+
+# ---------------------------------------------------------------------------
 # Shared TripAgent tools
 # ---------------------------------------------------------------------------
 
@@ -169,14 +236,22 @@ if __name__ == "__main__":
     for tool_name in ACCOMMODATION_TOOLS:
         print(f"- {tool_name}")
 
+    print("\nFlight tools:")
+    for tool_name in FLIGHT_TOOLS:
+        print(f"- {tool_name}")
+
     print("\nShared TripAgent tools:")
     for tool_name in SHARED_TOOLS:
         print(f"- {tool_name}")
 
-    print(
-        f"\nTotal registered tools: "
-        f"{len(ACCOUNT_TOOLS) + len(ACCOMMODATION_TOOLS) + len(SHARED_TOOLS)}"
+    total_tools = (
+        len(ACCOUNT_TOOLS)
+        + len(ACCOMMODATION_TOOLS)
+        + len(FLIGHT_TOOLS)
+        + len(SHARED_TOOLS)
     )
+
+    print(f"\nTotal registered tools: {total_tools}")
     print("=" * 60)
 
     mcp.run(transport="streamable-http")
