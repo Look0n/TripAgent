@@ -105,6 +105,8 @@ jobs:
         env:
           FLIGHT_DATABASE_URL: http://127.0.0.1:6005
           OLLAMA_BASE_URL: http://127.0.0.1:11434/v1
+          MCP_ENABLED: "false"
+          RAG_ENABLED: "false"
         run: |
           python app.py > backend.log 2>&1 &
           echo $! > backend.pid
@@ -141,6 +143,56 @@ jobs:
           fi
 
           echo "Backend integration validated"
+
+      - name: Verify MCP and RAG are disabled during CI
+        run: |
+          echo "Confirming MCP mode is disabled"
+          MCP_MODE=$(curl -sf http://127.0.0.1:5005/api/flight/mcp/mode \
+            | python -c "import json,sys; print(json.load(sys.stdin)['enabled'])")
+          if [ "${MCP_MODE}" != "False" ]; then
+            echo "Expected MCP mode disabled in CI, got ${MCP_MODE}"
+            exit 1
+          fi
+
+          echo "Confirming RAG mode is disabled"
+          RAG_MODE=$(curl -sf http://127.0.0.1:5005/api/flight/rag/mode \
+            | python -c "import json,sys; print(json.load(sys.stdin)['enabled'])")
+          if [ "${RAG_MODE}" != "False" ]; then
+            echo "Expected RAG mode disabled in CI, got ${RAG_MODE}"
+            exit 1
+          fi
+
+          echo "Confirming MCP integration is retained but refuses calls"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST http://127.0.0.1:5005/api/flight/mcp/call \
+            -H "Content-Type: application/json" \
+            -d '{"tool":"search_flights","arguments":{"origin":"SYD"}}')
+          if [ "${STATUS}" != "503" ]; then
+            echo "Expected 503 from disabled MCP, got ${STATUS}"
+            exit 1
+          fi
+
+          echo "Confirming tool boundaries reject cross-feature tools"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST http://127.0.0.1:5005/api/flight/mcp/call \
+            -H "Content-Type: application/json" \
+            -d '{"tool":"get_customer_profile","arguments":{"customer_id":1}}')
+          if [ "${STATUS}" != "403" ]; then
+            echo "Expected 403 for out-of-boundary tool, got ${STATUS}"
+            exit 1
+          fi
+
+          echo "Confirming RAG integration is retained but refuses calls"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST http://127.0.0.1:5005/api/flight/rag/answer \
+            -H "Content-Type: application/json" \
+            -d '{"query":"What is the flight service?"}')
+          if [ "${STATUS}" != "503" ]; then
+            echo "Expected 503 from disabled RAG, got ${STATUS}"
+            exit 1
+          fi
+
+          echo "MCP and RAG correctly retained and disabled during CI"
 
       - name: Validate agentic workflow stages
         run: |
