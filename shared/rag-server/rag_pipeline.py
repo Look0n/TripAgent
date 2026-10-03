@@ -27,9 +27,9 @@ SUPPORTED_FEATURES = {
 FEATURE_DIRS = {
     "account": REPO_DIR / "student-25992405",
     "accommodation": REPO_DIR / "student-14649634",
-    "attractions": REPO_DIR / "student-25992374",
+    "attractions": REPO_DIR / "student-25693742",
     "checklist": REPO_DIR / "student-14582668",
-    "flight": REPO_DIR / "student-25992381",
+    "flight": REPO_DIR / "student-25487036",
 }
 
 FEATURE_DATABASE_URLS = {
@@ -91,7 +91,42 @@ FEATURE_KNOWLEDGE = {
             ),
         },
     ],
-    "attractions": [],
+    "attractions": [
+        {
+            "chunk_id": "attractions_knowledge_search",
+            "text": (
+                "TripAgent Attractions allows users to browse, search, "
+                "and filter attraction and tour records by city, "
+                "category, and maximum price."
+            ),
+        },
+        {
+            "chunk_id": "attractions_knowledge_categories",
+            "text": (
+                "The categories of attractions available are "
+                "Sightseeing, Culture, Adventure, Entertainment "
+                "and Food & Drink."
+            ),
+        },
+        {
+            "chunk_id": "attractions_knowledge_reviews",
+            "text": (
+                "Each attraction can have customer reviews with a rating "
+                "from 1 to 5. The average_rating field is recalculated "
+                "automatically whenever a new review is submitted."
+            ),
+        },
+        {
+            "chunk_id": "attractions_knowledge_ai",
+            "text": (
+                "The Attractions Service provides AI-assisted "
+                "recommendations using a Plan-Act-Observe-Adapt pattern: "
+                "it extracts city, category, budget and preferences from "
+                "a free-text request, filters real database candidates, "
+                "and only then asks the LLM to explain the best matches."
+            ),
+        },
+    ],
     "checklist": [
         {
             "chunk_id": "checklist_knowledge_item_types",
@@ -162,6 +197,61 @@ FEATURE_KNOWLEDGE = {
         },
     ],
     "flight": [],
+    "checklist": [],
+    "flight": [
+        {
+            "chunk_id": "flight_knowledge_search",
+            "text": (
+                "TripAgent Flight Search allows travellers to browse, "
+                "search and filter flight records by origin airport and "
+                "destination airport."
+            ),
+        },
+        {
+            "chunk_id": "flight_knowledge_crud",
+            "text": (
+                "The Flight Search Service supports full create, read, "
+                "update and delete operations on flight records through "
+                "its frontend and backend API."
+            ),
+        },
+        {
+            "chunk_id": "flight_knowledge_availability",
+            "text": (
+                "A flight with fewer than ten seats remaining is reported "
+                "as limited availability. If seat availability is not "
+                "recorded, the system returns an unknown availability "
+                "status rather than assuming the flight is full."
+            ),
+        },
+        {
+            "chunk_id": "flight_knowledge_agentic",
+            "text": (
+                "Flight recommendations follow a Plan, Act, Observe, Adapt "
+                "workflow. The Observe stage verifies retrieved flight data "
+                "deterministically in code, computing the price and duration "
+                "ranges and identifying the cheapest and quickest flights "
+                "before the language model is called."
+            ),
+        },
+        {
+            "chunk_id": "flight_knowledge_grounding",
+            "text": (
+                "The Flight Search language model may only describe flights "
+                "returned by the flight database query. It must not invent "
+                "airlines, routes, prices or times, and the verified flight "
+                "table is displayed alongside every generated recommendation."
+            ),
+        },
+        {
+            "chunk_id": "flight_knowledge_duplicates",
+            "text": (
+                "A flight is uniquely identified by its airline, origin, "
+                "destination and departure time. Creating a duplicate "
+                "returns an HTTP 409 conflict rather than a second record."
+            ),
+        },
+    ],
 }
 
 EMBED_VECTOR_SIZE = 256
@@ -354,6 +444,151 @@ def load_accommodation_database_chunks() -> list[dict[str, Any]]:
             "indexed_at": now_iso(),
         }]
 
+def load_attractions_database_chunks() -> list[dict[str, Any]]:
+    base_url = FEATURE_DATABASE_URLS["attractions"].rstrip("/")
+
+    try:
+        response = requests.get(
+            f"{base_url}/health",
+            timeout=5,
+        )
+        response.raise_for_status()
+
+        return [{
+            "chunk_id": "attractions_db_health",
+            "source_id": "attractions-database:/health",
+            "authority_tier": "tier_1",
+            "text": (
+                "The TripAgent Attractions database "
+                "service is available."
+            ),
+            "metadata": {
+                "source_type": "database_service",
+                "metric": "health",
+            },
+            "indexed_at": now_iso(),
+        }]
+
+    except Exception as exc:
+        return [{
+            "chunk_id": "attractions_db_unavailable",
+            "source_id": "attractions-database:/health",
+            "authority_tier": "tier_1",
+            "text": (
+                "The TripAgent Attractions database service "
+                "was unavailable when the corpus was refreshed."
+            ),
+            "metadata": {
+                "source_type": "database_service",
+                "available": False,
+                "error_type": type(exc).__name__,
+            },
+            "indexed_at": now_iso(),
+        }]
+
+
+def load_flight_database_chunks() -> list[dict[str, Any]]:
+    """Tier 1: record Flight database availability and non-sensitive route coverage."""
+    base_url = FEATURE_DATABASE_URLS["flight"].rstrip("/")
+
+    try:
+        response = requests.get(f"{base_url}/health", timeout=5)
+        response.raise_for_status()
+    except Exception as exc:
+        return [{
+            "chunk_id": "flight_db_unavailable",
+            "source_id": "flight-database:/health",
+            "authority_tier": "tier_1",
+            "text": (
+                "The TripAgent Flight database service was unavailable "
+                "when the corpus was refreshed."
+            ),
+            "metadata": {
+                "source_type": "database_service",
+                "available": False,
+                "error_type": type(exc).__name__,
+            },
+            "indexed_at": now_iso(),
+        }]
+
+    chunks = [{
+        "chunk_id": "flight_db_health",
+        "source_id": "flight-database:/health",
+        "authority_tier": "tier_1",
+        "text": "The TripAgent Flight database service is available.",
+        "metadata": {
+            "source_type": "database_service",
+            "metric": "health",
+        },
+        "indexed_at": now_iso(),
+    }]
+
+    try:
+        response = requests.get(f"{base_url}/flights", timeout=10)
+        response.raise_for_status()
+        flights = _normalise_records(response.json())
+    except Exception:
+        return chunks
+
+    if not flights:
+        return chunks
+
+    airlines = sorted({
+        str(f.get("airline")).strip()
+        for f in flights
+        if f.get("airline")
+    })
+
+    routes = sorted({
+        f"{f.get('origin')}-{f.get('destination')}"
+        for f in flights
+        if f.get("origin") and f.get("destination")
+    })
+
+    prices = [
+        float(f["price"])
+        for f in flights
+        if f.get("price") is not None
+    ]
+
+    chunks.append({
+        "chunk_id": "flight_db_coverage",
+        "source_id": "flight-database:/flights",
+        "authority_tier": "tier_1",
+        "text": (
+            f"The TripAgent Flight database holds {len(flights)} flight "
+            f"records covering {len(routes)} routes operated by "
+            f"{len(airlines)} airlines. Airlines: {', '.join(airlines)}. "
+            f"Routes: {', '.join(routes)}."
+        ),
+        "metadata": {
+            "source_type": "database_service",
+            "metric": "coverage",
+            "record_count": len(flights),
+            "route_count": len(routes),
+        },
+        "indexed_at": now_iso(),
+    })
+
+    if prices:
+        chunks.append({
+            "chunk_id": "flight_db_pricing",
+            "source_id": "flight-database:/flights",
+            "authority_tier": "tier_1",
+            "text": (
+                f"Flight fares in the TripAgent Flight database range from "
+                f"${min(prices):.2f} to ${max(prices):.2f}."
+            ),
+            "metadata": {
+                "source_type": "database_service",
+                "metric": "pricing",
+            },
+            "indexed_at": now_iso(),
+        })
+
+    return chunks
+
+
 def load_checklist_database_chunks() -> list[dict[str, Any]]:
     base_url = FEATURE_DATABASE_URLS["checklist"].rstrip("/")
 
@@ -495,6 +730,10 @@ def load_database_chunks(feature: str) -> list[dict[str, Any]]:
         return load_account_database_chunks()
     if feature == "accommodation":
         return load_accommodation_database_chunks()
+    if feature == "flight":
+        return load_flight_database_chunks()
+    if feature == "attractions":
+        return load_attractions_database_chunks()
     if feature == "checklist":
         return load_checklist_database_chunks()
 
@@ -778,13 +1017,14 @@ def generate_with_ollama(query: str, context: str) -> str:
     ollama_generate_url = os.getenv("OLLAMA_GENERATE_URL", "http://localhost:11434/api/generate")
     prompt = f"""You are the TripAgent retrieval-grounded assistant.
 
-Answer the user's question using only the retrieved context below.
+Every passage below was selected because it is relevant to the question.
+Answer the question using only the information stated in these passages.
 
 Rules:
-- If any retrieved passage directly answers the question, use that evidence and answer concisely.
-- Some retrieved passages may be unrelated. Ignore unrelated passages instead of treating them as a reason to reject the answer.
-- Do not add facts that are not supported by the retrieved context.
-- Only return exactly "Insufficient evidence." when none of the retrieved passages contains enough information to answer the question.
+- Answer in two or three sentences using only facts that appear in the passages.
+- Do not add any fact that is not stated in the passages.
+- Do not use your own general knowledge, even if you believe the answer.
+- Do not claim the evidence is insufficient. Relevance has already been checked.
 - Return only the answer text. Do not add headings such as "Answer" or "Evidence".
 
 QUESTION:
@@ -807,6 +1047,90 @@ ANSWER:
         return f"Ollama unavailable: {exc}"
 
 
+STOPWORDS = {
+    "a", "about", "an", "and", "any", "are", "as", "at", "be", "been", "by",
+    "can", "did", "do", "doe", "for", "from", "ha", "had", "how", "i", "if",
+    "in", "into", "is", "it", "many", "me", "much", "my", "of", "on", "or",
+    "our", "that", "the", "their", "there", "thi", "to", "wa", "what", "when",
+    "where", "which", "who", "why", "will", "with", "you", "your",
+}
+
+MODEL_REFUSAL_PREFIXES = (
+    "insufficient evidence",
+    "insufficient context",
+    "i do not have enough",
+    "i don't have enough",
+)
+
+
+def content_words(text: str) -> set[str]:
+    """Lower-case, de-pluralised, stopword-free tokens used for relevance scoring."""
+    tokens = {
+        word.strip(".,?!:;\"'()[]").rstrip("s")
+        for word in str(text or "").lower().split()
+    }
+    return {word for word in tokens if len(word) > 2 and word not in STOPWORDS}
+
+
+def is_model_refusal(answer: str) -> bool:
+    """True when the model declined to answer despite being given relevant context."""
+    cleaned = str(answer or "").strip().lower().lstrip('"').rstrip('."')
+    return any(cleaned.startswith(prefix) for prefix in MODEL_REFUSAL_PREFIXES)
+
+
+def filter_relevant_results(
+    results: list[dict[str, Any]],
+    query: str,
+    min_overlap: int = 2,
+) -> list[dict[str, Any]]:
+    """Keep only passages that share meaningful terms with the query.
+
+    Authority tier is deliberately not a free pass. A tier_1 service fact is
+    authoritative about the flight service, not about every question asked of
+    it, so an off-topic query must be able to retain nothing at all.
+    """
+    query_words = content_words(query)
+    if not query_words:
+        return []
+
+    relevant: list[dict[str, Any]] = []
+
+    for row in results:
+        overlap = query_words & content_words(row.get("text", ""))
+        if len(overlap) >= min_overlap:
+            relevant.append(row)
+
+    return relevant
+
+
+def insufficient_context_response(
+    feature: str,
+    query: str,
+    k: int,
+    retrieval: dict[str, Any],
+) -> dict[str, Any]:
+    """Structured response used when no retrieved passage supports an answer."""
+    return {
+        "status": "success",
+        "feature": feature,
+        "query": query,
+        "answer": (
+            "Insufficient context. The shared RAG corpus for this feature "
+            "does not contain information that answers this question, so no "
+            "grounded answer was generated."
+        ),
+        "insufficient_context": True,
+        "citations": [],
+        "confidence_category": "Unknown",
+        "retrieval_summary": {
+            "k": k,
+            "retrieved_count": 0,
+            "top_chunk": None,
+            "retrieval_mode": retrieval.get("retrieval_mode"),
+        },
+    }
+
+
 def answer_question(query: str, feature: str, k: int = 5, caller: str = "student") -> dict[str, Any]:
     feature = validate_feature(feature)
     start = time.time()
@@ -820,7 +1144,10 @@ def answer_question(query: str, feature: str, k: int = 5, caller: str = "student
         return output
 
     results = retrieval.get("results", [])
-    
+
+    if feature == "flight":
+        results = filter_relevant_results(results, query)
+
     if feature == "accommodation":
         query_words = {
             word.strip(".,?!").rstrip("s")
@@ -842,9 +1169,37 @@ def answer_question(query: str, feature: str, k: int = 5, caller: str = "student
                 relevant_results.append(r)
 
         results = relevant_results
-    
+
+    if feature == "attractions":
+        # The feature name appears in almost every attractions chunk, so it
+        # cannot count as evidence on its own; any other shared term can.
+        query_words = content_words(query) - {"attraction", "tripagent"}
+        results = [
+            r for r in results
+            if query_words & content_words(r.get("text", ""))
+        ]
+
+    if not results:
+        output = insufficient_context_response(feature, query, k, retrieval)
+        append_audit(
+            "answer_question",
+            {"feature": feature, "query": query, "k": k, "caller": caller},
+            {"confidence_category": "Unknown", "citation_count": 0},
+            "pass", "insufficient_context", start)
+        return output
+
     context = "\n\n".join(r.get("text", "") for r in results)
     answer = generate_with_ollama(query, context)
+
+    if is_model_refusal(answer):
+        output = insufficient_context_response(feature, query, k, retrieval)
+        append_audit(
+            "answer_question",
+            {"feature": feature, "query": query, "k": k, "caller": caller},
+            {"confidence_category": "Unknown", "citation_count": 0},
+            "pass", "insufficient_context_model_declined", start)
+        return output
+
     citations = [{
         "chunk_id": r.get("chunk_id"),
         "source_id": r.get("source_id"),
@@ -856,6 +1211,7 @@ def answer_question(query: str, feature: str, k: int = 5, caller: str = "student
         "feature": feature,
         "query": query,
         "answer": answer,
+        "insufficient_context": False,
         "citations": citations,
         "confidence_category": confidence,
         "retrieval_summary": {

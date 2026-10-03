@@ -1,6 +1,13 @@
 from mcp.server.fastmcp import FastMCP
 
-from tool_registry import ACCOUNT_TOOLS, ACCOMMODATION_TOOLS, CHECKLIST_TOOLS, SHARED_TOOLS
+from tool_registry import (
+    ACCOUNT_TOOLS,
+    ACCOMMODATION_TOOLS,
+    FLIGHT_TOOLS,
+    ATTRACTIONS_TOOLS,
+    CHECKLIST_TOOLS, 
+    SHARED_TOOLS,
+)
 from tools.account_tools import (
     check_profile_completeness as check_profile_completeness_impl,
     get_customer_preferences as get_customer_preferences_impl,
@@ -14,12 +21,6 @@ from tools.accommodation_tools import (
     get_accommodations as get_accommodations_impl,
     get_accommodation_by_city as get_accommodation_by_city_impl,
     check_accommodation_availability as check_accommodation_availability_impl,
-)
-
-from tools.checklist_tools import (
-    get_checklist_item as get_checklist_item_impl,
-    get_checklist_items as get_checklist_items_impl,
-    get_checklist_summary as get_checklist_summary_impl,
 )
 
 from tools.tripagent_tools import (
@@ -123,31 +124,7 @@ def check_accommodation_availability(
         check_in,
         check_out,
     )
-
-# ---------------------------------------------------------------------------
-# Checklist feature tools
-# ---------------------------------------------------------------------------
-@mcp.tool()
-def get_checklist_items(
-    item_type: str | None = None,
-    category: str | None = None,
-    priority: str | None = None,
-    is_completed: bool | None = None,
-) -> dict:
-    return get_checklist_items_impl(
-        item_type=item_type,
-        category=category,
-        priority=priority,
-        is_completed=is_completed,
-    )
-
-@mcp.tool()
-def get_checklist_item(item_id: int) -> dict:
-    return get_checklist_item_impl(item_id)
-
-@mcp.tool()
-def get_checklist_summary() -> dict:
-    return get_checklist_summary_impl()
+    
 
 # ---------------------------------------------------------------------------
 # Shared TripAgent tools
@@ -199,18 +176,16 @@ if __name__ == "__main__":
     for tool_name in ACCOMMODATION_TOOLS:
         print(f"- {tool_name}")
 
-    print("\nChecklist tools:")
-    for tool_name in CHECKLIST_TOOLS:
-        print(f"- {tool_name}")
-
     print("\nShared TripAgent tools:")
     for tool_name in SHARED_TOOLS:
         print(f"- {tool_name}")
 
     print(
         f"\nTotal registered tools: "
-        f"{len(ACCOUNT_TOOLS) + len(ACCOMMODATION_TOOLS) + len(CHECKLIST_TOOLS) + len(SHARED_TOOLS)}"
+        f"{len(ACCOUNT_TOOLS) + len(ACCOMMODATION_TOOLS) + len(SHARED_TOOLS)}"
     )
+
+    print(f"\nTotal registered tools: {total_tools}")
     print("=" * 60)
 
     mcp.run(transport="streamable-http")
