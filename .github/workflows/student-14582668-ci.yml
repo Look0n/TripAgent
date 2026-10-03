@@ -120,15 +120,10 @@ jobs:
       - name: Start Checklist database
         run: |
           docker run -d \
-            --name "$BACKEND_CONTAINER" \
+            --name "$DATABASE_CONTAINER" \
             --network "$CHECKLIST_NETWORK" \
-            -p 5004:5004 \
-            -e CHECKLIST_DATABASE_URL="http://$DATABASE_CONTAINER:6004" \
-            -e MCP_ENABLED=false \
-            -e RAG_ENABLED=false \
-            -e OLLAMA_URL="http://127.0.0.1:11434/api/generate" \
-            -e OLLAMA_MODEL="$OLLAMA_DEFAULT_MODEL" \
-            checklist-backend-ci
+            -p 6004:6004 \
+            checklist-database-ci
 
       - name: Wait for Checklist database
         run: |
@@ -147,6 +142,53 @@ jobs:
           docker logs "$DATABASE_CONTAINER"
           exit 1
       
+      - name: Verify Checklist seed records
+        run: |
+          CHECKLIST_COUNT=$(
+            curl --fail --silent http://localhost:6004/checklist-items \
+              | python -c "import json, sys; print(len(json.load(sys.stdin)))"
+          )
+
+          echo "Checklist seed records: $CHECKLIST_COUNT"
+
+          if [ "$CHECKLIST_COUNT" -lt 10 ]; then
+            echo "Expected at least 10 checklist records."
+            exit 1
+          fi
+
+      # ---------------------------------------------------
+      # 9. Start and verify the backend
+      # ---------------------------------------------------
+      - name: Start Checklist backend
+        run: |
+          docker run -d \
+            --name "$BACKEND_CONTAINER" \
+            --network "$CHECKLIST_NETWORK" \
+            -p 5004:5004 \
+            -e CHECKLIST_DATABASE_URL="http://$DATABASE_CONTAINER:6004" \
+            -e MCP_ENABLED=false \
+            -e RAG_ENABLED=false \
+            -e OLLAMA_URL="http://127.0.0.1:11434/api/generate" \
+            -e OLLAMA_MODEL="$OLLAMA_DEFAULT_MODEL" \
+            checklist-backend-ci
+
+      - name: Wait for Checklist backend
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:5004/health; then
+              echo ""
+              echo "Checklist backend is healthy."
+              exit 0
+            fi
+
+            echo "Waiting for Checklist backend..."
+            sleep 2
+          done
+
+          echo "Checklist backend failed to become healthy."
+          docker logs "$BACKEND_CONTAINER"
+          exit 1
+
       - name: Verify MCP and RAG are disabled
         run: |
           docker exec -i "$BACKEND_CONTAINER" python - <<'PY'
@@ -186,51 +228,6 @@ jobs:
 
           print("PASS: MCP and RAG are disabled in the CI container.")
           PY
-
-      - name: Verify Checklist seed records
-        run: |
-          CHECKLIST_COUNT=$(
-            curl --fail --silent http://localhost:6004/checklist-items \
-              | python -c "import json, sys; print(len(json.load(sys.stdin)))"
-          )
-
-          echo "Checklist seed records: $CHECKLIST_COUNT"
-
-          if [ "$CHECKLIST_COUNT" -lt 10 ]; then
-            echo "Expected at least 10 checklist records."
-            exit 1
-          fi
-
-      # ---------------------------------------------------
-      # 9. Start and verify the backend
-      # ---------------------------------------------------
-      - name: Start Checklist backend
-        run: |
-          docker run -d \
-            --name "$BACKEND_CONTAINER" \
-            --network "$CHECKLIST_NETWORK" \
-            -p 5004:5004 \
-            -e CHECKLIST_DATABASE_URL="http://$DATABASE_CONTAINER:6004" \
-            -e OLLAMA_URL="http://ollama:11434/api/generate" \
-            -e OLLAMA_MODEL="$OLLAMA_DEFAULT_MODEL" \
-            checklist-backend-ci
-
-      - name: Wait for Checklist backend
-        run: |
-          for i in {1..30}; do
-            if curl --fail --silent http://localhost:5004/health; then
-              echo ""
-              echo "Checklist backend is healthy."
-              exit 0
-            fi
-
-            echo "Waiting for Checklist backend..."
-            sleep 2
-          done
-
-          echo "Checklist backend failed to become healthy."
-          docker logs "$BACKEND_CONTAINER"
-          exit 1
 
       # ---------------------------------------------------
       # 10. Start and verify the frontend
