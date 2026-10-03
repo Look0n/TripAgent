@@ -462,15 +462,20 @@ services:
     environment:
       CHECKLIST_BACKEND_PORT: 5004
       CHECKLIST_DATABASE_URL: http://checklist-database:6004
-      OLLAMA_URL: http://ollama:11434/api/generate
+      OLLAMA_URL: http://host.docker.internal:11434/api/generate
       OLLAMA_MODEL: qwen2.5:0.5b
+      MCP_SERVER_URL: http://host.docker.internal:7001/mcp
+      MCP_ENABLED: ${MCP_ENABLED:-true}
+      RAG_SERVICE_URL: http://host.docker.internal:7002
+      RAG_ENABLED: ${RAG_ENABLED:-true}
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     depends_on:
       checklist-database:
         condition: service_healthy
 
-      ollama:
-        condition: service_started
 
     healthcheck:
       test:

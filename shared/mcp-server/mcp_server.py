@@ -2,6 +2,7 @@ from mcp.server.fastmcp import FastMCP
 
 from tool_registry import (
     ACCOUNT_TOOLS,
+    CHECKLIST_TOOLS,
     ACCOMMODATION_TOOLS,
     FLIGHT_TOOLS,
     ATTRACTIONS_TOOLS,
@@ -36,6 +37,12 @@ from tools.attractions_tools import (
     search_attractions_impl as search_attractions_impl,
     get_attraction_details_impl as get_attraction_details_impl,
     get_top_rated_attractions_impl as get_top_rated_attractions_impl,
+)
+
+from tools.checklist_tools import (
+    get_checklist_item as get_checklist_item_impl,
+    get_checklist_items as get_checklist_items_impl,
+    get_checklist_summary as get_checklist_summary_impl,
 )
 
 from tools.tripagent_tools import (
@@ -252,6 +259,31 @@ def get_top_rated_attractions(
 
 
 # ---------------------------------------------------------------------------
+# Checklist feature tools
+# ---------------------------------------------------------------------------
+@mcp.tool()
+def get_checklist_items(
+    item_type: str | None = None,
+    category: str | None = None,
+    priority: str | None = None,
+    is_completed: bool | None = None,
+) -> dict:
+    return get_checklist_items_impl(
+        item_type=item_type,
+        category=category,
+        priority=priority,
+        is_completed=is_completed,
+    )
+
+@mcp.tool()
+def get_checklist_item(item_id: int) -> dict:
+    return get_checklist_item_impl(item_id)
+
+@mcp.tool()
+def get_checklist_summary() -> dict:
+    return get_checklist_summary_impl()
+
+# ---------------------------------------------------------------------------
 # Shared TripAgent tools
 # ---------------------------------------------------------------------------
 
@@ -309,6 +341,10 @@ if __name__ == "__main__":
     for tool_name in ATTRACTIONS_TOOLS:
         print(f"- {tool_name}")
 
+    print("\nChecklist tools:")
+    for tool_name in CHECKLIST_TOOLS:
+        print(f"- {tool_name}")
+
     print("\nShared TripAgent tools:")
     for tool_name in SHARED_TOOLS:
         print(f"- {tool_name}")
@@ -318,6 +354,7 @@ if __name__ == "__main__":
         + len(ACCOMMODATION_TOOLS)
         + len(FLIGHT_TOOLS)
         + len(ATTRACTIONS_TOOLS)
+        + len(CHECKLIST_TOOLS)
         + len(SHARED_TOOLS)
     )
 
