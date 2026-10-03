@@ -1,0 +1,92 @@
+﻿[
+    {
+        "category":  "Documents",
+        "description":  "Bring a valid passport",
+        "is_completed":  0,
+        "item_id":  1,
+        "item_type":  "packing",
+        "priority":  "High",
+        "title":  "Passport"
+    },
+    {
+        "category":  "Electronics",
+        "description":  "Pack phone charger and cable",
+        "is_completed":  0,
+        "item_id":  2,
+        "item_type":  "packing",
+        "priority":  "Medium",
+        "title":  "Phone Charger"
+    },
+    {
+        "category":  "Electronics",
+        "description":  "Pack an international travel adapter",
+        "is_completed":  0,
+        "item_id":  3,
+        "item_type":  "packing",
+        "priority":  "Medium",
+        "title":  "Travel Adapter"
+    },
+    {
+        "category":  "Health",
+        "description":  "Pack required medication",
+        "is_completed":  0,
+        "item_id":  4,
+        "item_type":  "packing",
+        "priority":  "High",
+        "title":  "Medication"
+    },
+    {
+        "category":  "Clothing",
+        "description":  "Pack suitable clothes for the destination",
+        "is_completed":  0,
+        "item_id":  5,
+        "item_type":  "packing",
+        "priority":  "Medium",
+        "title":  "Clothes"
+    },
+    {
+        "category":  "Flight",
+        "description":  "Complete airline online check-in",
+        "is_completed":  0,
+        "item_id":  6,
+        "item_type":  "task",
+        "priority":  "High",
+        "title":  "Online Check-in"
+    },
+    {
+        "category":  "Preparation",
+        "description":  "Check or purchase travel insurance",
+        "is_completed":  0,
+        "item_id":  7,
+        "item_type":  "task",
+        "priority":  "Medium",
+        "title":  "Travel Insurance"
+    },
+    {
+        "category":  "Documents",
+        "description":  "Confirm destination visa requirements",
+        "is_completed":  0,
+        "item_id":  8,
+        "item_type":  "task",
+        "priority":  "High",
+        "title":  "Check Visa Requirements"
+    },
+    {
+        "category":  "Money",
+        "description":  "Prepare destination currency if required",
+        "is_completed":  0,
+        "item_id":  9,
+        "item_type":  "task",
+        "priority":  "Low",
+        "title":  "Exchange Currency"
+    },
+    {
+        "category":  "Communication",
+        "description":  "Arrange an eSIM or enable international roaming before departure",
+        "is_completed":  0,
+        "item_id":  10,
+        "item_type":  "task",
+        "priority":  "Medium",
+        "title":  "Set Up eSIM or Roaming"
+    }
+]

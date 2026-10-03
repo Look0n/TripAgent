@@ -1,0 +1,13 @@
+﻿{
+    "result":  {
+                   "success":  true,
+                   "summary":  {
+                                   "completed":  0,
+                                   "high_priority_pending":  4,
+                                   "pending":  10,
+                                   "total":  10
+                               }
+               },
+    "success":  true,
+    "tool":  "get_checklist_summary"
+}

@@ -1,0 +1,16 @@
+﻿{
+    "result":  {
+                   "item":  {
+                                "category":  "Documents",
+                                "description":  "Bring a valid passport",
+                                "is_completed":  0,
+                                "item_id":  1,
+                                "item_type":  "packing",
+                                "priority":  "High",
+                                "title":  "Passport"
+                            },
+                   "success":  true
+               },
+    "success":  true,
+    "tool":  "get_checklist_item"
+}

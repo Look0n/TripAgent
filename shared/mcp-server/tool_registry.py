@@ -16,6 +16,12 @@ ACCOMMODATION_TOOLS = [
     "get_available_accommodations",
 ]
 
+CHECKLIST_TOOLS = [
+    "get_checklist_item",
+    "get_checklist_items",
+    "get_checklist_summary",
+]
+
 SHARED_TOOLS = [
     "list_tripagent_services",
     "get_service_status",
@@ -29,11 +35,13 @@ SHARED_TOOLS = [
 FEATURE_TOOL_ACCESS = {
     "account": ACCOUNT_TOOLS + SHARED_TOOLS,
     "accommodation": ACCOMMODATION_TOOLS + SHARED_TOOLS,
+    "checklist": CHECKLIST_TOOLS + SHARED_TOOLS,
 }
 
 TOOL_CATEGORY = {
     **{name: "account" for name in ACCOUNT_TOOLS},
     **{name: "accommodation" for name in ACCOMMODATION_TOOLS},
+    **{name: "checklist" for name in CHECKLIST_TOOLS},
     **{name: "shared" for name in SHARED_TOOLS},
 }
 
@@ -59,6 +67,7 @@ def get_registry_summary() -> dict:
     return {
         "account_tools": ACCOUNT_TOOLS.copy(),
         "accommodation_tools": ACCOMMODATION_TOOLS.copy(),
+        "checklist_tools": CHECKLIST_TOOLS.copy(),
         "shared_tools": SHARED_TOOLS.copy(),
         "feature_access": {
             feature: tools.copy()

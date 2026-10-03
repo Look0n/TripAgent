@@ -1,0 +1,46 @@
+﻿{
+    "result":  {
+                   "count":  4,
+                   "items":  [
+                                 {
+                                     "category":  "Documents",
+                                     "description":  "Bring a valid passport",
+                                     "is_completed":  0,
+                                     "item_id":  1,
+                                     "item_type":  "packing",
+                                     "priority":  "High",
+                                     "title":  "Passport"
+                                 },
+                                 {
+                                     "category":  "Health",
+                                     "description":  "Pack required medication",
+                                     "is_completed":  0,
+                                     "item_id":  4,
+                                     "item_type":  "packing",
+                                     "priority":  "High",
+                                     "title":  "Medication"
+                                 },
+                                 {
+                                     "category":  "Flight",
+                                     "description":  "Complete airline online check-in",
+                                     "is_completed":  0,
+                                     "item_id":  6,
+                                     "item_type":  "task",
+                                     "priority":  "High",
+                                     "title":  "Online Check-in"
+                                 },
+                                 {
+                                     "category":  "Documents",
+                                     "description":  "Confirm destination visa requirements",
+                                     "is_completed":  0,
+                                     "item_id":  8,
+                                     "item_type":  "task",
+                                     "priority":  "High",
+                                     "title":  "Check Visa Requirements"
+                                 }
+                             ],
+                   "success":  true
+               },
+    "success":  true,
+    "tool":  "get_checklist_items"
+}

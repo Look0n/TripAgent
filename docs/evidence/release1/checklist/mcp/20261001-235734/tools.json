@@ -1,0 +1,92 @@
+﻿{
+    "count":  3,
+    "success":  true,
+    "tools":  [
+                  {
+                      "description":  "",
+                      "input_schema":  {
+                                           "properties":  {
+                                                              "category":  {
+                                                                               "anyOf":  [
+                                                                                             {
+                                                                                                 "type":  "string"
+                                                                                             },
+                                                                                             {
+                                                                                                 "type":  "null"
+                                                                                             }
+                                                                                         ],
+                                                                               "default":  null,
+                                                                               "title":  "Category"
+                                                                           },
+                                                              "is_completed":  {
+                                                                                   "anyOf":  [
+                                                                                                 {
+                                                                                                     "type":  "boolean"
+                                                                                                 },
+                                                                                                 {
+                                                                                                     "type":  "null"
+                                                                                                 }
+                                                                                             ],
+                                                                                   "default":  null,
+                                                                                   "title":  "Is Completed"
+                                                                               },
+                                                              "item_type":  {
+                                                                                "anyOf":  [
+                                                                                              {
+                                                                                                  "type":  "string"
+                                                                                              },
+                                                                                              {
+                                                                                                  "type":  "null"
+                                                                                              }
+                                                                                          ],
+                                                                                "default":  null,
+                                                                                "title":  "Item Type"
+                                                                            },
+                                                              "priority":  {
+                                                                               "anyOf":  [
+                                                                                             {
+                                                                                                 "type":  "string"
+                                                                                             },
+                                                                                             {
+                                                                                                 "type":  "null"
+                                                                                             }
+                                                                                         ],
+                                                                               "default":  null,
+                                                                               "title":  "Priority"
+                                                                           }
+                                                          },
+                                           "title":  "get_checklist_itemsArguments",
+                                           "type":  "object"
+                                       },
+                      "name":  "get_checklist_items"
+                  },
+                  {
+                      "description":  "",
+                      "input_schema":  {
+                                           "properties":  {
+                                                              "item_id":  {
+                                                                              "title":  "Item Id",
+                                                                              "type":  "integer"
+                                                                          }
+                                                          },
+                                           "required":  [
+                                                            "item_id"
+                                                        ],
+                                           "title":  "get_checklist_itemArguments",
+                                           "type":  "object"
+                                       },
+                      "name":  "get_checklist_item"
+                  },
+                  {
+                      "description":  "",
+                      "input_schema":  {
+                                           "properties":  {
+
+                                                          },
+                                           "title":  "get_checklist_summaryArguments",
+                                           "type":  "object"
+                                       },
+                      "name":  "get_checklist_summary"
+                  }
+              ]
+}
