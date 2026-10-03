@@ -346,6 +346,15 @@ services:
       DATABASE_API_URL: http://attractions-database:6003
       OLLAMA_URL: http://ollama:11434/api/generate
       OLLAMA_MODEL: qwen2.5:0.5b
+      # Release 1: MCP and RAG servers run on the host, not in Docker.
+      MCP_SERVER_URL: http://host.docker.internal:7001/mcp
+      MCP_ENABLED: ${MCP_ENABLED:-true}
+      RAG_SERVICE_URL: http://host.docker.internal:7002
+      RAG_ENABLED: ${RAG_ENABLED:-true}
+
+    # Needed so host.docker.internal resolves on native Linux too.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     depends_on:
       attractions-database:
@@ -447,13 +456,6 @@ services:
       CHECKLIST_DATABASE_URL: http://checklist-database:6004
       OLLAMA_URL: http://host.docker.internal:11434/api/generate
       OLLAMA_MODEL: qwen2.5:0.5b
-      MCP_SERVER_URL: http://host.docker.internal:7001/mcp
-      MCP_ENABLED: ${MCP_ENABLED:-true}
-      RAG_SERVICE_URL: http://host.docker.internal:7002
-      RAG_ENABLED: ${RAG_ENABLED:-true}
-    
-    extra_hosts:
-    - "host.docker.internal:host-gateway"
 
     depends_on:
       checklist-database:
@@ -539,6 +541,13 @@ services:
       FLIGHT_DATABASE_URL: http://flight-database:6005
       OLLAMA_BASE_URL: http://ollama:11434/v1
       OLLAMA_MODEL: qwen2.5:0.5b
+      MCP_SERVER_URL: http://host.docker.internal:7001/mcp
+      MCP_ENABLED: ${MCP_ENABLED:-true}
+      RAG_SERVICE_URL: http://host.docker.internal:7002
+      RAG_ENABLED: ${RAG_ENABLED:-true}
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     depends_on:
       flight-database:

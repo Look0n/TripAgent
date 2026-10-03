@@ -2,4 +2,3 @@ Flask==3.1.2
 flask-cors
 requests==2.32.5
 pytest
-mcp>=1.28,<2

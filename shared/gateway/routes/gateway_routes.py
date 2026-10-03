@@ -418,7 +418,7 @@ def checklist_proxy(path):
                         ]
                     )
             },
-            timeout=(5, 180) if path.startswith("rag/") else 30
+            timeout=10
         )
 
     except requests.RequestException:

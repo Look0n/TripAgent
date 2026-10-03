@@ -1,4 +1,5 @@
 import html
+import json
 
 
 LOW_SEAT_THRESHOLD = 10
@@ -263,5 +264,195 @@ def format_flight_edit_row(flight):
     )
 
     parts.append('</tr>')
+
+    return "".join(parts)
+
+CONFIDENCE_CLASS = {
+    "High": "confidence-high",
+    "Medium": "confidence-medium",
+    "Low": "confidence-low",
+    "Unknown": "confidence-unknown",
+}
+
+
+def format_mcp_tool_list(tools):
+    if not tools:
+        return (
+            '<p class="empty-state">'
+            'No MCP tools are available to the flight feature.'
+            '</p>'
+        )
+
+    parts = ['<div class="mcp-tool-list">']
+
+    for tool in tools:
+        parts.append('<article class="mcp-tool">')
+        parts.append(
+            f'<h4>{html.escape(str(tool.get("name", "")))}</h4>'
+        )
+        parts.append(
+            f'<p>{html.escape(str(tool.get("description", "")))}</p>'
+        )
+        parts.append('</article>')
+
+    parts.append('</div>')
+
+    return "".join(parts)
+
+
+def format_mcp_result(tool_name, arguments, result):
+    parts = ['<div class="mcp-result">']
+
+    parts.append('<section class="stage">')
+    parts.append('<h4>MCP tool call</h4>')
+    parts.append(
+        f'<p>Tool: {html.escape(str(tool_name))}</p>'
+    )
+
+    if arguments:
+        rendered = ", ".join(
+            f"{html.escape(str(key))}={html.escape(str(value))}"
+            for key, value in arguments.items()
+        )
+        parts.append(f'<p>Arguments: {rendered}</p>')
+
+    parts.append('</section>')
+
+    parts.append('<section class="stage">')
+    parts.append('<h4>Structured result</h4>')
+
+    status = str(result.get("status", "unknown")) \
+        if isinstance(result, dict) else "unknown"
+
+    parts.append(f'<p>Status: {html.escape(status)}</p>')
+
+    if isinstance(result, dict):
+        if result.get("error"):
+            parts.append(
+                f'<p class="warning">'
+                f'{html.escape(str(result["error"]))}</p>'
+            )
+
+        if result.get("message"):
+            parts.append(
+                f'<p>{html.escape(str(result["message"]))}</p>'
+            )
+
+        if result.get("count") is not None:
+            parts.append(
+                f'<p>Records returned: {int(result["count"])}</p>'
+            )
+
+    parts.append(
+        f'<pre class="mcp-json">'
+        f'{html.escape(json.dumps(result, indent=2, default=str))}'
+        f'</pre>'
+    )
+    parts.append('</section>')
+
+    rows = []
+
+    if isinstance(result, dict):
+        if isinstance(result.get("results"), list):
+            rows = result["results"]
+        elif isinstance(result.get("result"), dict):
+            rows = [result["result"]]
+
+    flights = [
+        row for row in rows
+        if isinstance(row, dict) and "airline" in row
+    ]
+
+    if flights:
+        parts.append(format_flight_cards(flights))
+
+    parts.append('</div>')
+
+    return "".join(parts)
+
+
+def format_rag_answer(result):
+    if not isinstance(result, dict):
+        return '<p class="warning">The RAG service returned no answer.</p>'
+
+    confidence = str(result.get("confidence_category", "Unknown"))
+    badge_class = CONFIDENCE_CLASS.get(confidence, "confidence-unknown")
+    citations = result.get("citations") or []
+
+    parts = ['<div class="rag-answer">']
+
+    if result.get("insufficient_context"):
+        parts.append('<section class="stage insufficient-context">')
+        parts.append('<h4>Insufficient context</h4>')
+        parts.append(
+            f'<p>{html.escape(str(result.get("answer", "")))}</p>'
+        )
+        parts.append(
+            '<p>No grounded answer was generated because the shared '
+            'RAG corpus returned no supporting passage for this '
+            'question.</p>'
+        )
+        parts.append('</section>')
+        parts.append(
+            f'<p class="confidence {badge_class}">'
+            f'Confidence: {html.escape(confidence)}</p>'
+        )
+        parts.append('</div>')
+        return "".join(parts)
+
+    parts.append('<section class="stage">')
+    parts.append('<h4>Grounded answer</h4>')
+
+    for paragraph in str(result.get("answer", "")).split("\n"):
+        if paragraph.strip():
+            parts.append(
+                f'<p>{html.escape(paragraph.strip())}</p>'
+            )
+
+    parts.append(
+        f'<p class="confidence {badge_class}">'
+        f'Confidence: {html.escape(confidence)}</p>'
+    )
+    parts.append('</section>')
+
+    parts.append('<section class="stage">')
+    parts.append(f'<h4>Source citations ({len(citations)})</h4>')
+
+    if not citations:
+        parts.append('<p>No sources were cited.</p>')
+    else:
+        parts.append('<ul class="citation-list">')
+
+        for citation in citations:
+            parts.append(
+                f'<li>'
+                f'<strong>'
+                f'{html.escape(str(citation.get("source_id", "")))}'
+                f'</strong> '
+                f'&mdash; chunk '
+                f'{html.escape(str(citation.get("chunk_id", "")))} '
+                f'({html.escape(str(citation.get("authority_tier", "")))})'
+                f'</li>'
+            )
+
+        parts.append('</ul>')
+
+    parts.append('</section>')
+
+    summary = result.get("retrieval_summary") or {}
+
+    if summary:
+        parts.append('<section class="stage">')
+        parts.append('<h4>Retrieval</h4>')
+        parts.append(
+            f'<p>Passages retrieved: '
+            f'{html.escape(str(summary.get("retrieved_count", 0)))} '
+            f'(k={html.escape(str(summary.get("k", "")))}), mode: '
+            f'{html.escape(str(summary.get("retrieval_mode", "unknown")))}'
+            f'</p>'
+        )
+        parts.append('</section>')
+
+    parts.append('</div>')
 
     return "".join(parts)

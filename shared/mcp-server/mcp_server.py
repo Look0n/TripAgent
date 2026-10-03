@@ -1,6 +1,12 @@
 from mcp.server.fastmcp import FastMCP
 
-from tool_registry import ACCOUNT_TOOLS, ACCOMMODATION_TOOLS, CHECKLIST_TOOLS, SHARED_TOOLS
+from tool_registry import (
+    ACCOUNT_TOOLS,
+    ACCOMMODATION_TOOLS,
+    FLIGHT_TOOLS,
+    ATTRACTIONS_TOOLS,
+    SHARED_TOOLS,
+)
 from tools.account_tools import (
     check_profile_completeness as check_profile_completeness_impl,
     get_customer_preferences as get_customer_preferences_impl,
@@ -16,10 +22,20 @@ from tools.accommodation_tools import (
     check_accommodation_availability as check_accommodation_availability_impl,
 )
 
-from tools.checklist_tools import (
-    get_checklist_item as get_checklist_item_impl,
-    get_checklist_items as get_checklist_items_impl,
-    get_checklist_summary as get_checklist_summary_impl,
+from tools.flight_tools import (
+    check_seat_availability_impl,
+    get_cheapest_flight_impl,
+    get_flight_impl,
+    get_flights_by_route_impl,
+    search_flights_impl,
+)
+
+from tools.attractions_tools import (
+    get_attractions_impl as get_attractions_impl,
+    get_attractions_by_city_impl as get_attractions_by_city_impl,
+    search_attractions_impl as search_attractions_impl,
+    get_attraction_details_impl as get_attraction_details_impl,
+    get_top_rated_attractions_impl as get_top_rated_attractions_impl,
 )
 
 from tools.tripagent_tools import (
@@ -123,31 +139,117 @@ def check_accommodation_availability(
         check_in,
         check_out,
     )
+    
 
 # ---------------------------------------------------------------------------
-# Checklist feature tools
+# Flight feature tools
 # ---------------------------------------------------------------------------
+
 @mcp.tool()
-def get_checklist_items(
-    item_type: str | None = None,
-    category: str | None = None,
-    priority: str | None = None,
-    is_completed: bool | None = None,
+def search_flights(
+    origin: str,
+    destination: str | None = None,
+    max_price: float | None = None,
 ) -> dict:
-    return get_checklist_items_impl(
-        item_type=item_type,
-        category=category,
-        priority=priority,
-        is_completed=is_completed,
+    """Search TripAgent flight records by route and optional maximum price."""
+    return search_flights_impl(
+        origin=origin,
+        destination=destination,
+        max_price=max_price,
     )
 
-@mcp.tool()
-def get_checklist_item(item_id: int) -> dict:
-    return get_checklist_item_impl(item_id)
 
 @mcp.tool()
-def get_checklist_summary() -> dict:
-    return get_checklist_summary_impl()
+def get_flight(flight_id: int) -> dict:
+    """Retrieve one flight record by its identifier."""
+    return get_flight_impl(flight_id)
+
+
+@mcp.tool()
+def get_flights_by_route(
+    origin: str,
+    destination: str,
+) -> dict:
+    """List every flight between two airports."""
+    return get_flights_by_route_impl(
+        origin,
+        destination,
+    )
+
+
+@mcp.tool()
+def get_cheapest_flight(
+    origin: str,
+    destination: str,
+) -> dict:
+    """Return the lowest priced flight on a route."""
+    return get_cheapest_flight_impl(
+        origin,
+        destination,
+    )
+
+
+@mcp.tool()
+def check_seat_availability(flight_id: int) -> dict:
+    """Report remaining seats and limited availability for one flight."""
+    return check_seat_availability_impl(flight_id)
+
+
+# ---------------------------------------------------------------------------
+# Attractions feature tools
+# ---------------------------------------------------------------------------
+
+@mcp.tool()
+def get_attractions() -> dict:
+    """Return all attraction and tour records."""
+    return get_attractions_impl()
+
+
+@mcp.tool()
+def get_attractions_by_city(
+    city: str,
+) -> dict:
+    """Return attraction records for one city."""
+    return get_attractions_by_city_impl(
+        city
+    )
+
+
+@mcp.tool()
+def search_attractions(
+    city: str | None = None,
+    category: str | None = None,
+    max_price: float | None = None,
+) -> dict:
+    """Search TripAgent attraction records by city, category and price."""
+    return search_attractions_impl(
+        city=city,
+        category=category,
+        max_price=max_price,
+    )
+
+
+@mcp.tool()
+def get_attraction_details(
+    attraction_id: int,
+) -> dict:
+    """Return one attraction record including its customer reviews."""
+    return get_attraction_details_impl(
+        attraction_id
+    )
+
+
+@mcp.tool()
+def get_top_rated_attractions(
+    city: str | None = None,
+    limit: int = 5,
+) -> dict:
+    """Return the highest-rated attractions, optionally filtered by city."""
+    return get_top_rated_attractions_impl(
+        city=city,
+        limit=limit,
+    )
+
 
 # ---------------------------------------------------------------------------
 # Shared TripAgent tools
@@ -199,18 +301,27 @@ if __name__ == "__main__":
     for tool_name in ACCOMMODATION_TOOLS:
         print(f"- {tool_name}")
 
-    print("\nChecklist tools:")
-    for tool_name in CHECKLIST_TOOLS:
+    print("\nFlight tools:")
+    for tool_name in FLIGHT_TOOLS:
+        print(f"- {tool_name}")
+
+    print("\nAttractions tools:")
+    for tool_name in ATTRACTIONS_TOOLS:
         print(f"- {tool_name}")
 
     print("\nShared TripAgent tools:")
     for tool_name in SHARED_TOOLS:
         print(f"- {tool_name}")
 
-    print(
-        f"\nTotal registered tools: "
-        f"{len(ACCOUNT_TOOLS) + len(ACCOMMODATION_TOOLS) + len(CHECKLIST_TOOLS) + len(SHARED_TOOLS)}"
+    total_tools = (
+        len(ACCOUNT_TOOLS)
+        + len(ACCOMMODATION_TOOLS)
+        + len(FLIGHT_TOOLS)
+        + len(ATTRACTIONS_TOOLS)
+        + len(SHARED_TOOLS)
     )
+
+    print(f"\nTotal registered tools: {total_tools}")
     print("=" * 60)
 
     mcp.run(transport="streamable-http")
