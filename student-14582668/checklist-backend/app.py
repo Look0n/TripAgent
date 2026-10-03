@@ -6,9 +6,6 @@ from flask_cors import CORS
 from routes.ai_mode import ai_bp
 from routes.normal_ui import normal_bp
 
-from routes.mcp_routes import mcp_bp
-from routes.rag_routes import rag_bp
-
 
 def create_app():
     app = Flask(__name__)
@@ -17,9 +14,7 @@ def create_app():
 
     app.register_blueprint(normal_bp)
     app.register_blueprint(ai_bp)
-    app.register_blueprint(mcp_bp)
-    app.register_blueprint(rag_bp)
-    
+
     @app.route("/health", methods=["GET"])
     def health():
         return jsonify({
