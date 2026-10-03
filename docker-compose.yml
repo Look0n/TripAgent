@@ -154,9 +154,6 @@ services:
       account-database:
         condition: service_healthy
 
-      ollama:
-        condition: service_started
-
     healthcheck:
       test:
         [
@@ -254,9 +251,6 @@ services:
     depends_on:
       accommodation-database:
         condition: service_healthy
-
-      ollama:
-        condition: service_started
 
     healthcheck:
       test:
@@ -356,8 +350,6 @@ services:
     depends_on:
       attractions-database:
         condition: service_healthy
-      ollama:
-        condition: service_started
 
     healthcheck:
       test:
@@ -453,7 +445,7 @@ services:
     environment:
       CHECKLIST_BACKEND_PORT: 5004
       CHECKLIST_DATABASE_URL: http://checklist-database:6004
-      OLLAMA_URL: http://ollama:11434/api/generate
+      OLLAMA_URL: http://host.docker.internal:11434/api/generate
       OLLAMA_MODEL: qwen2.5:0.5b
       MCP_SERVER_URL: http://host.docker.internal:7001/mcp
       MCP_ENABLED: ${MCP_ENABLED:-true}
@@ -466,9 +458,6 @@ services:
     depends_on:
       checklist-database:
         condition: service_healthy
-
-      ollama:
-        condition: service_started
 
     healthcheck:
       test:
@@ -555,9 +544,6 @@ services:
       flight-database:
         condition: service_healthy
 
-      ollama:
-        condition: service_started
-
     healthcheck:
       test:
         [
@@ -602,55 +588,6 @@ services:
 
     restart: unless-stopped
 
-
-  # =================================================
-  # OLLAMA
-  # =================================================
-  ollama:
-    image: ollama/ollama:latest
-
-    ports:
-      - "11434:11434"
-
-    volumes:
-      - ollama-data:/root/.ollama
-
-    restart: unless-stopped
-
-
-  # =================================================
-  # OLLAMA MODEL INITIALISATION
-  # =================================================
-  ollama-init:
-    image: ollama/ollama:latest
-
-    environment:
-      OLLAMA_HOST: http://ollama:11434
-
-    depends_on:
-      ollama:
-        condition: service_started
-
-    entrypoint: /bin/sh
-
-    command:
-      - -c
-      - |
-        echo "Waiting for Ollama..."
-
-        until ollama list > /dev/null 2>&1; do
-          sleep 2
-        done
-
-        echo "Ensuring qwen2.5:0.5b is available..."
-        ollama pull qwen2.5:0.5b
-
-        echo "Ensuring llama3.1:8b is available..."
-        ollama pull llama3.1:8b
-
-        echo "Ollama models are ready."
-
-
 # ===================================================
 # VOLUMES
 # ===================================================
@@ -667,5 +604,3 @@ volumes:
   attractions-database-data:
 
   checklist-database-data:
-
-  ollama-data:

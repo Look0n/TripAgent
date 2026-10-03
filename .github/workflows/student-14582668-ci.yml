@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      MCP_ENABLED: "false"
+      RAG_ENABLED: "false"
       OLLAMA_DEFAULT_MODEL: qwen2.5:0.5b
       CHECKLIST_NETWORK: checklist-ci-network
       DATABASE_CONTAINER: checklist-database-ci
@@ -70,7 +72,16 @@ jobs:
       - name: Run Checklist pytest
         working-directory: student-14582668/checklist-backend
         run: |
-          pytest -v
+          python -m pytest tests -v -p no:cacheprovider \
+            --junitxml=pytest-results.xml
+
+      - name: Upload Checklist test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checklist-backend-tests
+          path: student-14582668/checklist-backend/pytest-results.xml
+          if-no-files-found: warn
 
       # ---------------------------------------------------
       # 5. Validate the shared Docker Compose file
@@ -109,10 +120,15 @@ jobs:
       - name: Start Checklist database
         run: |
           docker run -d \
-            --name "$DATABASE_CONTAINER" \
+            --name "$BACKEND_CONTAINER" \
             --network "$CHECKLIST_NETWORK" \
-            -p 6004:6004 \
-            checklist-database-ci
+            -p 5004:5004 \
+            -e CHECKLIST_DATABASE_URL="http://$DATABASE_CONTAINER:6004" \
+            -e MCP_ENABLED=false \
+            -e RAG_ENABLED=false \
+            -e OLLAMA_URL="http://127.0.0.1:11434/api/generate" \
+            -e OLLAMA_MODEL="$OLLAMA_DEFAULT_MODEL" \
+            checklist-backend-ci
 
       - name: Wait for Checklist database
         run: |
@@ -130,6 +146,46 @@ jobs:
           echo "Checklist database failed to become healthy."
           docker logs "$DATABASE_CONTAINER"
           exit 1
+      
+      - name: Verify MCP and RAG are disabled
+        run: |
+          docker exec -i "$BACKEND_CONTAINER" python - <<'PY'
+          import requests
+
+          base = "http://localhost:5004/api/checklist-items"
+
+          for mode in ("mcp", "rag"):
+              response = requests.get(
+                  f"{base}/{mode}/status",
+                  timeout=5,
+              )
+              assert response.status_code == 200, response.text
+              payload = response.json()
+              assert payload["enabled"] is False, payload
+              assert payload["available"] is False, payload
+
+          checks = [
+              ("/mcp/call", {
+                  "tool": "get_checklist_summary",
+                  "arguments": {},
+              }),
+              ("/rag/refresh", {}),
+              ("/rag/retrieve", {"query": "Checklist priority"}),
+              ("/rag/answer", {"query": "Checklist priority"}),
+          ]
+
+          for path, payload in checks:
+              response = requests.post(
+                  base + path,
+                  json=payload,
+                  timeout=5,
+              )
+              assert response.status_code == 403, (
+                  path, response.status_code, response.text
+              )
+
+          print("PASS: MCP and RAG are disabled in the CI container.")
+          PY
 
       - name: Verify Checklist seed records
         run: |
@@ -185,7 +241,7 @@ jobs:
             --name "$FRONTEND_CONTAINER" \
             --network "$CHECKLIST_NETWORK" \
             -p 3004:3004 \
-            -e CHECKLIST_API_URL="http://localhost:5005/api/checklist-items" \
+            -e CHECKLIST_API_URL="http://localhost:5004/api/checklist-items" \
             checklist-frontend-ci
 
       - name: Wait for Checklist frontend
