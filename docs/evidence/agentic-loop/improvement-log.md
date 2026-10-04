@@ -106,3 +106,10 @@ Specification sections 4.2, 4.3 and 6.2.1 still require application AI-mode, the
 Priorities are to resolve actual service failures, rerun the corrected Checklist CI, obtain inspectable CI evidence, and document human review plus adaptation/retest. A reliable human decision is required; model completion or an Approved response is not release acceptance. Workflow filenames also differ from the specification's student-1.yml through student-5.yml convention; confirm the team's student-ID naming with the tutor rather than renaming shared files silently.
 
 Sources: supplied ASD_2026_Project_Specifications.pdf sections 2.2, 4.2-4.6, 6.2.1, 7.3 and Release 0 submissions; supplied technical report template section 11; official asd-labs Lab04 architecture/modular loop and Lab05 sections 6-8.
+
+
+## Release 1 MCP/RAG validation modes - 2026-10-04
+
+Added Lab 7/8 collector-to-pipeline dual-model review with genuine MCP SDK transport and RAG HTTP checks. Both RAG review and reasoning prompts are wired into the review call. Added curated retrieval metrics, explicit unsupported-query checks, unique JSON/Markdown evidence and separate execution/validation/model outcomes.
+
+24 isolated mock tests passed; these are regression checks, not live success evidence. Real all-feature checks-only attempts mcp-20261004T035239Z-fabb5a14 and rag-20261004T035301Z-97ac87a9 failed because required servers/backends were unavailable and returned exit 1. Full live dual-model validation remains pending. No application code fixes applied. Accommodation tool-registry naming mismatch requires a separately approved shared-code fix. See docs/release1/agentic-loop-work-log.md for continuation and docs/release1/agentic-loop-guide.md for commands and metric limitations.

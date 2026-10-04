@@ -1,0 +1,4 @@
+In the same four sections, also assess corpus design, chunking, embeddings, vector-store usage, and data governance. 
+Base architectural claims only on the supplied implementation context. 
+Mark unavailable details as unverified. 
+Recommend a concrete retest for each material issue; do not claim code was changed or a fix was executed.
