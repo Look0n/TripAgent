@@ -1,0 +1,460 @@
+{
+  "run_id": "mcp-20261004T035239Z-fabb5a14",
+  "mode": "mcp",
+  "source": "live-services",
+  "repository": {
+    "commit": "338078d87c44cb7eedb04101c5a9a8447ba75fcb",
+    "dirty": true
+  },
+  "results": {
+    "account": {
+      "service": "Customer Account / Profile Service",
+      "feature": "account",
+      "mode": "mcp",
+      "started_at": "2026-10-04T03:52:10.978791+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "account",
+        "server": "http://localhost:7001/mcp",
+        "checks": [
+          {
+            "id": "file:shared/mcp-server/mcp_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/tool_registry.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:student-25992405/account-backend/app.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/tool_selection_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/integration_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "registry_contract",
+            "status": "PASS",
+            "detail": {
+              "declared": [
+                "get_customer_profile",
+                "get_customer_preferences",
+                "update_customer_preferences",
+                "get_customer_summary",
+                "check_profile_completeness"
+              ],
+              "expected": [
+                "get_customer_profile",
+                "get_customer_preferences",
+                "get_customer_summary",
+                "check_profile_completeness",
+                "update_customer_preferences"
+              ]
+            }
+          },
+          {
+            "id": "mcp_execution",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ExceptionGroup",
+              "message": "Connection, protocol or tool execution failed"
+            }
+          },
+          {
+            "id": "backend_tool_boundary",
+            "status": "SKIP",
+            "detail": "Set an authorised LOOP_ACCOUNT_CUSTOMER_ID; browser-session validation remains separate"
+          }
+        ],
+        "calls": [],
+        "limitations": [
+          "Read-only sample calls; write tools are registration-only",
+          "Direct MCP is not an authenticated UI test",
+          "Account backend boundary uses the existing trusted X-Customer-ID contract, not browser authentication"
+        ],
+        "validation_status": "FAIL",
+        "duration_seconds": 2.375
+      },
+      "finished_at": "2026-10-04T03:52:13.353484+00:00"
+    },
+    "accommodation": {
+      "service": "Accommodation Service",
+      "feature": "accommodation",
+      "mode": "mcp",
+      "started_at": "2026-10-04T03:52:13.354335+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "accommodation",
+        "server": "http://localhost:7001/mcp",
+        "checks": [
+          {
+            "id": "file:shared/mcp-server/mcp_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/tool_registry.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:student-14649634/accommodation-backend/app.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/tool_selection_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/integration_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "registry_contract",
+            "status": "FAIL",
+            "detail": {
+              "declared": [
+                "get_accommodations",
+                "get_accommodations_by_city",
+                "search_accommodations",
+                "get_available_accommodations"
+              ],
+              "expected": [
+                "get_accommodations",
+                "get_accommodation_by_city",
+                "search_accommodations",
+                "check_accommodation_availability"
+              ]
+            }
+          },
+          {
+            "id": "mcp_execution",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ExceptionGroup",
+              "message": "Connection, protocol or tool execution failed"
+            }
+          },
+          {
+            "id": "backend_tool_boundary",
+            "status": "FAIL",
+            "detail": "ConnectionError"
+          }
+        ],
+        "calls": [],
+        "limitations": [
+          "Read-only sample calls; write tools are registration-only",
+          "Direct MCP is not an authenticated UI test",
+          "Account backend boundary uses the existing trusted X-Customer-ID contract, not browser authentication"
+        ],
+        "validation_status": "FAIL",
+        "duration_seconds": 6.437
+      },
+      "finished_at": "2026-10-04T03:52:19.796262+00:00"
+    },
+    "attractions": {
+      "service": "Attractions & Tour Experiences",
+      "feature": "attractions",
+      "mode": "mcp",
+      "started_at": "2026-10-04T03:52:19.797475+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "attractions",
+        "server": "http://localhost:7001/mcp",
+        "checks": [
+          {
+            "id": "file:shared/mcp-server/mcp_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/tool_registry.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:student-25693742/attractions-backend/app.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/tool_selection_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/integration_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "registry_contract",
+            "status": "PASS",
+            "detail": {
+              "declared": [
+                "get_attractions",
+                "get_attractions_by_city",
+                "search_attractions",
+                "get_attraction_details",
+                "get_top_rated_attractions"
+              ],
+              "expected": [
+                "get_attractions",
+                "get_attractions_by_city",
+                "search_attractions",
+                "get_attraction_details",
+                "get_top_rated_attractions"
+              ]
+            }
+          },
+          {
+            "id": "mcp_execution",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ExceptionGroup",
+              "message": "Connection, protocol or tool execution failed"
+            }
+          },
+          {
+            "id": "backend_tool_boundary",
+            "status": "FAIL",
+            "detail": "ConnectionError"
+          }
+        ],
+        "calls": [],
+        "limitations": [
+          "Read-only sample calls; write tools are registration-only",
+          "Direct MCP is not an authenticated UI test",
+          "Account backend boundary uses the existing trusted X-Customer-ID contract, not browser authentication"
+        ],
+        "validation_status": "FAIL",
+        "duration_seconds": 6.454
+      },
+      "finished_at": "2026-10-04T03:52:26.237770+00:00"
+    },
+    "checklist": {
+      "service": "Pre-Trip Checklist Service",
+      "feature": "checklist",
+      "mode": "mcp",
+      "started_at": "2026-10-04T03:52:26.237770+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "checklist",
+        "server": "http://localhost:7001/mcp",
+        "checks": [
+          {
+            "id": "file:shared/mcp-server/mcp_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/tool_registry.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:student-14582668/checklist-backend/app.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/tool_selection_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/integration_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "registry_contract",
+            "status": "PASS",
+            "detail": {
+              "declared": [
+                "get_checklist_item",
+                "get_checklist_items",
+                "get_checklist_summary"
+              ],
+              "expected": [
+                "get_checklist_items",
+                "get_checklist_item",
+                "get_checklist_summary"
+              ]
+            }
+          },
+          {
+            "id": "mcp_execution",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ExceptionGroup",
+              "message": "Connection, protocol or tool execution failed"
+            }
+          },
+          {
+            "id": "backend_tool_boundary",
+            "status": "FAIL",
+            "detail": "ConnectionError"
+          }
+        ],
+        "calls": [],
+        "limitations": [
+          "Read-only sample calls; write tools are registration-only",
+          "Direct MCP is not an authenticated UI test",
+          "Account backend boundary uses the existing trusted X-Customer-ID contract, not browser authentication"
+        ],
+        "validation_status": "FAIL",
+        "duration_seconds": 6.39
+      },
+      "finished_at": "2026-10-04T03:52:32.639666+00:00"
+    },
+    "flight": {
+      "service": "Flight Service",
+      "feature": "flight",
+      "mode": "mcp",
+      "started_at": "2026-10-04T03:52:32.639666+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "flight",
+        "server": "http://localhost:7001/mcp",
+        "checks": [
+          {
+            "id": "file:shared/mcp-server/mcp_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/tool_registry.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/mcp-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:student-25487036/flight-backend/app.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/tool_selection_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/integration_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "registry_contract",
+            "status": "PASS",
+            "detail": {
+              "declared": [
+                "search_flights",
+                "get_flight",
+                "get_flights_by_route",
+                "get_cheapest_flight",
+                "check_seat_availability"
+              ],
+              "expected": [
+                "search_flights",
+                "get_flight",
+                "get_flights_by_route",
+                "get_cheapest_flight",
+                "check_seat_availability"
+              ]
+            }
+          },
+          {
+            "id": "mcp_execution",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ExceptionGroup",
+              "message": "Connection, protocol or tool execution failed"
+            }
+          },
+          {
+            "id": "backend_tool_boundary",
+            "status": "FAIL",
+            "detail": "ConnectionError"
+          }
+        ],
+        "calls": [],
+        "limitations": [
+          "Read-only sample calls; write tools are registration-only",
+          "Direct MCP is not an authenticated UI test",
+          "Account backend boundary uses the existing trusted X-Customer-ID contract, not browser authentication"
+        ],
+        "validation_status": "FAIL",
+        "duration_seconds": 6.422
+      },
+      "finished_at": "2026-10-04T03:52:39.054806+00:00"
+    }
+  }
+}

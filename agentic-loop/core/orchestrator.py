@@ -11,16 +11,29 @@ from pipelines.db_pipeline import run_db_pipeline
 from pipelines.endpoints_pipeline import run_endpoints_pipeline
 from pipelines.architecture_pipeline import run_architecture_pipeline
 from pipelines.devops_pipeline import run_devops_pipeline
-from core.reporter import save_report, save_run_report
+from core.reporter import save_report, save_run_report, validation_passed
+from pipelines.mcp_pipeline import run_mcp_pipeline
+from pipelines.rag_pipeline import run_rag_pipeline
 
 def main():
     parser = argparse.ArgumentParser(description="TripAgent agentic loop")
-    parser.add_argument("--mode", choices=("db", "endpoints", "architecture", "devops", "all"), default="all", help="Select analysis mode")
+    parser.add_argument("--mode", choices=("db", "endpoints", "architecture", "devops", "mcp", "rag", "all"), default="all", help="Select analysis mode")
     parser.add_argument("--service", choices=tuple(SERVICES), help="Select one service; default is all five")
+    parser.add_argument("--checks-only", action="store_true", help="Skip model review in MCP/RAG modes")
     args = parser.parse_args()
+    if args.checks_only and args.mode not in ("mcp", "rag"):
+        parser.error("--checks-only is supported only with --mode mcp or rag")
     selected = {args.service: SERVICES[args.service]} if args.service else SERVICES
     print("=== [STARTING AGENTIC LOOP] ===")
     results = {}
+
+    if args.mode in ("mcp", "rag"):
+        pipeline = run_mcp_pipeline if args.mode == "mcp" else run_rag_pipeline
+        for service_id, config in selected.items():
+            results[service_id] = pipeline(config, service_id, checks_only=args.checks_only)
+            print(json.dumps(results[service_id], indent=2, ensure_ascii=False))
+        save_run_report(results, mode=args.mode)
+        return 0 if all(validation_passed(result, args.checks_only) for result in results.values()) else 1
 
     if args.mode == "devops":
         for service_id, config in selected.items():
@@ -79,12 +92,16 @@ def main():
         except (OSError, ValueError, RuntimeError) as error:
             devops_res = {"status": "FAILED", "error": str(error)}
 
+        mcp_res = run_mcp_pipeline(config, service_id)
+        rag_res = run_rag_pipeline(config, service_id)
         results[service_id] = {
+            "mcp_analysis": mcp_res,
+            "rag_analysis": rag_res,
             "database_analysis": db_res,
             "endpoints_analysis": endpoints_res,
             "architecture_analysis": arch_res,
             "devops_analysis": devops_res,
-            "status": "COMPLETED" if db_res.get("status") == "COMPLETED"
+            "status": "COMPLETED" if validation_passed(mcp_res) and validation_passed(rag_res) and db_res.get("status") == "COMPLETED"
             and endpoints_res.get("execution_status") == "COMPLETED"
             and endpoints_res.get("validation_status") == "PASS"
             and arch_res.get("execution_status") == "COMPLETED"
@@ -95,6 +112,16 @@ def main():
             ) else "FAILED"
         }
 
+    report_keys = {
+        "db": "database_analysis",
+        "endpoints": "endpoints_analysis",
+        "architecture": "architecture_analysis",
+        "devops": "devops_analysis",
+        "mcp": "mcp_analysis",
+        "rag": "rag_analysis",
+    }
+    for mode, result_key in report_keys.items():
+        save_run_report({key: value[result_key] for key, value in results.items()}, mode=mode)
     save_report(results)
     print("\n=== [AGENTIC LOOP FINISHED - CHECK INDIVIDUAL RESULTS] ===")
     return 0 if all(result["status"] == "COMPLETED" for result in results.values()) else 1

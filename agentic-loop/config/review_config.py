@@ -1,3 +1,5 @@
+import os
+
 IMPLEMENTATION_MODEL = "qwen2.5:0.5b"
 REVIEW_MODEL = "llama3.1:8b"
 
@@ -29,3 +31,18 @@ DEVOPS_PROMPTS = {
 GITHUB_API_TIMEOUT_SECONDS = 20
 CI_REPOSITORY = "Look0n/TripAgent"
 CI_DEFAULT_BRANCH = "main"
+
+
+MCP_SERVER_URL = os.getenv("LOOP_MCP_SERVER_URL", "http://localhost:7001/mcp")
+RAG_SERVICE_URL = os.getenv("LOOP_RAG_SERVICE_URL", "http://localhost:7002").rstrip("/")
+MCP_TIMEOUT_SECONDS = 30
+RAG_TIMEOUT_SECONDS = 180
+MCP_PROMPTS = {
+    "implementation": "implementation/tool_selection_prompt.txt",
+    "review": "review/integration_review_prompt.txt",
+}
+RAG_PROMPTS = {
+    "implementation": "implementation/rag_implementation_prompt.txt",
+    "review": "review/rag_review_prompt.txt",
+    "reasoning": "review/rag_reasoning_prompt.txt",
+}
