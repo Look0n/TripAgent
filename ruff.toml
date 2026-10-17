@@ -1,0 +1,14 @@
+# TripAgent Ruff Security Configuration
+
+[lint]
+
+# Ignore common warnings that are acceptable in this project.
+ignore = [
+    "S104",  # Binding to 0.0.0.0 (required for Docker networking)
+]
+
+[lint.per-file-ignores]
+
+# Allow standard pytest assertions.
+"**/tests/**" = ["S101"]
+"**/test_*.py" = ["S101"]
