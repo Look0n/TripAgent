@@ -28,7 +28,7 @@ FEATURE_DIRS = {
     "account": REPO_DIR / "student-25992405",
     "accommodation": REPO_DIR / "student-14649634",
     "attractions": REPO_DIR / "student-25693742",
-    "checklist": REPO_DIR / "student-25992424",
+    "checklist": REPO_DIR / "student-14582668",
     "flight": REPO_DIR / "student-25487036",
 }
 
@@ -127,9 +127,76 @@ FEATURE_KNOWLEDGE = {
             ),
         },
     ],
-    "checklist": [],
     "flight": [],
-    "checklist": [],
+    "checklist": [
+        {
+            "chunk_id": "checklist_knowledge_item_types",
+            "text": (
+                "TripAgent Checklist supports two item types: task and packing. "
+                "A task represents a preparation action, such as completing "
+                "online check-in. A packing item represents something to bring, "
+                "such as a passport or phone charger."
+            ),
+        },
+        {
+            "chunk_id": "checklist_knowledge_fields",
+            "text": (
+                "Each Checklist item has an item ID, title, item type, "
+                "category, description, priority, and completion status. "
+                "The title identifies the item. The description provides "
+                "additional details. Category groups related items, "
+                "such as Documents, Electronics, or Preparation."
+            ),
+        },
+        {
+            "chunk_id": "checklist_knowledge_priority",
+            "text": (
+                "Checklist priority must be High, Medium, or Low. "
+                "Priority and completion are separate fields. "
+                "An item can have High priority and still be completed. "
+                "Users can filter Checklist items by priority."
+            ),
+        },
+        {
+            "chunk_id": "checklist_knowledge_completion",
+            "text": (
+                "Checklist completion status indicates whether an item "
+                "has been completed. The database represents incomplete "
+                "items with 0 and completed items with 1. "
+                "The API accepts false for incomplete and true for completed. "
+                "Updating completion does not delete the item."
+            ),
+        },
+        {
+            "chunk_id": "checklist_knowledge_operations",
+            "text": (
+                "TripAgent Checklist supports creating, viewing, updating, "
+                "and deleting items. Users can filter the list by item type, "
+                "category, priority, and completion status. "
+                "An individual item can be retrieved using its item ID."
+            ),
+        },
+        {
+            "chunk_id": "checklist_knowledge_ai_suggestions",
+            "text": (
+                "Checklist AI recommendations are suggestions and are not "
+                "saved automatically. Users review suggestions and explicitly "
+                "choose Add to checklist to save an item. "
+                "The backend returns at most five suggestions and filters "
+                "suggestions whose titles already exist in the checklist."
+            ),
+        },
+        {
+            "chunk_id": "checklist_knowledge_snapshot",
+            "text": (
+                "Checklist database records in the RAG corpus are snapshots "
+                "taken when the corpus is refreshed. Changes made after that "
+                "refresh may not appear in RAG answers until the next refresh. "
+                "Use the normal Checklist API or Checklist MCP tools to "
+                "check the current stored items and counts."
+            ),
+        },
+    ],
     "flight": [
         {
             "chunk_id": "flight_knowledge_search",
@@ -521,8 +588,146 @@ def load_flight_database_chunks() -> list[dict[str, Any]]:
     return chunks
 
 
+def load_checklist_database_chunks() -> list[dict[str, Any]]:
+    base_url = FEATURE_DATABASE_URLS["checklist"].rstrip("/")
+
+    try:
+        response = requests.get(
+            f"{base_url}/checklist-items",
+            timeout=10,
+        )
+        response.raise_for_status()
+
+    except requests.RequestException as exc:
+        raise RuntimeError(
+            "Unable to load Checklist records from the database service."
+        ) from exc
+
+    try:
+        items = response.json()
+
+    except ValueError as exc:
+        raise RuntimeError(
+            "Checklist database returned invalid JSON."
+        ) from exc
+
+    if not isinstance(items, list):
+        raise ValueError(
+            "Checklist database must return a list of items."
+        )
+
+    chunks: list[dict[str, Any]] = []
+    seen_ids: set[int] = set()
+    indexed_at = now_iso()
+
+    for item in items:
+        if not isinstance(item, dict):
+            raise ValueError(
+                "Each Checklist record must be a JSON object."
+            )
+
+        item_id = item.get("item_id")
+        title = item.get("title")
+        item_type = item.get("item_type")
+        priority = item.get("priority")
+        is_completed = item.get("is_completed")
+        category = item.get("category")
+        description = item.get("description")
+
+        if type(item_id) is not int or item_id < 1:
+            raise ValueError(
+                "Checklist records must have positive integer item IDs."
+            )
+
+        if item_id in seen_ids:
+            raise ValueError(
+                f"Duplicate Checklist item ID: {item_id}"
+            )
+
+        if not isinstance(title, str) or not title.strip():
+            raise ValueError(
+                f"Checklist item {item_id} has an invalid title."
+            )
+
+        if item_type not in ("task", "packing"):
+            raise ValueError(
+                f"Checklist item {item_id} has an invalid item type."
+            )
+
+        if priority not in ("High", "Medium", "Low"):
+            raise ValueError(
+                f"Checklist item {item_id} has an invalid priority."
+            )
+
+        if (
+            type(is_completed) not in (int, bool)
+            or is_completed not in (0, 1)
+        ):
+            raise ValueError(
+                f"Checklist item {item_id} has an invalid completion status."
+            )
+
+        if category is not None and not isinstance(category, str):
+            raise ValueError(
+                f"Checklist item {item_id} has an invalid category."
+            )
+
+        if description is not None and not isinstance(description, str):
+            raise ValueError(
+                f"Checklist item {item_id} has an invalid description."
+            )
+
+        seen_ids.add(item_id)
+
+        category_text = (category or "").strip() or "Not specified"
+        description_text = (description or "").strip() or "Not specified"
+        completion_text = (
+            "completed" if is_completed == 1 else "incomplete"
+        )
+
+        record_text = (
+            f"Checklist item ID: {item_id}. "
+            f"Title: {title.strip()}. "
+            f"Item type: {item_type}. "
+            f"Category: {category_text}. "
+            f"Priority: {priority}. "
+            f"Completion status: {completion_text}. "
+            f"Description: {description_text}. "
+            f"This record is a database snapshot indexed at {indexed_at}."
+        )
+
+        for part_number, text in enumerate(
+            chunk_text(record_text),
+            start=1,
+        ):
+            chunks.append({
+                "chunk_id": (
+                    f"checklist_db_item_{item_id}_{part_number}"
+                ),
+                "source_id": (
+                    f"checklist-database:/checklist-items/{item_id}"
+                ),
+                "authority_tier": "tier_1",
+                "text": text,
+                "metadata": {
+                    "source_type": "database_record",
+                    "feature": "checklist",
+                    "item_id": item_id,
+                    "item_type": item_type,
+                    "priority": priority,
+                    "is_completed": bool(is_completed),
+                    "snapshot": True,
+                },
+                "indexed_at": indexed_at,
+            })
+
+    return chunks
+
+
 def load_database_chunks(feature: str) -> list[dict[str, Any]]:
     feature = validate_feature(feature)
+    if feature == "checklist":
+        return load_checklist_database_chunks()
     if feature == "account":
         return load_account_database_chunks()
     if feature == "accommodation":

@@ -543,3 +543,392 @@ filterButtons.forEach(button => {
 });
 
 loadChecklist();
+
+// MCP Connection
+const mcpStatus = document.getElementById("mcp-status");
+const mcpResults = document.getElementById("mcp-results");
+const mcpStatusButton = document.getElementById("mcp-status-button");
+const mcpListForm = document.getElementById("mcp-list-form");
+const mcpItemForm = document.getElementById("mcp-item-form");
+const mcpSummaryButton = document.getElementById("mcp-summary-button");
+const mcpActionButtons = document.querySelectorAll("[data-mcp-action]");
+
+let mcpAvailable = false;
+let mcpBusy = false;
+
+
+function updateMcpButtons() {
+    mcpStatusButton.disabled = mcpBusy;
+
+    mcpActionButtons.forEach(button => {
+        button.disabled = mcpBusy || !mcpAvailable;
+    });
+}
+
+
+function setMcpStatus(message, isError = false) {
+    mcpStatus.textContent = message;
+    mcpStatus.dataset.type = isError ? "error" : "info";
+}
+
+
+async function checkMcpConnection() {
+    if (mcpBusy) {
+        return;
+    }
+
+    mcpBusy = true;
+    mcpAvailable = false;
+    updateMcpButtons();
+    setMcpStatus("Checking MCP connection...");
+
+    try {
+        const result = await apiRequest(`${API_URL}/mcp/status`);
+
+        mcpAvailable = result.enabled === true
+            && result.available === true;
+
+        if (!result.enabled) {
+            setMcpStatus("MCP is disabled in the server configuration.");
+        } else if (mcpAvailable) {
+            setMcpStatus("MCP connected. Checklist tools are ready.");
+        } else {
+            setMcpStatus("MCP is unavailable.", true);
+        }
+    } catch (error) {
+        const message = error.status === 401
+            ? "Please sign in to use Checklist MCP tools."
+            : error.message;
+
+        setMcpStatus(message, true);
+    } finally {
+        mcpBusy = false;
+        updateMcpButtons();
+    }
+}
+
+
+function renderMcpItem(item) {
+    const card = makeElement("article", "mcp-result-card");
+
+    card.appendChild(
+        makeElement("h3", "", `#${item.item_id} ${item.title}`)
+    );
+
+    card.appendChild(
+        makeElement(
+            "p",
+            "",
+            `${item.item_type} · ${item.priority || "No priority"} · `
+            + (item.is_completed ? "Completed" : "Pending")
+        )
+    );
+
+    if (item.category) {
+        card.appendChild(makeElement("p", "", item.category));
+    }
+
+    if (item.description) {
+        card.appendChild(makeElement("p", "", item.description));
+    }
+
+    mcpResults.appendChild(card);
+}
+
+
+function renderMcpResult(toolName, result) {
+    clearElement(mcpResults);
+
+    if (toolName === "get_checklist_summary") {
+        const summary = result.summary;
+
+        const values = [
+            ["Total", summary.total],
+            ["Completed", summary.completed],
+            ["Pending", summary.pending],
+            ["High-priority pending", summary.high_priority_pending],
+        ];
+
+        values.forEach(([label, value]) => {
+            mcpResults.appendChild(
+                makeElement("p", "", `${label}: ${value}`)
+            );
+        });
+
+        return;
+    }
+
+    const items = toolName === "get_checklist_item"
+        ? [result.item]
+        : result.items;
+
+    if (items.length === 0) {
+        mcpResults.appendChild(
+            makeElement("p", "", "No matching checklist items.")
+        );
+        return;
+    }
+
+    items.forEach(renderMcpItem);
+}
+
+
+async function runMcpTool(toolName, argumentsObject = {}) {
+    if (mcpBusy || !mcpAvailable) {
+        return;
+    }
+
+    mcpBusy = true;
+    updateMcpButtons();
+    clearElement(mcpResults);
+    setMcpStatus("Running checklist tool...");
+
+    try {
+        const response = await apiRequest(`${API_URL}/mcp/call`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                tool: toolName,
+                arguments: argumentsObject,
+            }),
+        });
+
+        if (
+            response.success !== true
+            || response.result?.success !== true
+        ) {
+            throw new Error(
+                response.error
+                || response.result?.error
+                || "MCP tool failed."
+            );
+        }
+
+        renderMcpResult(toolName, response.result);
+        setMcpStatus("Checklist tool completed successfully.");
+    } catch (error) {
+        if ([401, 403, 503].includes(error.status)) {
+            mcpAvailable = false;
+        }
+
+        clearElement(mcpResults);
+        setMcpStatus(error.message, true);
+    } finally {
+        mcpBusy = false;
+        updateMcpButtons();
+    }
+}
+
+
+mcpStatusButton.addEventListener("click", checkMcpConnection);
+
+mcpListForm.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const argumentsObject = {};
+    const itemType = document.getElementById("mcp-item-type").value;
+    const priority = document.getElementById("mcp-priority").value;
+    const completed = document.getElementById("mcp-completed").value;
+
+    if (itemType) {
+        argumentsObject.item_type = itemType;
+    }
+
+    if (priority) {
+        argumentsObject.priority = priority;
+    }
+
+    if (completed !== "") {
+        argumentsObject.is_completed = completed === "true";
+    }
+
+    runMcpTool("get_checklist_items", argumentsObject);
+});
+
+mcpItemForm.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const itemId = Number(
+        document.getElementById("mcp-item-id").value
+    );
+
+    if (!Number.isSafeInteger(itemId) || itemId < 1) {
+        setMcpStatus("Enter a positive integer item ID.", true);
+        return;
+    }
+
+    runMcpTool("get_checklist_item", {item_id: itemId});
+});
+
+mcpSummaryButton.addEventListener("click", () => {
+    runMcpTool("get_checklist_summary");
+});
+
+checkMcpConnection();
+
+const ragStatus = document.getElementById("rag-status");
+const ragStatusButton = document.getElementById("rag-status-button");
+const ragForm = document.getElementById("rag-form");
+const ragQuery = document.getElementById("rag-query");
+const ragAskButton = document.getElementById("rag-ask-button");
+const ragResults = document.getElementById("rag-results");
+const ragAnswer = document.getElementById("rag-answer");
+const ragConfidence = document.getElementById("rag-confidence");
+const ragCitations = document.getElementById("rag-citations");
+
+let ragAvailable = false;
+let ragBusy = false;
+
+
+function updateRagButtons() {
+    ragStatusButton.disabled = ragBusy;
+    ragAskButton.disabled = ragBusy || !ragAvailable;
+    ragQuery.disabled = ragBusy;
+}
+
+
+function setRagStatus(message, isError = false) {
+    ragStatus.textContent = message;
+    ragStatus.dataset.type = isError ? "error" : "info";
+}
+
+
+function clearRagResult() {
+    ragResults.hidden = true;
+    ragAnswer.textContent = "";
+    ragConfidence.textContent = "";
+    clearElement(ragCitations);
+}
+
+
+async function checkRagConnection() {
+    if (ragBusy) {
+        return;
+    }
+
+    ragBusy = true;
+    ragAvailable = false;
+    updateRagButtons();
+    setRagStatus("Checking RAG connection...");
+
+    try {
+        const result = await apiRequest(`${API_URL}/rag/status`);
+
+        ragAvailable = result.enabled === true
+            && result.available === true;
+
+        if (result.enabled === false) {
+            clearRagResult();
+            setRagStatus("RAG mode is disabled.");
+        } else if (ragAvailable) {
+            setRagStatus("RAG service connected.");
+        } else {
+            clearRagResult();
+            setRagStatus("RAG service is unavailable.", true);
+        }
+    } catch (error) {
+        clearRagResult();
+        setRagStatus(
+            error.status === 401
+                ? "Please log in to use the knowledge assistant."
+                : error.message,
+            true
+        );
+    } finally {
+        ragBusy = false;
+        updateRagButtons();
+    }
+}
+
+
+function renderRagAnswer(result) {
+    ragAnswer.textContent = result.answer;
+
+    ragConfidence.textContent = (
+        `Confidence category: ${result.confidence_category}. `
+        + "This is a source-based estimate, not a probability."
+    );
+
+    clearElement(ragCitations);
+
+    for (const citation of result.citations) {
+        const source = citation.source_id || "Unknown source";
+        const chunk = citation.chunk_id || "Unknown chunk";
+        const tier = citation.authority_tier || "Unknown tier";
+
+        ragCitations.appendChild(
+            makeElement(
+                "li",
+                "",
+                `${source} | ${chunk} | ${tier}`
+            )
+        );
+    }
+
+    if (result.citations.length === 0) {
+        ragCitations.appendChild(
+            makeElement("li", "", "No sources returned.")
+        );
+    }
+
+    ragResults.hidden = false;
+}
+
+
+ragStatusButton.addEventListener("click", checkRagConnection);
+
+ragForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    if (ragBusy || !ragAvailable) {
+        return;
+    }
+
+    const query = ragQuery.value.trim();
+
+    if (!query) {
+        setRagStatus("Enter a question.", true);
+        return;
+    }
+
+    ragBusy = true;
+    updateRagButtons();
+    clearRagResult();
+    setRagStatus("Retrieving information and generating a response...");
+
+    try {
+        const result = await apiRequest(`${API_URL}/rag/answer`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                query,
+                k: 5,
+            }),
+        });
+
+        if (
+            result.status !== "success"
+            || typeof result.answer !== "string"
+            || !Array.isArray(result.citations)
+        ) {
+            throw new Error(
+                result.error || "RAG returned an invalid response."
+            );
+        }
+
+        renderRagAnswer(result);
+        setRagStatus("Response received.");
+    } catch (error) {
+        if ([401, 403, 503].includes(error.status)) {
+            ragAvailable = false;
+        }
+
+        clearRagResult();
+        setRagStatus(error.message, true);
+    } finally {
+        ragBusy = false;
+        updateRagButtons();
+    }
+});
+
+checkRagConnection();

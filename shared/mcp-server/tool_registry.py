@@ -33,6 +33,12 @@ ATTRACTIONS_TOOLS = [
     "get_top_rated_attractions",
 ]
 
+CHECKLIST_TOOLS = [
+    "get_checklist_item",
+    "get_checklist_items",
+    "get_checklist_summary",
+]
+
 SHARED_TOOLS = [
     "list_tripagent_services",
     "get_service_status",
@@ -44,6 +50,7 @@ SHARED_TOOLS = [
 # Only the Account integration is registered in this release. Other feature
 # teams can later add their own five tools without changing Account access.
 FEATURE_TOOL_ACCESS = {
+    "checklist": CHECKLIST_TOOLS + SHARED_TOOLS,
     "account": ACCOUNT_TOOLS + SHARED_TOOLS,
     "accommodation": ACCOMMODATION_TOOLS + SHARED_TOOLS,
     "flight": FLIGHT_TOOLS + SHARED_TOOLS,
@@ -51,6 +58,7 @@ FEATURE_TOOL_ACCESS = {
 }
 
 TOOL_CATEGORY = {
+    **{name: "checklist" for name in CHECKLIST_TOOLS},
     **{name: "account" for name in ACCOUNT_TOOLS},
     **{name: "accommodation" for name in ACCOMMODATION_TOOLS},
     **{name: "flight" for name in FLIGHT_TOOLS},
@@ -78,6 +86,7 @@ def get_tool_category(tool_name: str) -> str | None:
 def get_registry_summary() -> dict:
     """Return non-sensitive registry metadata."""
     return {
+        "checklist_tools": CHECKLIST_TOOLS.copy(),
         "account_tools": ACCOUNT_TOOLS.copy(),
         "accommodation_tools": ACCOMMODATION_TOOLS.copy(),
         "flight_tools": FLIGHT_TOOLS.copy(),

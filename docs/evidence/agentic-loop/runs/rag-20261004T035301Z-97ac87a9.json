@@ -1,0 +1,386 @@
+{
+  "run_id": "rag-20261004T035301Z-97ac87a9",
+  "mode": "rag",
+  "source": "live-services",
+  "repository": {
+    "commit": "338078d87c44cb7eedb04101c5a9a8447ba75fcb",
+    "dirty": true
+  },
+  "results": {
+    "account": {
+      "service": "Customer Account / Profile Service",
+      "feature": "account",
+      "mode": "rag",
+      "started_at": "2026-10-04T03:52:40.825400+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "account",
+        "server": "http://localhost:7002",
+        "checks": [
+          {
+            "id": "file:shared/rag-server/rag_pipeline.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/rag_http_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/rag_implementation_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_reasoning_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_functions",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_setup",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ConnectionError"
+            }
+          }
+        ],
+        "queries": [],
+        "limitations": [
+          "Corpus refresh updates the local index and audit log",
+          "Citation membership is not proof that all answer claims are supported",
+          "Human review of answer grounding and confidence remains required",
+          "Retrieval metrics use a curated reference subset, with no rubric-defined numeric threshold"
+        ],
+        "implementation_context": {
+          "chunk_text": "def chunk_text(text: str, max_words: int = 80) -> list[str]:\n    words = text.split()\n    if not words:\n        return []\n    return [\n        \" \".join(words[i:i + max_words]).strip()\n        for i in range(0, len(words), max_words)\n        if \" \".join(words[i:i + max_words]).strip()\n    ]",
+          "confidence_from_results": "def confidence_from_results(results: list[dict[str, Any]]) -> str:\n    if not results:\n        return \"Unknown\"\n    tier_1 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_1\")\n    tier_2 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_2\")\n    if tier_1 >= 2 and len(results) >= 3:\n        return \"High\"\n    if tier_1 >= 1 or tier_2 >= 2:\n        return \"Medium\"\n    return \"Low\""
+        },
+        "validation_status": "FAIL",
+        "duration_seconds": 4.109
+      },
+      "finished_at": "2026-10-04T03:52:44.934108+00:00"
+    },
+    "accommodation": {
+      "service": "Accommodation Service",
+      "feature": "accommodation",
+      "mode": "rag",
+      "started_at": "2026-10-04T03:52:44.934108+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "accommodation",
+        "server": "http://localhost:7002",
+        "checks": [
+          {
+            "id": "file:shared/rag-server/rag_pipeline.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/rag_http_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/rag_implementation_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_reasoning_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_functions",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_setup",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ConnectionError"
+            }
+          }
+        ],
+        "queries": [],
+        "limitations": [
+          "Corpus refresh updates the local index and audit log",
+          "Citation membership is not proof that all answer claims are supported",
+          "Human review of answer grounding and confidence remains required",
+          "Retrieval metrics use a curated reference subset, with no rubric-defined numeric threshold"
+        ],
+        "implementation_context": {
+          "chunk_text": "def chunk_text(text: str, max_words: int = 80) -> list[str]:\n    words = text.split()\n    if not words:\n        return []\n    return [\n        \" \".join(words[i:i + max_words]).strip()\n        for i in range(0, len(words), max_words)\n        if \" \".join(words[i:i + max_words]).strip()\n    ]",
+          "confidence_from_results": "def confidence_from_results(results: list[dict[str, Any]]) -> str:\n    if not results:\n        return \"Unknown\"\n    tier_1 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_1\")\n    tier_2 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_2\")\n    if tier_1 >= 2 and len(results) >= 3:\n        return \"High\"\n    if tier_1 >= 1 or tier_2 >= 2:\n        return \"Medium\"\n    return \"Low\""
+        },
+        "validation_status": "FAIL",
+        "duration_seconds": 4.094
+      },
+      "finished_at": "2026-10-04T03:52:49.033414+00:00"
+    },
+    "attractions": {
+      "service": "Attractions & Tour Experiences",
+      "feature": "attractions",
+      "mode": "rag",
+      "started_at": "2026-10-04T03:52:49.033414+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "attractions",
+        "server": "http://localhost:7002",
+        "checks": [
+          {
+            "id": "file:shared/rag-server/rag_pipeline.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/rag_http_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/rag_implementation_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_reasoning_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_functions",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_setup",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ConnectionError"
+            }
+          }
+        ],
+        "queries": [],
+        "limitations": [
+          "Corpus refresh updates the local index and audit log",
+          "Citation membership is not proof that all answer claims are supported",
+          "Human review of answer grounding and confidence remains required",
+          "Retrieval metrics use a curated reference subset, with no rubric-defined numeric threshold"
+        ],
+        "implementation_context": {
+          "chunk_text": "def chunk_text(text: str, max_words: int = 80) -> list[str]:\n    words = text.split()\n    if not words:\n        return []\n    return [\n        \" \".join(words[i:i + max_words]).strip()\n        for i in range(0, len(words), max_words)\n        if \" \".join(words[i:i + max_words]).strip()\n    ]",
+          "confidence_from_results": "def confidence_from_results(results: list[dict[str, Any]]) -> str:\n    if not results:\n        return \"Unknown\"\n    tier_1 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_1\")\n    tier_2 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_2\")\n    if tier_1 >= 2 and len(results) >= 3:\n        return \"High\"\n    if tier_1 >= 1 or tier_2 >= 2:\n        return \"Medium\"\n    return \"Low\""
+        },
+        "validation_status": "FAIL",
+        "duration_seconds": 4.109
+      },
+      "finished_at": "2026-10-04T03:52:53.138131+00:00"
+    },
+    "checklist": {
+      "service": "Pre-Trip Checklist Service",
+      "feature": "checklist",
+      "mode": "rag",
+      "started_at": "2026-10-04T03:52:53.138131+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "checklist",
+        "server": "http://localhost:7002",
+        "checks": [
+          {
+            "id": "file:shared/rag-server/rag_pipeline.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/rag_http_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/rag_implementation_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_reasoning_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_functions",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_setup",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ConnectionError"
+            }
+          }
+        ],
+        "queries": [],
+        "limitations": [
+          "Corpus refresh updates the local index and audit log",
+          "Citation membership is not proof that all answer claims are supported",
+          "Human review of answer grounding and confidence remains required",
+          "Retrieval metrics use a curated reference subset, with no rubric-defined numeric threshold"
+        ],
+        "implementation_context": {
+          "chunk_text": "def chunk_text(text: str, max_words: int = 80) -> list[str]:\n    words = text.split()\n    if not words:\n        return []\n    return [\n        \" \".join(words[i:i + max_words]).strip()\n        for i in range(0, len(words), max_words)\n        if \" \".join(words[i:i + max_words]).strip()\n    ]",
+          "confidence_from_results": "def confidence_from_results(results: list[dict[str, Any]]) -> str:\n    if not results:\n        return \"Unknown\"\n    tier_1 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_1\")\n    tier_2 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_2\")\n    if tier_1 >= 2 and len(results) >= 3:\n        return \"High\"\n    if tier_1 >= 1 or tier_2 >= 2:\n        return \"Medium\"\n    return \"Low\""
+        },
+        "validation_status": "FAIL",
+        "duration_seconds": 4.125
+      },
+      "finished_at": "2026-10-04T03:52:57.253483+00:00"
+    },
+    "flight": {
+      "service": "Flight Service",
+      "feature": "flight",
+      "mode": "rag",
+      "started_at": "2026-10-04T03:52:57.253483+00:00",
+      "execution_status": "COMPLETED",
+      "validation_status": "FAIL",
+      "model_status": "NOT_RUN",
+      "human_review_required": true,
+      "stages": {
+        "observe": "COLLECTED"
+      },
+      "evidence": {
+        "feature": "flight",
+        "server": "http://localhost:7002",
+        "checks": [
+          {
+            "id": "file:shared/rag-server/rag_pipeline.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/rag_http_server.py",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:shared/rag-server/requirements.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/implementation/rag_implementation_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_review_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "file:prompts/service/review/rag_reasoning_prompt.txt",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_functions",
+            "status": "PASS",
+            "detail": null
+          },
+          {
+            "id": "rag_setup",
+            "status": "FAIL",
+            "detail": {
+              "error_type": "ConnectionError"
+            }
+          }
+        ],
+        "queries": [],
+        "limitations": [
+          "Corpus refresh updates the local index and audit log",
+          "Citation membership is not proof that all answer claims are supported",
+          "Human review of answer grounding and confidence remains required",
+          "Retrieval metrics use a curated reference subset, with no rubric-defined numeric threshold"
+        ],
+        "implementation_context": {
+          "chunk_text": "def chunk_text(text: str, max_words: int = 80) -> list[str]:\n    words = text.split()\n    if not words:\n        return []\n    return [\n        \" \".join(words[i:i + max_words]).strip()\n        for i in range(0, len(words), max_words)\n        if \" \".join(words[i:i + max_words]).strip()\n    ]",
+          "confidence_from_results": "def confidence_from_results(results: list[dict[str, Any]]) -> str:\n    if not results:\n        return \"Unknown\"\n    tier_1 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_1\")\n    tier_2 = sum(1 for r in results if r.get(\"authority_tier\") == \"tier_2\")\n    if tier_1 >= 2 and len(results) >= 3:\n        return \"High\"\n    if tier_1 >= 1 or tier_2 >= 2:\n        return \"Medium\"\n    return \"Low\""
+        },
+        "validation_status": "FAIL",
+        "duration_seconds": 4.078
+      },
+      "finished_at": "2026-10-04T03:53:01.331907+00:00"
+    }
+  }
+}
