@@ -537,3 +537,16 @@ button:hover,
 .rag-switch input:checked+.rag-slider{background:#2563eb}
 .rag-switch input:checked+.rag-slider::before{transform:translateX(24px)}
 .rag-action:disabled{opacity:.5;cursor:not-allowed}
+
+/* MCP mode card: same layout and switch styling as RAG */
+.mcp-mode-card {margin-top:24px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;}
+.mcp-mode-card p {margin:6px 0 0;color:#6b7280;}
+.mcp-mode-card .rag-switch,.mcp-status-card .rag-switch {flex:0 0 52px;}
+.rag-switch input:focus-visible + .rag-slider {outline:3px solid #93c5fd;outline-offset:3px;}
+.rag-switch input:disabled + .rag-slider {opacity:.55;cursor:wait;}
+
+/* Multi-Agent readable workflow results */
+.agent-panel, .review-summary { margin: 18px 0; }
+.agent-readable { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; background: #f8fafc; color: #1f2937; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; min-height: 52px; font-family: inherit; }
+.review-summary { border: 2px solid #cbd5e1; border-radius: 12px; padding: 18px; background: #fff; }
+.review-summary h3 { margin-top: 0; }

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TripAgent - Multi-Agent</title><link rel="stylesheet" href="/account/css/styles.css?v=20261017-readable"></head>
+<body><header class="topbar"><a href="/" class="brand">TripAgent</a><nav><a href="/">Home</a><button id="logout-button" class="link-button">Logout</button></nav></header>
+<main class="account-layout"><aside class="sidebar"><h2>Account</h2>
+        <a href="/account/profile">Profile</a>
+        <a href="/account/preferences">Preferences</a>
+        <a href="/account/mcp">MCP Service</a>
+        <a href="/account/rag">RAG Service</a>
+        <a href="/account/multi-agent" class="active">Multi-Agent</a>
+</aside><section class="content-card"><h1>AI Trip Planner</h1>
+<p class="subtitle">Planner → Worker → Reviewer → Human approval. Agents recommend a destination from your saved preferences, build a sample itinerary, review it, and ask for your approval. No bookings are made.</p>
+<div class="mcp-status-card"><div><strong>Multi-Agent mode</strong><p id="mode-status">OFF by default</p></div>
+<label class="rag-switch" aria-label="Toggle Multi-Agent mode"><input id="multi-toggle" type="checkbox"><span class="rag-slider"></span></label></div>
+<section class="mcp-section"><h2>Trip planning request</h2><label for="workflow-request">Optional trip requirements (duration, dates, departure city, budget constraints)</label>
+<textarea id="workflow-request" rows="4" placeholder="For example: Plan a 4-day trip in November. Recommend the destination based on my saved preferences.">Recommend a destination based on my saved travel preferences and create a personalised 3-day itinerary.</textarea>
+<button class="rag-action" id="run-workflow" type="button">Generate Trip Plan</button>
+<p id="workflow-status" aria-live="polite">No workflow started.</p>
+<section class="agent-panel"><h3>Planner — destination strategy</h3><div id="planner-result" class="agent-readable">Waiting for a workflow.</div></section>
+<section class="agent-panel"><h3>Worker — itinerary</h3><div id="worker-result" class="agent-readable">Waiting for a workflow.</div></section>
+<section class="agent-panel"><h3>Reviewer — itinerary quality</h3><div id="reviewer-result" class="agent-readable">Waiting for a workflow.</div></section>
+<section class="review-summary"><h3>Workflow summary for human review</h3><p id="summary-status">Generate a trip plan to see the review summary.</p><div id="summary-content" class="agent-readable" aria-live="polite"></div></section><h3>Human review</h3><p>Read the itinerary and reviewer findings before deciding. Approval records your decision only; it does not book travel or change saved preferences.</p>
+<label for="correction">Correction (required for Partially Accept)</label><textarea id="correction" rows="3"></textarea>
+<div class="rag-actions"><button class="rag-action review-action" data-decision="Accept">Accept</button>
+<button class="rag-action review-action" data-decision="Partially Accept">Partially Accept</button>
+<button class="rag-action review-action" data-decision="Reject">Reject</button></div>
+<div id="decision-result" class="agent-readable">No decision recorded.</div>
+</section></section></main>
+<script>
+const toggle=document.getElementById('multi-toggle');
+const modeStatus=document.getElementById('mode-status');
+const runButton=document.getElementById('run-workflow');
+const reviewButtons=[...document.querySelectorAll('.review-action')];
+let available=true, active=null, timer=null, busy=false;
+const byId=id=>document.getElementById(id);
+function stopPolling(){if(timer){clearTimeout(timer);timer=null}}
+function controls(){const on=available&&toggle.checked;runButton.disabled=!on||busy;byId('workflow-request').disabled=!on;byId('correction').disabled=!on;reviewButtons.forEach(b=>b.disabled=!on||!active||active.status!=='pending_review'||busy);modeStatus.textContent=!available?'Locked OFF by deployment configuration':on?'ON — ready to run workflows':'OFF — no Multi-Agent requests will be sent'}
+async function api(path,method='GET',body){const response=await fetch('/api/account/multi-agent'+path,{method,credentials:'include',headers:{...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});if(response.status===401){location.href='/account/login';throw Error('Authentication required')}let data;try{data=await response.json()}catch{throw Error('Invalid server response')}if(!response.ok)throw Error(data.error||'Request failed');return data}
+function parseAgentText(value){
+  if(value==null)return '';
+  if(typeof value==='string'){
+    const t=value.trim();
+    if((t.startsWith('{')&&t.endsWith('}'))||(t.startsWith('[')&&t.endsWith(']'))){
+      try{return readableObject(JSON.parse(t))}catch{}
+    }
+    return t.replace(/^```(?:json|markdown|text)?\s*\n?/i,'').replace(/\n?```$/,'').trim();
+  }
+  return readableObject(value);
+}
+function readableObject(value,depth=0){
+  if(value==null)return '';
+  if(Array.isArray(value))return value.map((item,i)=>`${i+1}. ${readableObject(item,depth+1)}`).join('\n');
+  if(typeof value==='object')return Object.entries(value).filter(([k,v])=>v!=null&&!['agent','status'].includes(k)).map(([k,v])=>{
+    const title=k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    return `${title}:\n${readableObject(v,depth+1)}`;
+  }).join('\n\n');
+  return String(value);
+}
+function agentContent(result,key){
+  if(!result)return '';
+  return parseAgentText(result[key]??result);
+}
+function excerpt(value,limit=440){
+  const text=value.replace(/\s+/g,' ').trim();
+  return text.length>limit?text.slice(0,limit).replace(/\s+\S*$/,'')+'…':text;
+}
+function render(d){
+  active.status=d.status;
+  byId('workflow-status').textContent='Workflow: '+d.status+(d.error?' — '+d.error:'');
+  const plan=agentContent(d.planner_result,'plan');
+  const itinerary=agentContent(d.worker_result,'output');
+  const review=agentContent(d.reviewer_result,'review');
+  byId('planner-result').textContent=plan||'Planner has not finished yet.';
+  byId('worker-result').textContent=itinerary||'Worker has not finished yet.';
+  byId('reviewer-result').textContent=review||'Reviewer has not finished yet.';
+  const summary=[];
+  if(plan)summary.push('Destination strategy\n'+excerpt(plan));
+  if(itinerary)summary.push('Proposed trip\n'+excerpt(itinerary,650));
+  if(review)summary.push('Reviewer findings\n'+excerpt(review,500));
+  byId('summary-content').textContent=summary.join('\n\n')||'Agent results will appear here as they finish.';
+  byId('summary-status').textContent=d.status==='pending_review'?'Ready for your decision. Read the complete itinerary and reviewer assessment below before accepting.':d.status==='failed'?'Workflow failed; no approval is available.':d.status==='completed'||d.status==='rejected'?'Human review completed.':'Workflow in progress — summary will update as agents finish.';
+  if(d.human_decision?.status==='completed'){
+    const h=d.human_decision;
+    byId('decision-result').textContent='Decision: '+h.decision+(h.correction?'\nCorrection: '+h.correction:'');
+  }
+  controls();
+}
+async function poll(){if(!toggle.checked||!active)return;const id=active.id;try{const d=await api('/workflow/'+encodeURIComponent(id));if(!toggle.checked||!active||active.id!==id)return;render(d);if(['queued','running'].includes(d.status))timer=setTimeout(poll,2000)}catch(e){byId('workflow-status').textContent=e.message}}
+toggle.addEventListener('change',async()=>{
+  const requested=toggle.checked;toggle.disabled=true;
+  try{
+    const mode=await api('/mode','PUT',{enabled:requested});
+    available=!mode.locked;toggle.checked=!!mode.enabled;
+    if(!toggle.checked)stopPolling();
+    if(toggle.checked&&active&&['queued','running'].includes(active.status))poll();
+  }catch(e){toggle.checked=!requested;modeStatus.textContent='Unable to change mode: '+e.message;}
+  finally{toggle.disabled=!available;controls();}
+});
+runButton.addEventListener('click',async()=>{const user_request=byId('workflow-request').value.trim();if(!user_request){byId('workflow-status').textContent='Enter a request first.';return}stopPolling();busy=true;controls();try{const d=await api('/workflow','POST',{user_request});active={id:d.workflow_id,status:d.status};render(d);if(['queued','running'].includes(d.status))timer=setTimeout(poll,2000)}catch(e){byId('workflow-status').textContent=e.message}finally{busy=false;controls()}});
+reviewButtons.forEach(b=>b.addEventListener('click',async()=>{if(!active||active.status!=='pending_review')return;const decision=b.dataset.decision,correction=byId('correction').value.trim();if(decision==='Partially Accept'&&!correction){byId('decision-result').textContent='Enter a correction for partial acceptance.';return}busy=true;controls();try{const d=await api('/workflow/'+encodeURIComponent(active.id)+'/review','POST',{decision,correction});render(d)}catch(e){byId('decision-result').textContent=e.message}finally{busy=false;controls()}}));
+byId('logout-button').addEventListener('click',async()=>{await fetch('/api/access/logout',{method:'POST',credentials:'include'});location.href='/account/login'});
+(async()=>{try{const session=await fetch('/api/account/session',{credentials:'include'});if(session.status===401){location.href='/account/login';return}const mode=await api('/mode');available=!mode.locked;toggle.checked=!!mode.enabled;toggle.disabled=!available;controls()}catch(e){modeStatus.textContent=e.message;controls()}})();
+</script></body></html>

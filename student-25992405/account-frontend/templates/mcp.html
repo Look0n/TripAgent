@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TripAgent - MCP Tools</title>
-    <link rel="stylesheet" href="/account/css/styles.css">
+    <link rel="stylesheet" href="/account/css/styles.css?v=20261017-fix2">
 </head>
 <body>
 <header class="topbar">
@@ -16,12 +16,12 @@
 </header>
 
 <main class="account-layout">
-    <aside class="sidebar">
-        <h2>Account</h2>
+    <aside class="sidebar"><h2>Account</h2>
         <a href="/account/profile">Profile</a>
         <a href="/account/preferences">Preferences</a>
         <a href="/account/mcp" class="active">MCP Service</a>
-            <a href="/account/rag">RAG Service</a>
+        <a href="/account/rag">RAG Service</a>
+        <a href="/account/multi-agent">Multi-Agent</a>
 </aside>
 
     <section class="content-card">
@@ -35,9 +35,9 @@
                 <strong>MCP Mode</strong>
                 <p id="mcp-mode-text">Loading MCP mode...</p>
             </div>
-            <label class="toggle-switch" aria-label="Toggle MCP mode">
+            <label class="rag-switch" aria-label="Toggle MCP mode">
                 <input type="checkbox" id="mcp-toggle">
-                <span class="toggle-slider"></span>
+                <span class="rag-slider"></span>
             </label>
         </div>
 
@@ -89,6 +89,8 @@
 <script>
 let availableTools = [];
 let mcpEnabled = false;
+let mcpModeReady = false;
+document.getElementById("mcp-toggle").disabled = true;
 
 async function ensureAuthenticated() {
     const response = await fetch("/api/account/session", {
@@ -165,6 +167,8 @@ async function loadMode() {
     }
 
     updateModeInterface(Boolean(data.enabled));
+    mcpModeReady = true;
+    document.getElementById("mcp-toggle").disabled = false;
     return Boolean(data.enabled);
 }
 
@@ -324,16 +328,17 @@ function buildArgumentTemplate(tool) {
 }
 
 document.getElementById("mcp-toggle").addEventListener("change", async (event) => {
+    if (!mcpModeReady) { event.target.checked = mcpEnabled; return; }
     const requestedMode = event.target.checked;
     event.target.disabled = true;
 
     try {
         await changeMode(requestedMode);
     } catch (error) {
-        event.target.checked = !requestedMode;
+        updateModeInterface(mcpEnabled);
         document.getElementById("mcp-mode-text").textContent = error.message;
     } finally {
-        event.target.disabled = false;
+        event.target.disabled = !mcpModeReady;
     }
 });
 
@@ -427,6 +432,8 @@ document.getElementById("logout-button").addEventListener("click", async () => {
         }
     } catch (error) {
         document.getElementById("mcp-mode-text").textContent = error.message;
+        mcpModeReady = false;
+        document.getElementById("mcp-toggle").disabled = true;
         setMcpControlsEnabled(false);
     }
 })();
