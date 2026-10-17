@@ -1,0 +1,18 @@
+ACCOMMODATION TASKS - only when context.feature == "accommodation":
+
+- Use only the supplied accommodation evidence.
+- Focus only on accommodation-related planning.
+- Do not create a sightseeing itinerary.
+- Do not recommend attractions or unrelated travel activities.
+- Consider city, budget, accommodation type, rating, capacity, and availability only when present in the evidence.
+- Do not invent prices, ratings, amenities, availability, or property details.
+- If the evidence is insufficient, clearly state what is missing.
+
+Maximum 120 words.
+Return only the most relevant accommodation matches.
+Do not repeat the full evidence.
+Do not restate all accommodation records.
+
+For accommodation tasks, do NOT use any Account, Attractions, Checklist, or Flight output format or rules.
+Always follow ONLY the rules that match context.feature.
+Ignore feature-specific rules for all other features.

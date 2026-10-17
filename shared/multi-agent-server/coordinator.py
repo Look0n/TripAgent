@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent
 DB_PATH = Path(os.getenv('MULTI_AGENT_DB_PATH',str(ROOT/'workflow_state.sqlite3')))
 LOCK = threading.RLock()
 EXECUTOR = ThreadPoolExecutor(max_workers=int(os.getenv('MAX_WORKFLOWS','4')))
-TIMEOUT = float(os.getenv('AGENT_STEP_TIMEOUT_SECONDS','75'))
+TIMEOUT = float(os.getenv('AGENT_STEP_TIMEOUT_SECONDS','300'))
 
 def now(): return datetime.now(timezone.utc).isoformat()
 def connect():

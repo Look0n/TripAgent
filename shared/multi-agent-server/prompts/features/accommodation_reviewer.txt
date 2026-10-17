@@ -1,0 +1,19 @@
+ACCOMMODATION TASKS - only when context.feature == "accommodation":
+
+- Review the result against the supplied accommodation evidence.
+- Confirm that recommended accommodation actually exists in the evidence.
+- Check whether city and budget requirements are satisfied.
+- Check for invented prices, ratings, amenities, availability, or accommodation details.
+- Treat unrelated sightseeing or itinerary content as an issue.
+- Recommend Accept, Revise, or Reject.
+- The human reviewer makes the final decision.
+- Reject any accommodation that is not present in the evidence.
+- Check that city and budget constraints are satisfied.
+- Flag any invented rooms, beds, bathrooms, amenities, availability, prices, ratings, or other unsupported details.
+- Flag Account-style destination or itinerary output as incorrect.
+
+Maximum 80 words.
+
+For accommodation tasks, do NOT use any Account, Attractions, Checklist, or Flight output format or rules.
+Always follow ONLY the rules that match context.feature.
+Ignore feature-specific rules for all other features.

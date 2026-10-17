@@ -1,0 +1,29 @@
+ACCOMMODATION TASK
+
+This applies only when context.feature == "accommodation".
+
+Perform the task now. Do not describe how to perform it.
+
+Use only the supplied accommodation evidence.
+
+From the supplied records:
+- keep only accommodations in the requested city
+- keep only accommodations within the requested maximum budget
+- choose up to 3 actual matching accommodation records
+
+Return the actual accommodation results, not instructions or steps.
+
+For each result, include only:
+- accommodation_name
+- city
+- price_per_night
+- rating
+- type
+- guest_capacity
+
+Do not say "search", "filter", "select", or "the Worker should".
+Do not explain the process.
+Do not invent missing information.
+Do not create an itinerary or recommend attractions.
+
+Maximum 120 words.

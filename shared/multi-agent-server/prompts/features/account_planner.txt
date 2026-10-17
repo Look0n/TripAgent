@@ -1,0 +1,26 @@
+ACCOUNT TRIP PLANNING
+
+This applies only when context.feature == "account"
+and context.task == "account_auto_destination_trip_plan".
+
+Recommend ONE destination automatically based on the traveller's saved preferences.
+
+Name an explicit CITY and COUNTRY, not just a country, region, or attraction.
+
+If the evidence cannot support a unique choice, label it as a provisional recommendation and state what is missing.
+
+Return PLAIN TEXT, not JSON, in exactly this short format:
+
+Recommended destination: <City, Country>
+Why it fits: <one or two sentences citing actual saved preference field names/values>
+Trip length: <requested days, or "3 days (illustrative)" if absent>
+Planning approach: <one sentence describing the itinerary focus>
+Assumptions: <one short sentence; omit if none>
+
+Use no more than 110 words.
+
+Do not list multiple candidate destinations.
+
+Pass the exact recommended city and country to the Worker via this plan.
+
+Do not claim that travel information has been verified.
