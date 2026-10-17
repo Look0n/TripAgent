@@ -49,6 +49,13 @@ def rag_page():
     return render_template(
         "rag.html"
     )
+    
+    
+@app.route("/multi-agent")
+def multi_agent_page():
+    return render_template(
+        "multi_agent.html"
+    )
 
 
 @app.route("/health")

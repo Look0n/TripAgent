@@ -1,4 +1,5 @@
 import os
+import re
 
 from flask import Blueprint, jsonify, request
 from requests import RequestException
@@ -48,6 +49,40 @@ def fail(exc):
     return jsonify({
         "error": str(exc)
     }), status_code
+    
+def extract_accommodation_filters(user_request):
+    text = user_request.lower()
+
+    city = None
+    max_price = None
+
+    # Demo cities currently supported by accommodation data
+    cities = [
+        "Sydney",
+        "Melbourne",
+        "Brisbane",
+        "Cairns",
+        "Gold Coast",
+        "Port Douglas",
+        "Bathurst"
+    ]
+
+    for known_city in cities:
+        if known_city.lower() in text:
+            city = known_city
+            break
+
+    price_match = re.search(
+        r"(?:under|below|max(?:imum)?)\s*\$?(\d+(?:\.\d+)?)",
+        text
+    )
+
+    if price_match:
+        max_price = float(
+            price_match.group(1)
+        )
+
+    return city, max_price
     
     
 # -----------------------------
@@ -148,7 +183,24 @@ def start_multi_agent_workflow():
 
     try:
         # Use real Accommodation DB records as evidence
-        evidence = get_all_accommodations()
+        city, max_price = extract_accommodation_filters(user_request)
+        print("MULTI-AGENT FILTER:", city, max_price)
+        
+        evidence = get_all_accommodations(city=city, max_price=max_price)
+        print(
+            "EVIDENCE:",
+            [
+                (
+                    item["accommodation_name"],
+                    item["city"],
+                    item["price_per_night"]
+                )
+                for item in evidence
+            ]
+        )
+
+        if not evidence:
+            return jsonify({"error": "No accommodation evidence matched the request."}), 404
 
         result = run_multi_agent_workflow(
             feature="accommodation",

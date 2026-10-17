@@ -97,129 +97,137 @@
                 RAG Service
             </a>
 
+            <a
+                class="sidebar-link"
+                href="/accommodation/multi-agent"
+            >
+                Multi-Agent
+            </a>
+
 
         </aside>
 
+        <section class="content-card">
+            <main class="main-content">
 
-        <main class="main-content">
+                <h1>RAG Service</h1>
 
-            <h1>RAG Service</h1>
-
-            <p class="subtitle">
-                Ask questions using only the
-                Accommodation feature knowledge corpus.
-            </p>
-    
-    
-            <div class="rag-mode-control">
-    
-                <label>
-                    <input
-                        type="checkbox"
-                        id="ragEnabled"
-                        checked
-                    >
-    
-                    RAG Enabled
-                </label>
-    
-                <span id="ragModeStatus">
-                    ON
-                </span>
-    
-            </div>
-    
-    
-            <div class="status-card">
-    
+                <p class="subtitle">
+                    Ask questions using only the
+                    Accommodation feature knowledge corpus.
+                </p>
+        
+        
+                <div class="rag-mode-control">
+        
+                    <label>
+                        <input
+                            type="checkbox"
+                            id="ragEnabled"
+                            checked
+                        >
+        
+                        RAG Enabled
+                    </label>
+        
+                    <span id="ragModeStatus">
+                        ON
+                    </span>
+        
+                </div>
+        
+        
+                <div class="status-card">
+        
+                    <div>
+        
+                        <strong>
+                            RAG status
+                        </strong>
+        
+                        <p id="ragServerStatusText">
+                            Connected to shared RAG server
+                        </p>
+        
+                    </div>
+        
+                    <span
+                        id="ragServerStatusDot"
+                        class="status-dot status-on"
+                    ></span>
+        
+                </div>
+        
+        
                 <div>
-    
-                    <strong>
-                        RAG status
-                    </strong>
-    
-                    <p id="ragServerStatusText">
-                        Connected to shared RAG server
-                    </p>
-    
+        
+                    <h2>
+                        Ask Accommodation Knowledge
+                    </h2>
+        
+                    <label for="ragQuestion">
+                        Question
+                    </label>
+        
+                    <textarea
+                        id="ragQuestion"
+                        rows="5"
+                        placeholder="How can users search for accommodation?"
+                    ></textarea>
+        
+        
+                    <label for="ragK">
+                        Retrieved passages
+                    </label>
+        
+                    <select id="ragK">
+                        <option value="3">
+                            3
+                        </option>
+        
+                        <option
+                            value="5"
+                            selected
+                        >
+                            5
+                        </option>
+        
+                        <option value="10">
+                            10
+                        </option>
+                    </select>
+        
+        
+                    <div class="rag-actions">
+        
+                        <button onclick="answerWithRAG()">
+                            Answer with RAG
+                        </button>
+        
+                        <button onclick="retrieveRAGContext()">
+                            Retrieve Context
+                        </button>
+        
+                        <button onclick="refreshRAGCorpus()">
+                            Refresh Accommodation Corpus
+                        </button>
+        
+                    </div>
+        
+        
+                    <h2>
+                        Result
+                    </h2>
+        
+                    <pre
+                        id="ragResult"
+                        class="result"
+                    >No RAG request yet.</pre>
+        
                 </div>
-    
-                <span
-                    id="ragServerStatusDot"
-                    class="status-dot status-on"
-                ></span>
-    
-            </div>
-    
-    
-            <div>
-    
-                <h2>
-                    Ask Accommodation Knowledge
-                </h2>
-    
-                <label for="ragQuestion">
-                    Question
-                </label>
-    
-                <textarea
-                    id="ragQuestion"
-                    rows="5"
-                    placeholder="How can users search for accommodation?"
-                ></textarea>
-    
-    
-                <label for="ragK">
-                    Retrieved passages
-                </label>
-    
-                <select id="ragK">
-                    <option value="3">
-                        3
-                    </option>
-    
-                    <option
-                        value="5"
-                        selected
-                    >
-                        5
-                    </option>
-    
-                    <option value="10">
-                        10
-                    </option>
-                </select>
-    
-    
-                <div class="rag-actions">
-    
-                    <button onclick="answerWithRAG()">
-                        Answer with RAG
-                    </button>
-    
-                    <button onclick="retrieveRAGContext()">
-                        Retrieve Context
-                    </button>
-    
-                    <button onclick="refreshRAGCorpus()">
-                        Refresh Accommodation Corpus
-                    </button>
-    
-                </div>
-    
-    
-                <h2>
-                    Result
-                </h2>
-    
-                <pre
-                    id="ragResult"
-                    class="result"
-                >No RAG request yet.</pre>
-    
-            </div>
-    
-        </main>
+        
+            </main>
+        </section>
 
     </div>
 

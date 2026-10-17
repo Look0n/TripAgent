@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Accommodation Multi-Agent Service | TripAgent
+    </title>
+    
+    <link
+        rel="stylesheet"
+        href="/css/styles.css"
+    >
+
+
+    <link
+        rel="stylesheet"
+        href="/accommodation/static/css/accommodation.css"
+    >
+</head>
+
+<body>
+
+    <header class="navbar">
+
+        <a href="/" class="brand">
+            TripAgent
+        </a>
+
+        <nav>
+            <a href="/">Home</a>
+            <button
+                id="logout-button"
+                class="link-button"
+            >
+                Logout
+            </button>
+        </nav>
+
+    </header>
+
+    <div class="accommodation-layout">
+
+        <aside class="accommodation-sidebar">
+
+            <h2>Accommodation</h2>
+
+            <a
+                class="sidebar-link"
+                id="browseTab"
+                href="/accommodation/"
+            >
+                Browse
+            </a>
+
+            <a
+                class="sidebar-link"
+                id="searchTab"
+                href="/accommodation/?view=search"
+            >
+                Search & Filter
+            </a>
+
+            <a
+                class="sidebar-link"
+                id="aiTab"
+                href="/accommodation/?view=ai"
+            >
+                AI Assistant
+            </a>
+
+            <a
+                class="sidebar-link"
+                id="adminTab"
+                href="/accommodation/?view=admin"
+            >
+                Admin View
+            </a>
+
+            <a
+                class="sidebar-link"
+                href="/accommodation/mcp"
+            >
+                MCP Service
+            </a>
+
+            <a
+                class="sidebar-link"
+                href="/accommodation/rag"
+            >
+                RAG Service
+            </a>
+
+            <a
+                class="sidebar-link active"
+                href="/accommodation/multi-agent"
+            >
+                Multi-Agent
+            </a>
+
+
+        </aside>
+
+        <section class="content-card">
+
+            <main class="main-content">
+
+                <h1>Multi-Agent Service</h1>
+
+                <p class="subtitle">
+                    Planner → Worker → Reviewer → Human approval.
+                </p>
+
+
+                <div class="multi-agent-mode-control">
+
+                    <label>
+                        <input
+                            type="checkbox"
+                            id="multiAgentEnabled"
+                            checked
+                        >
+                
+                        Multi-Agent Enabled
+                    </label>
+                
+                    <span
+                        id="multiAgentModeStatus"
+                    >
+                        ON
+                    </span>
+                
+                </div>
+
+                <div class="status-card">
+
+                    <div>
+
+                        <strong>
+                            Multi-Agent server status
+                        </strong>
+
+                        <p id="multiAgentServerStatusText">
+                            Checking connection...
+                        </p>
+                    </div>
+
+                    <span
+                        id="multiAgentServerStatusDot"
+                        class="status-dot status-off"
+                    ></span>
+
+                </div>
+
+                <!-- =========================
+                    REQUEST
+                    ========================= -->
+
+                <section class="multi-agent-section">
+
+                    <h2>
+                        Accommodation request
+                    </h2>
+
+                    <label for="accommodationRequest">
+                        Describe your accommodation requirements
+                    </label>
+
+                    <textarea
+                        id="accommodationRequest"
+                        rows="5"
+                        placeholder="Find suitable accommodation in Sydney under $300."
+                    ></textarea>
+
+                    <div class="button-row">
+
+                        <button
+                            type="button"
+                            class="secondary-button"
+                            onclick="useAccommodationSample()"
+                        >
+                            Use Sample
+                        </button>
+
+                        <button
+                            type="button"
+                            id="runWorkflowButton"
+                        >
+                            Run Workflow
+                        </button>
+
+                    </div>
+
+                    <p id="workflowStatusText">
+                        No workflow started.
+                    </p>
+
+                </section>
+
+
+                <!-- =========================
+                    PLANNER
+                    ========================= -->
+
+                <section class="multi-agent-section">
+
+                    <h2>
+                        Planner — accommodation strategy
+                    </h2>
+
+                    <div
+                        id="plannerResult"
+                        class="agent-result"
+                    >
+                        Waiting for a workflow.
+                    </div>
+
+                </section>
+
+
+                <!-- =========================
+                    WORKER
+                    ========================= -->
+
+                <section class="multi-agent-section">
+
+                    <h2>
+                        Worker — accommodation recommendation
+                    </h2>
+
+                    <div
+                        id="workerResult"
+                        class="agent-result"
+                    >
+                        Waiting for a workflow.
+                    </div>
+
+                </section>
+
+
+                <!-- =========================
+                    REVIEWER
+                    ========================= -->
+
+                <section class="multi-agent-section">
+
+                    <h2>
+                        Reviewer — recommendation quality
+                    </h2>
+
+                    <div
+                        id="reviewerResult"
+                        class="agent-result"
+                    >
+                        Waiting for a workflow.
+                    </div>
+
+                </section>
+
+
+                <!-- =========================
+                    HUMAN REVIEW SUMMARY
+                    ========================= -->
+
+                <section class="workflow-summary-card">
+
+                    <h2>
+                        Workflow summary for human review
+                    </h2>
+
+                    <p>
+                        Review the Worker recommendation and Reviewer
+                        assessment before making the final decision.
+                    </p>
+
+                    <div
+                        id="workflowSummary"
+                        class="agent-result"
+                    >
+                        Generate an accommodation recommendation
+                        to see the review summary.
+                    </div>
+
+                </section>
+
+
+                <!-- =========================
+                    HUMAN REVIEW
+                    ========================= -->
+
+                <section class="multi-agent-section">
+
+                    <h2>
+                        Human review
+                    </h2>
+
+                    <p class="subtitle">
+                        Your decision is recorded as the final approval
+                        step for this workflow.
+                    </p>
+
+                    <label for="correctionInput">
+                        Correction
+                        (required for Partial Accept)
+                    </label>
+
+                    <textarea
+                        id="correctionInput"
+                        rows="5"
+                        placeholder="Enter any correction or feedback..."
+                    ></textarea>
+
+
+                    <div class="button-row">
+
+                        <button
+                            type="button"
+                            id="acceptButton"
+                        >
+                            Accept
+                        </button>
+
+                        <button
+                            type="button"
+                            id="partialAcceptButton"
+                        >
+                            Partially Accept
+                        </button>
+
+                        <button
+                            type="button"
+                            id="rejectButton"
+                            class="danger-button"
+                        >
+                            Reject
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="humanReviewResult"
+                        class="agent-result"
+                    >
+                        No decision recorded.
+                    </div>
+
+                </section>
+
+            </section>
+
+        </main>
+        </section>
+
+        <script src="/accommodation/static/js/config.js"></script>
+        <script src="/accommodation/static/js/multi_agent.js"></script>
+    
+    </body>
+    
+    </html>

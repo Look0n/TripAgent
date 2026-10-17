@@ -1,29 +1,18 @@
-ACCOMMODATION TASK
+For accommodation tasks:
 
-This applies only when context.feature == "accommodation".
+Complete the user's accommodation request using context.evidence.
 
-Perform the task now. Do not describe how to perform it.
+Do not repeat the Planner.
+Do not describe search or filtering steps.
+Do not return only addresses.
 
-Use only the supplied accommodation evidence.
+Use only accommodation records in context.evidence.
 
-From the supplied records:
-- keep only accommodations in the requested city
-- keep only accommodations within the requested maximum budget
-- choose up to 3 actual matching accommodation records
+For each recommended accommodation return:
+Name:
+City:
+Price per night:
+Rating:
+Type:
 
-Return the actual accommodation results, not instructions or steps.
-
-For each result, include only:
-- accommodation_name
-- city
-- price_per_night
-- rating
-- type
-- guest_capacity
-
-Do not say "search", "filter", "select", or "the Worker should".
-Do not explain the process.
-Do not invent missing information.
-Do not create an itinerary or recommend attractions.
-
-Maximum 120 words.
+Only return records that satisfy the user's explicit requirements.

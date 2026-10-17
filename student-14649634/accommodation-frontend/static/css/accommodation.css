@@ -852,3 +852,81 @@ button:active {
     gap: 12px;
     margin-bottom: 25px;
 }
+
+
+.multi-agent-mode-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px;
+    margin: 20px 0;
+
+    border: 1px solid #d9dee8;
+    border-radius: 10px;
+
+    background: #f8fafc;
+}
+
+
+.multi-agent-mode-control p {
+    margin: 5px 0 0;
+    color: #667085;
+}
+
+
+.multi-agent-section {
+    margin-top: 30px;
+}
+
+
+.multi-agent-section label {
+    display: block;
+
+    margin-top: 12px;
+    margin-bottom: 7px;
+
+    font-weight: 600;
+}
+
+
+.multi-agent-section textarea {
+    width: 100%;
+
+    padding: 12px 14px;
+
+    border: 1px solid #cfd5df;
+    border-radius: 8px;
+
+    box-sizing: border-box;
+
+    resize: vertical;
+}
+
+
+.agent-result {
+    min-height: 70px;
+
+    margin-top: 12px;
+    padding: 16px;
+
+    border: 1px solid #d9dee8;
+    border-radius: 9px;
+
+    background: #f8fafc;
+
+    white-space: pre-wrap;
+
+    line-height: 1.6;
+}
+
+
+.workflow-summary-card {
+    margin-top: 30px;
+    padding: 20px;
+
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+
+    background: white;
+}
