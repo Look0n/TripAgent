@@ -1,0 +1,6 @@
+workflow_state.sqlite3
+workflow_state.sqlite3-*
+.env
+__pycache__/
+.pytest_cache/
+.venv/
