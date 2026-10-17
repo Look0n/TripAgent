@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+.git/
+.DS_Store
+*.sqlite3
+*.db
+chroma/
+rag-audit.jsonl
