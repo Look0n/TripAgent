@@ -24,3 +24,8 @@ repos:
     hooks:
       - id: detect-secrets
         args: [--exclude-files, '(^|/)(package-lock\.json|yarn\.lock|poetry\.lock|uv\.lock)$']
+
+  - repo: https://github.com/pypa/pip-audit
+    rev: v2.9.0
+    hooks:
+      - id: pip-audit
