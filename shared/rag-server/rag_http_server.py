@@ -80,4 +80,4 @@ def answer():
 
 if __name__ == "__main__":
     print("TripAgent Shared RAG HTTP Server: http://localhost:7002")
-    app.run(host="0.0.0.0", port=7002, debug=False) # noqa: S104
+    app.run(host="0.0.0.0", port=7002, debug=False) # noqa: S104 - required for Docker/service access

@@ -56,7 +56,7 @@ from tools.tripagent_tools import (
 
 mcp = FastMCP(
     "TripAgent Shared MCP",
-    host="0.0.0.0", # noqa: S104
+    host="0.0.0.0", # noqa: S104 - required for Docker/service access
     port=7001,
 )
 

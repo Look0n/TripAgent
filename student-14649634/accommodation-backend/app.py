@@ -34,7 +34,7 @@ def health():
 if __name__ == "__main__":
 
     app.run(
-        host="0.0.0.0", # noqa: S104
+        host="0.0.0.0", # noqa: S104 - required for Docker/service access
         port=5002,
         debug=True
     )

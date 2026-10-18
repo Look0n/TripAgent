@@ -229,10 +229,10 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 13. Release 2 required post-commit endpoint tests
+      # 13. Release 2 post-commit endpoint tests
       # ---------------------------------------------------
 
-      # Required endpoint test 1
+      # Endpoint test 1
       - name: Endpoint Test 1 - Get all accommodations
         run: |
           RESPONSE=$(curl --fail --silent \
@@ -253,7 +253,7 @@ jobs:
           " "$RESPONSE"
 
 
-      # Required endpoint test 2
+      # Endpoint test 2
       - name: Endpoint Test 2 - Get accommodation by ID
         run: |
           RESPONSE=$(curl --fail --silent \
@@ -275,30 +275,14 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 14. Test Accommodation API
+      # 14. Test additional Accommodation and Availability API
       # ---------------------------------------------------
-
-      - name: Test get all accommodations
-        run: |
-          curl --fail \
-            http://localhost:5002/api/accommodations
-
-
-      - name: Test accommodation by ID
-        run: |
-          curl --fail \
-            http://localhost:5002/api/accommodations/1
-
 
       - name: Test accommodation search
         run: |
           curl --fail \
             "http://localhost:5002/api/accommodations?city=Sydney"
 
-
-      # ---------------------------------------------------
-      # 15. Test Availability API
-      # ---------------------------------------------------
 
       - name: Test available dates
         run: |
@@ -313,7 +297,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 16. Install pytest dependencies
+      # 15. Install pytest dependencies
       # ---------------------------------------------------
 
       - name: Install backend test dependencies
@@ -324,7 +308,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 17. Run pytest
+      # 16. Run pytest
       # ---------------------------------------------------
 
       - name: Run Accommodation pytest
@@ -336,7 +320,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 18. Display logs if something failed
+      # 17. Display logs if something failed
       # ---------------------------------------------------
 
       - name: Show Docker logs on failure
@@ -348,7 +332,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 19. Clean up
+      # 18. Clean up
       # ---------------------------------------------------
 
       - name: Stop Accommodation services

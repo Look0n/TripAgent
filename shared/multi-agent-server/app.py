@@ -60,4 +60,4 @@ def history():
     return jsonify({'status':'success','workflows':workflow_history(f)})
 
 if __name__=='__main__':
-    app.run(host=os.getenv('MULTI_AGENT_HOST','0.0.0.0'),port=int(os.getenv('PORT','7003')),debug=False) # noqa: S104
+    app.run(host=os.getenv('MULTI_AGENT_HOST','0.0.0.0'),port=int(os.getenv('PORT','7003')),debug=False) # noqa: S104 - required for Docker/service access
