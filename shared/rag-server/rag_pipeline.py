@@ -317,8 +317,8 @@ def reset_collection(feature: str) -> None:
     client = chromadb.PersistentClient(path=str(chroma_path(feature)))
     try:
         client.delete_collection(name=collection_name(feature))
-    except Exception:
-        pass
+    except Exception as error:
+        print(f"RAG processing warning: {error}")
     _collections[feature] = client.get_or_create_collection(name=collection_name(feature))
 
 
@@ -779,7 +779,8 @@ def load_report_chunks(feature: str) -> list[dict[str, Any]]:
                 text = json.dumps(json.loads(path.read_text(encoding="utf-8")), indent=2)
             else:
                 text = path.read_text(encoding="utf-8", errors="ignore")
-        except Exception:
+        except Exception as error:
+            print(f"Skipping RAG item due to error: {error}")
             continue
         for i, piece in enumerate(chunk_text(text), 1):
             chunks.append({

@@ -68,7 +68,7 @@ def health():
 
 if __name__ == "__main__":
     app.run(
-        host="0.0.0.0",
+        host="0.0.0.0", # noqa: S104
         port=3002,
         debug=False,
         use_reloader=False
