@@ -260,6 +260,46 @@ jobs:
         run: |
           curl --fail http://localhost:5001/health
 
+      # ============================================
+      # ACCOUNT FUNCTIONAL API TESTS
+      # ============================================
+      - name: Test Account registration and login validation
+        run: |
+          echo "===== TEST 1: REGISTRATION VALIDATION ====="
+
+          STATUS=$(curl --silent --output /tmp/register-response.json \
+            --write-out "%{http_code}" \
+            -X POST http://localhost:5001/api/account/register \
+            -H "Content-Type: application/json" \
+            -d '{}')
+
+          cat /tmp/register-response.json
+
+          if [ "$STATUS" != "400" ]; then
+            echo "FAIL: Expected HTTP 400, received $STATUS"
+            exit 1
+          fi
+
+          echo "PASS: Registration rejects missing required fields"
+
+
+          echo "===== TEST 2: LOGIN VALIDATION ====="
+
+          STATUS=$(curl --silent --output /tmp/login-response.json \
+            --write-out "%{http_code}" \
+            -X POST http://localhost:5001/api/account/login \
+            -H "Content-Type: application/json" \
+            -d '{}')
+
+          cat /tmp/login-response.json
+
+          if [ "$STATUS" != "400" ]; then
+            echo "FAIL: Expected HTTP 400, received $STATUS"
+            exit 1
+          fi
+
+          echo "PASS: Login rejects missing credentials"
+
 
       - name: Test Shared gateway health
         run: |
