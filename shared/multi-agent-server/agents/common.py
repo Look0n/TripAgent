@@ -23,7 +23,24 @@ def ask(name, content, tokens=350):
             system_prompt += "\n\n" + extra
             
     client = OpenAI(base_url=os.getenv('OLLAMA_BASE_URL','http://localhost:11434/v1'), api_key='ollama', timeout=float(os.getenv('OLLAMA_TIMEOUT_SECONDS','300')), max_retries=0)
-    response = client.chat.completions.create(model=os.getenv('OLLAMA_REVIEW_MODEL','llama3.1:8b') if name=='reviewer' else os.getenv('OLLAMA_MODEL','qwen2.5:0.5b'), messages=[{'role':'system','content':system_prompt},{'role':'user','content':content}], temperature=0, max_tokens=tokens)
+    if name == "planner":
+        model = os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")
+    elif name in ("worker", "reviewer"):
+        model = os.getenv("OLLAMA_REVIEW_MODEL", "llama3.1:8b")
+    else:
+        raise ValueError(f"Unknown agent: {name}")
+
+    print(f"Running {name} using {model}", flush=True)
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": content}
+        ],
+        temperature=0,
+        max_tokens=tokens
+    )    
     return (response.choices[0].message.content or '').strip()
 def feature_prompt(feature, name):
     path = (
