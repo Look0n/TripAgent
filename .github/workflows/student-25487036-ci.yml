@@ -119,6 +119,7 @@ jobs:
         env:
           FLIGHT_DATABASE_URL: http://127.0.0.1:6005
           OLLAMA_BASE_URL: http://127.0.0.1:11434/v1
+          AI_MODE_ENABLED: "false"
           MCP_ENABLED: "false"
           RAG_ENABLED: "false"
           MULTI_AGENT_LOCKED: "true"
@@ -159,8 +160,26 @@ jobs:
 
           echo "Backend integration validated"
 
-      - name: Verify MCP and RAG are disabled during CI
+      - name: Verify AI-Mode, MCP and RAG are disabled during CI
         run: |
+          echo "Confirming AI-Mode is disabled"
+          AI_MODE=$(curl -sf http://127.0.0.1:5005/api/flight/ai/mode \
+            | python -c "import json,sys; print(json.load(sys.stdin)['enabled'])")
+          if [ "${AI_MODE}" != "False" ]; then
+            echo "Expected AI-Mode disabled in CI, got ${AI_MODE}"
+            exit 1
+          fi
+
+          echo "Confirming AI-Mode integration is retained but refuses calls"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST http://127.0.0.1:5005/api/flight/ai/recommend \
+            -H "Content-Type: application/json" \
+            -d '{"message":"cheapest flight to Melbourne"}')
+          if [ "${STATUS}" != "403" ]; then
+            echo "Expected 403 from disabled AI-Mode, got ${STATUS}"
+            exit 1
+          fi
+
           echo "Confirming MCP mode is disabled"
           MCP_MODE=$(curl -sf http://127.0.0.1:5005/api/flight/mcp/mode \
             | python -c "import json,sys; print(json.load(sys.stdin)['enabled'])")
@@ -207,7 +226,7 @@ jobs:
             exit 1
           fi
 
-          echo "MCP and RAG correctly retained and disabled during CI"
+          echo "AI-Mode, MCP and RAG correctly retained and disabled during CI"
 
       - name: Verify Multi-Agent is locked off during CI
         run: |

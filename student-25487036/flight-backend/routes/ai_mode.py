@@ -1,4 +1,5 @@
 import json
+import os
 
 import requests
 
@@ -22,6 +23,45 @@ ai_mode_bp = Blueprint(
 LOW_SEAT_THRESHOLD = 10
 
 HTML_HEADERS = {"Content-Type": "text/html; charset=utf-8"}
+
+
+_ai_mode_enabled = os.getenv("AI_MODE_ENABLED", "true").strip().lower() in (
+    "true",
+    "1",
+    "yes",
+    "on",
+)
+
+
+def mode_locked():
+    return os.getenv("AI_MODE_LOCKED", "false").strip().lower() in (
+        "true",
+        "1",
+        "yes",
+        "on",
+    )
+
+
+def mode_enabled():
+    return _ai_mode_enabled and not mode_locked()
+
+
+def set_mode_enabled(enabled):
+    global _ai_mode_enabled
+    _ai_mode_enabled = bool(enabled)
+    return mode_enabled()
+
+
+def permitted():
+    if mode_locked():
+        return jsonify({
+            "error": "AI-Mode is locked off by deployment configuration"
+        }), 403
+
+    if not mode_enabled():
+        return jsonify({"error": "AI-Mode is OFF"}), 403
+
+    return None
 
 
 class DatabaseUnavailable(Exception):
@@ -162,8 +202,37 @@ def run_agentic_loop(message, origin, destination):
     }
 
 
+@ai_mode_bp.route("/api/flight/ai/mode", methods=["GET", "PUT"])
+def ai_mode():
+    if request.method == "GET":
+        return jsonify({
+            "enabled": mode_enabled(),
+            "locked": mode_locked()
+        }), 200
+
+    if mode_locked():
+        return jsonify({
+            "error": "AI-Mode is locked off by deployment configuration"
+        }), 403
+
+    data = request.get_json(silent=True) or {}
+    enabled = data.get("enabled")
+
+    if not isinstance(enabled, bool):
+        return jsonify({
+            "error": "enabled must be true or false"
+        }), 400
+
+    return jsonify({"enabled": set_mode_enabled(enabled)}), 200
+
+
 @ai_mode_bp.route("/api/flight/ai/recommend", methods=["POST"])
 def recommend_flights():
+    blocked = permitted()
+
+    if blocked:
+        return blocked
+
     data = request.get_json(silent=True) or {}
 
     message = str(data.get("message", "")).strip()
@@ -190,6 +259,13 @@ def recommend_flights():
 
 @ai_mode_bp.route("/api/flight/ai/recommend/html", methods=["POST"])
 def recommend_flights_html():
+    if not mode_enabled():
+        return (
+            '<p class="warning">AI-Mode is currently disabled.</p>',
+            403,
+            HTML_HEADERS
+        )
+
     message = str(request.form.get("message", "")).strip()
 
     if not message:

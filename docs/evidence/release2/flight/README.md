@@ -44,6 +44,28 @@ Multi-Agent mode is disabled on backend startup and can be forced off by
 deployment configuration through `MULTI_AGENT_LOCKED`, which is how the
 Multi-Agent Server is kept disabled by default in the cloud deployment.
 
+## Cloud baseline switches
+
+The Release 2 cloud baseline requires AI-Mode, MCP, RAG and the Multi-Agent
+Server to be disabled by default in the cloud deployment. The flight backend
+exposes one environment switch per service, so the cloud deployment can satisfy
+the baseline without code changes.
+
+| Service | Runtime mode endpoint | Startup switch | Deployment lock |
+|---|---|---|---|
+| AI-Mode | `GET/PUT /api/flight/ai/mode` | `AI_MODE_ENABLED` (local default on) | `AI_MODE_LOCKED` |
+| MCP | `GET/PUT /api/flight/mcp/mode` | `MCP_ENABLED` (local default on) | n/a |
+| RAG | `GET/PUT /api/flight/rag/mode` | `RAG_ENABLED` (local default on) | n/a |
+| Multi-Agent | `GET/PUT /api/flight/multi-agent/mode` | off at startup | `MULTI_AGENT_LOCKED` |
+
+A deployment lock takes precedence over the runtime mode endpoint: while the
+lock is set the service reports `enabled: false`, refuses to be enabled through
+the API, and returns 403 from its feature endpoints. `student-25487036-ci.yml`
+asserts this state on every push by starting the backend with
+`AI_MODE_ENABLED=false`, `MCP_ENABLED=false`, `RAG_ENABLED=false` and
+`MULTI_AGENT_LOCKED=true`, then confirming each service reports disabled and
+refuses calls.
+
 ## Known limitation
 
 The Planner runs on `qwen2.5:0.5b`, the smallest configured model, and its
