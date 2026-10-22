@@ -41,7 +41,10 @@ def set_session_cookie(
         session_id,
         httponly=True,
         samesite="Lax",
-        secure=False,
+        secure=os.getenv(
+            "SESSION_COOKIE_SECURE",
+            "false"
+        ).lower() == "true",
         max_age=86400
     )
 
