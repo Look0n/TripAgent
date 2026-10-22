@@ -276,4 +276,4 @@ def delete_flight(flight_id):
 
 if __name__ == "__main__":
     initialise_database()
-    app.run(host="0.0.0.0", port=6005)
+    app.run(host="0.0.0.0", port=6005)  # noqa: S104 - required for Docker service networking

@@ -40,6 +40,7 @@
         <a href="/flight/search" class="active">AI Search</a>
         <a href="/flight/search#mcp">MCP Tools</a>
         <a href="/flight/search#rag">Ask (RAG)</a>
+        <a href="/flight/search#multi-agent">Multi-Agent</a>
         <a href="/flight/manage">Manage Flights</a>
 
     </aside>
@@ -264,6 +265,67 @@
         </form>
 
         <div id="rag-result"></div>
+
+
+        <h1 id="multi-agent">Multi-Agent trip planning</h1>
+
+        <p class="lead">
+            Send a flight request to the shared Multi-Agent Server through this
+            feature's backend API. A Planner creates the plan, a Worker
+            produces a recommendation from flight records retrieved from the
+            flight database, and a Reviewer checks that result against the
+            evidence. The workflow then pauses for human review.
+        </p>
+
+        <form
+            hx-post="/api/flight/multi-agent/workflow/html"
+            hx-target="#multi-agent-result"
+            hx-swap="innerHTML"
+            class="search-form"
+        >
+
+            <label>
+                What do you need?
+                <input
+                    type="text"
+                    name="user_request"
+                    required
+                    placeholder="Cheapest flight from Sydney to Melbourne"
+                >
+            </label>
+
+            <label>
+                Origin
+                <input type="text" name="origin" placeholder="SYD">
+            </label>
+
+            <label>
+                Destination
+                <input type="text" name="destination" placeholder="MEL">
+            </label>
+
+            <button type="submit" class="primary-button">
+                Start Multi-Agent workflow
+            </button>
+
+            <div class="htmx-indicator loading">
+                Submitting the request to the Multi-Agent Server.
+            </div>
+
+        </form>
+
+        <div id="multi-agent-result"></div>
+
+        <h2>Workflow history</h2>
+
+        <div
+            id="multi-agent-history"
+            hx-get="/api/flight/multi-agent/history/html"
+            hx-trigger="load, every 15s"
+            hx-swap="innerHTML"
+        >
+            <p>Loading workflow history...</p>
+        </div>
 
     </section>
 

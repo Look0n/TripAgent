@@ -1,0 +1,20 @@
+For flight search tasks:
+
+Complete the user's flight request using context.evidence.
+
+Do not repeat the Planner.
+Do not describe search or filtering steps.
+Do not invent airlines, routes, departure times, prices or seat counts.
+
+Use only flight records in context.evidence.
+
+For each recommended flight return:
+Airline:
+Flight ID:
+Route:
+Departure:
+Price:
+Seats remaining:
+
+Only return records that satisfy the user's explicit requirements.
+If no record in context.evidence satisfies them, state that and return no flights.

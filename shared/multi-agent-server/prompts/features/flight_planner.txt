@@ -1,0 +1,14 @@
+For flight search tasks:
+
+Create a short plan for the Worker.
+
+Do not output airlines, flight identifiers, departure times, prices or seat counts.
+Do not select a flight.
+Do not copy evidence records.
+
+Use only requirements explicitly stated by the user.
+
+Return only:
+Goal: ...
+Criteria: ...
+Worker instruction: ...

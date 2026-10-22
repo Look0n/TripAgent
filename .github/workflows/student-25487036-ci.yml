@@ -1,4 +1,4 @@
-name: Student 5 - Flight Service CI
+name: Student 25487036 - Flight Service CI
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
       - student-5-flight-service
     paths:
       - 'student-25487036/**'
-      - '.github/workflows/student-5.yml'
+      - '.github/workflows/student-25487036-ci.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'student-25487036/**'
-      - '.github/workflows/student-5.yml'
+      - '.github/workflows/student-25487036-ci.yml'
   workflow_dispatch:
 
 jobs:
@@ -38,8 +38,22 @@ jobs:
       - name: Install backend service dependencies
         run: pip install -r student-25487036/flight-backend/requirements.txt
 
+      - name: Run post-commit endpoint tests
+        working-directory: student-25487036/flight-backend  # pragma: allowlist secret
+        run: |
+          python -m pytest tests -v -p no:cacheprovider \
+            --junitxml=pytest-results.xml
+
+      - name: Upload endpoint test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-25487036-endpoint-tests  # pragma: allowlist secret
+          path: student-25487036/flight-backend/pytest-results.xml  # pragma: allowlist secret
+          if-no-files-found: warn
+
       - name: Start flight-database service
-        working-directory: student-25487036/flight-database
+        working-directory: student-25487036/flight-database  # pragma: allowlist secret
         env:
           DATABASE_PATH: ./flight.db
         run: |
@@ -101,12 +115,13 @@ jobs:
           echo "All CRUD operations validated"
 
       - name: Start flight-backend service
-        working-directory: student-25487036/flight-backend
+        working-directory: student-25487036/flight-backend  # pragma: allowlist secret
         env:
           FLIGHT_DATABASE_URL: http://127.0.0.1:6005
           OLLAMA_BASE_URL: http://127.0.0.1:11434/v1
           MCP_ENABLED: "false"
           RAG_ENABLED: "false"
+          MULTI_AGENT_LOCKED: "true"
         run: |
           python app.py > backend.log 2>&1 &
           echo $! > backend.pid
@@ -194,6 +209,24 @@ jobs:
 
           echo "MCP and RAG correctly retained and disabled during CI"
 
+      - name: Verify Multi-Agent is locked off during CI
+        run: |
+          echo "Confirming Multi-Agent mode reports locked"
+          curl -sf http://127.0.0.1:5005/api/flight/multi-agent/mode \
+            | python -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if d['locked'] and not d['enabled'] else 1)"
+
+          echo "Confirming a locked workflow request is refused"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST http://127.0.0.1:5005/api/flight/multi-agent/workflow \
+            -H "Content-Type: application/json" \
+            -d '{"user_request":"Cheapest flight from SYD to MEL"}')
+          if [ "${STATUS}" != "403" ]; then
+            echo "Expected 403 from locked Multi-Agent, got ${STATUS}"
+            exit 1
+          fi
+
+          echo "Multi-Agent correctly retained and locked off during CI"
+
       - name: Validate agentic workflow stages
         run: |
           RESPONSE=$(curl -sf -X POST http://127.0.0.1:5005/api/flight/ai/recommend \
@@ -247,7 +280,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: student-5-service-logs
+          name: student-25487036-service-logs  # pragma: allowlist secret
           path: |
             student-25487036/flight-database/database.log
             student-25487036/flight-backend/backend.log

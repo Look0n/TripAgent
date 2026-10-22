@@ -5,3 +5,7 @@ __pycache__/
 .env
 database/*.db
 shared/rag-server/chroma/
+
+# Generated at runtime by the shared AI services
+shared/rag-server/rag-audit.jsonl
+shared/multi-agent-server/workflow_state.sqlite3

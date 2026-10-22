@@ -1,0 +1,226 @@
+================================================================================
+TripAgent Release 2 - Flight Search Service
+Multi-Agent Workflow: Local Terminal Validation Evidence
+================================================================================
+Student      : Haris Naeem (25487036)
+Feature      : flight
+Date         : 2026-10-22 (AEDT)
+Workflow ID  : 34bcc949-4e9b-44a6-9697-5d59d6870de0
+Duration     : 9629 ms (Planner + Worker + Reviewer)
+
+Environment
+  flight-frontend / flight-backend / flight-database : Docker Compose
+  Shared MCP Server                                  : host, port 7001
+  Shared RAG Server                                  : host, port 7002
+  Shared Multi-Agent Server                          : host, port 7003 (non-containerised)
+  Planner model                                      : qwen2.5:0.5b
+  Worker / Reviewer model                            : llama3.1:8b
+
+================================================================================
+1. SHARED MULTI-AGENT SERVER HEALTH
+================================================================================
+$ curl -s http://127.0.0.1:7003/health | python3 -m json.tool
+{
+    "features": [
+        "accommodation",
+        "account",
+        "attractions",
+        "checklist",
+        "flight"
+    ],
+    "service": "multi-agent-server",
+    "status": "running"
+}
+
+================================================================================
+2. FLIGHT BACKEND REACHES THE SERVER - MODE IS OFF BY DEFAULT
+================================================================================
+$ curl -s http://127.0.0.1:5005/api/flight/multi-agent/status | python3 -m json.tool
+{
+    "available": true,
+    "enabled": false,
+    "features": [
+        "accommodation",
+        "account",
+        "attractions",
+        "checklist",
+        "flight"
+    ],
+    "locked": false,
+    "service_url": "http://host.docker.internal:7003"
+}
+
+The containerised flight backend reaches the non-containerised Multi-Agent
+Server through host.docker.internal:7003. Multi-Agent mode reports disabled
+on startup, satisfying the Release 2 requirement that the Multi-Agent Server
+is disabled by default.
+
+$ curl -s -X PUT http://127.0.0.1:5005/api/flight/multi-agent/mode \
+    -H "Content-Type: application/json" -d '{"enabled":true}'
+{"enabled":true,"locked":false}
+
+================================================================================
+3. WORKFLOW CREATED THROUGH THE FLIGHT BACKEND/API
+================================================================================
+$ curl -s -X POST http://127.0.0.1:5005/api/flight/multi-agent/workflow \
+    -H "Content-Type: application/json" \
+    -d '{"user_request":"I need the cheapest flight from Sydney to Melbourne","origin":"SYD","destination":"MEL"}' \
+    | python3 -m json.tool
+{
+    "created_at": "2026-10-22T05:48:56.866019+00:00",
+    "feature": "flight",
+    "human_decision": {
+        "allowed_values": [
+            "Accept",
+            "Partially Accept",
+            "Reject"
+        ],
+        "required": true,
+        "status": "pending"
+    },
+    "planner_result": null,
+    "reviewer_result": null,
+    "status": "queued",
+    "user_request": "I need the cheapest flight from Sydney to Melbourne",
+    "worker_result": null,
+    "workflow_id": "34bcc949-4e9b-44a6-9697-5d59d6870de0"
+}
+
+================================================================================
+4. COMPLETED AGENT WORKFLOW - PLANNER, WORKER, REVIEWER
+================================================================================
+$ curl -s "http://127.0.0.1:5005/api/flight/multi-agent/workflow/34bcc949-4e9b-44a6-9697-5d59d6870de0" \
+    | python3 -m json.tool
+{
+    "created_at": "2026-10-22T05:48:56.866019+00:00",
+    "duration_ms": 9629,
+    "feature": "flight",
+    "human_decision": {
+        "allowed_values": [
+            "Accept",
+            "Partially Accept",
+            "Reject"
+        ],
+        "required": true,
+        "status": "pending"
+    },
+    "planner_result": {
+        "agent": "planner_agent",
+        "plan": "Goal: Find the cheapest flight from Sydney to Melbourne.\nCriteria: The cheapest flight from Sydney to Melbourne.\nWorker instruction: Search for the cheapest flight from Sydney to Melbourne using the provided evidence.",
+        "status": "success"
+    },
+    "reviewer_result": {
+        "agent": "reviewer_agent",
+        "review": "Evidence check: Pass\nConstraint check: Pass\nIssues: None\nRecommendation: Accept",
+        "status": "success"
+    },
+    "status": "pending_review",
+    "user_request": "I need the cheapest flight from Sydney to Melbourne",
+    "worker_result": {
+        "agent": "worker_agent",
+        "evidence": [
+            {
+                "airline": "Qantas",
+                "arrival_time": "2026-09-15T07:35:00",
+                "departure_time": "2026-09-15T06:00:00",
+                "destination": "MEL",
+                "duration": 95,
+                "flight_id": 1,
+                "origin": "SYD",
+                "price": 249.0,
+                "seat_availability": 38
+            },
+            {
+                "airline": "Jetstar",
+                "arrival_time": "2026-09-15T13:00:00",
+                "departure_time": "2026-09-15T11:20:00",
+                "destination": "MEL",
+                "duration": 100,
+                "flight_id": 2,
+                "origin": "SYD",
+                "price": 109.0,
+                "seat_availability": 64
+            },
+            {
+                "airline": "Virgin Australia",
+                "arrival_time": "2026-09-15T20:20:00",
+                "departure_time": "2026-09-15T18:45:00",
+                "destination": "MEL",
+                "duration": 95,
+                "flight_id": 3,
+                "origin": "SYD",
+                "price": 178.0,
+                "seat_availability": 3
+            }
+        ],
+        "output": "Airline: Jetstar\nFlight ID: 2\nRoute: SYD to MEL\nDeparture: 2026-09-15T11:20:00\nPrice: 109.0\nSeats remaining: 64",
+        "status": "success"
+    },
+    "workflow_id": "34bcc949-4e9b-44a6-9697-5d59d6870de0"
+}
+
+Grounding note
+  The three flight records under worker_result.evidence were retrieved by the
+  flight backend from the flight database service over HTTP and passed to the
+  agents as context.evidence. The Worker selected flight_id 2 (Jetstar, 109.0),
+  which is the lowest priced record in that evidence set. The Reviewer verified
+  the recommendation against the same evidence and returned Accept.
+
+================================================================================
+5. HUMAN REVIEW DECISION
+================================================================================
+$ curl -s -X POST "http://127.0.0.1:5005/api/flight/multi-agent/workflow/$WF/review" \
+    -H "Content-Type: application/json" \
+    -d '{"decision":"Partially Accept","correction":"Prefer a morning departure where price difference is under $50"}' \
+    | python3 -m json.tool
+
+    "human_decision": {
+        "correction": "Prefer a morning departure where price difference is under $50",
+        "decision": "Partially Accept",
+        "required": true,
+        "status": "completed",
+        "timestamp": "2026-10-22T05:50:56.391346+00:00"
+    },
+    "status": "completed",
+
+The workflow paused at pending_review until a human decision was supplied.
+The decision and correction are recorded against the workflow with a timestamp.
+
+================================================================================
+6. WORKFLOW HISTORY (COORDINATION / AUDIT RECORD)
+================================================================================
+$ curl -s http://127.0.0.1:5005/api/flight/multi-agent/history | python3 -m json.tool
+{
+    "status": "success",
+    "workflows": [
+        {
+            "created_at": "2026-10-22T05:48:56.866572+00:00",
+            "feature": "flight",
+            "id": "34bcc949-4e9b-44a6-9697-5d59d6870de0",
+            "status": "completed",
+            "updated_at": "2026-10-22T05:50:56.391420+00:00"
+        }
+    ]
+}
+
+================================================================================
+7. HUMAN REVIEW VALIDATION (NEGATIVE CASES)
+================================================================================
+$ curl -o /dev/null -s -w "invalid decision: %{http_code}\n" -X POST \
+    "http://127.0.0.1:5005/api/flight/multi-agent/workflow/$WF/review" \
+    -H "Content-Type: application/json" -d '{"decision":"Maybe"}'
+invalid decision: 400
+
+$ curl -o /dev/null -s -w "partial without correction: %{http_code}\n" -X POST \
+    "http://127.0.0.1:5005/api/flight/multi-agent/workflow/$WF/review" \
+    -H "Content-Type: application/json" -d '{"decision":"Partially Accept","correction":""}'
+partial without correction: 400
+
+Only Accept, Partially Accept and Reject are permitted, and a partial
+acceptance requires a correction.
+
+================================================================================
+RESULT: PASS
+Planner -> Worker -> Reviewer -> Human Review executed successfully through the
+flight backend/API against the shared non-containerised Multi-Agent Server.
+================================================================================

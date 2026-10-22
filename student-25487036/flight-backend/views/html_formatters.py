@@ -456,3 +456,236 @@ def format_rag_answer(result):
     parts.append('</div>')
 
     return "".join(parts)
+
+
+WORKFLOW_STATUS_CLASS = {
+    "queued": "status-running",
+    "running": "status-running",
+    "pending_review": "status-review",
+    "completed": "status-reviewed",
+    "rejected": "status-failed",
+    "failed": "status-failed",
+}
+
+RUNNING_STATUSES = ("queued", "running")
+
+DECISION_OPTIONS = ("Accept", "Partially Accept", "Reject")
+
+
+AGENT_TEXT_KEYS = {
+    "Planner": "plan",
+    "Worker": "output",
+    "Reviewer": "review",
+}
+
+EVIDENCE_COLUMNS = (
+    ("flight_id", "Flight"),
+    ("airline", "Airline"),
+    ("origin", "From"),
+    ("destination", "To"),
+    ("departure_time", "Departure"),
+    ("price", "Price"),
+    ("seat_availability", "Seats"),
+)
+
+
+def agent_text(result, key):
+    if isinstance(result, dict):
+        return str(result.get(key) or "").strip()
+    if result:
+        return str(result).strip()
+    return ""
+
+
+def format_evidence_table(records):
+    if not isinstance(records, list) or not records:
+        return ""
+
+    header = "".join(
+        f'<th>{html.escape(label)}</th>' for _, label in EVIDENCE_COLUMNS
+    )
+
+    rows = []
+
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        cells = "".join(
+            f'<td>{html.escape(str(record.get(field, "")))}</td>'
+            for field, _ in EVIDENCE_COLUMNS
+        )
+        rows.append(f'<tr>{cells}</tr>')
+
+    if not rows:
+        return ""
+
+    return (
+        '<details class="evidence-block"><summary>'
+        f'Evidence supplied to the agents ({len(rows)} flight records)'
+        '</summary>'
+        f'<table class="evidence-table"><thead><tr>{header}</tr></thead>'
+        f'<tbody>{"".join(rows)}</tbody></table></details>'
+    )
+
+
+def format_agent_stage(title, result):
+    parts = [f'<section class="stage"><h4>{html.escape(title)}</h4>']
+
+    text = agent_text(result, AGENT_TEXT_KEYS.get(title, "output"))
+
+    if not text:
+        parts.append('<p class="pending">Not produced yet.</p>')
+    else:
+        for line in text.split("\n"):
+            if line.strip():
+                parts.append(f'<p>{html.escape(line.strip())}</p>')
+
+        if isinstance(result, dict) and result.get("evidence"):
+            parts.append(format_evidence_table(result["evidence"]))
+
+    parts.append('</section>')
+    return "".join(parts)
+
+
+def format_human_review(workflow_id, decision):
+    status = str(decision.get("status", "pending"))
+
+    if status != "pending":
+        parts = ['<section class="stage human-review">']
+        parts.append('<h4>Human review</h4>')
+        parts.append(
+            f'<p><strong>Decision:</strong> '
+            f'{html.escape(str(decision.get("decision", status)))}</p>'
+        )
+
+        correction = str(decision.get("correction", "")).strip()
+
+        if correction:
+            parts.append(
+                f'<p><strong>Correction:</strong> '
+                f'{html.escape(correction)}</p>'
+            )
+
+        parts.append('</section>')
+        return "".join(parts)
+
+    options = "".join(
+        f'<option value="{html.escape(value)}">{html.escape(value)}</option>'
+        for value in DECISION_OPTIONS
+    )
+
+    return (
+        '<section class="stage human-review">'
+        '<h4>Human review</h4>'
+        '<p>The workflow is paused until a person approves, partially '
+        'accepts or rejects the reviewed result.</p>'
+        '<form '
+        f'hx-post="/api/flight/multi-agent/workflow/{html.escape(workflow_id)}'
+        '/review/html" '
+        'hx-target="#multi-agent-result" hx-swap="innerHTML" '
+        'class="search-form">'
+        f'<label>Decision<select name="decision" required>{options}'
+        '</select></label>'
+        '<label>Correction'
+        '<input type="text" name="correction" '
+        'placeholder="Required when partially accepting"></label>'
+        '<button type="submit" class="primary-button">Submit decision</button>'
+        '</form>'
+        '</section>'
+    )
+
+
+def format_multi_agent_workflow(result):
+    if not isinstance(result, dict):
+        return (
+            '<p class="warning">The Multi-Agent server returned no '
+            'workflow.</p>'
+        )
+
+    workflow_id = str(result.get("workflow_id", ""))
+    status = str(result.get("status", "unknown"))
+    status_class = WORKFLOW_STATUS_CLASS.get(status, "status-running")
+
+    parts = ['<div class="multi-agent-workflow">']
+
+    parts.append(
+        f'<p class="workflow-meta">Workflow '
+        f'<code>{html.escape(workflow_id)}</code> '
+        f'<span class="workflow-status {status_class}">'
+        f'{html.escape(status.replace("_", " "))}</span></p>'
+    )
+
+    if status == "failed":
+        error = str(result.get("error", "")).strip()
+        parts.append(
+            '<p class="warning">The workflow failed before completing.</p>'
+        )
+        if error:
+            parts.append(
+                f'<p class="workflow-error"><strong>Reported error:</strong> '
+                f'{html.escape(error)}</p>'
+            )
+        parts.append(
+            format_agent_stage("Planner", result.get("planner_result"))
+        )
+        parts.append(
+            format_agent_stage("Worker", result.get("worker_result"))
+        )
+        parts.append(
+            format_agent_stage("Reviewer", result.get("reviewer_result"))
+        )
+        parts.append('</div>')
+        return "".join(parts)
+
+    parts.append(format_agent_stage("Planner", result.get("planner_result")))
+    parts.append(format_agent_stage("Worker", result.get("worker_result")))
+    parts.append(format_agent_stage("Reviewer", result.get("reviewer_result")))
+
+    decision = result.get("human_decision")
+
+    if isinstance(decision, dict) and status not in RUNNING_STATUSES:
+        parts.append(format_human_review(workflow_id, decision))
+
+    if status in RUNNING_STATUSES and workflow_id:
+        parts.append(
+            '<div class="polling" '
+            f'hx-get="/api/flight/multi-agent/workflow/'
+            f'{html.escape(workflow_id)}/html" '
+            'hx-trigger="load delay:3s" '
+            'hx-target="#multi-agent-result" hx-swap="innerHTML">'
+            'Planner, Worker and Reviewer are running. This refreshes '
+            'automatically.'
+            '</div>'
+        )
+
+    parts.append('</div>')
+    return "".join(parts)
+
+
+def format_multi_agent_history(result):
+    workflows = (result or {}).get("workflows") or []
+
+    if not workflows:
+        return '<p>No flight workflows have been run yet.</p>'
+
+    parts = ['<table class="workflow-history">']
+    parts.append(
+        '<thead><tr><th>Workflow</th><th>Status</th><th>Created</th>'
+        '<th>Updated</th></tr></thead><tbody>'
+    )
+
+    for row in workflows:
+        status = str(row.get("status", ""))
+        parts.append(
+            '<tr>'
+            f'<td><code>{html.escape(str(row.get("id", "")))}</code></td>'
+            f'<td><span class="workflow-status '
+            f'{WORKFLOW_STATUS_CLASS.get(status, "status-running")}">'
+            f'{html.escape(status.replace("_", " "))}</span></td>'
+            f'<td>{html.escape(str(row.get("created_at", "")))}</td>'
+            f'<td>{html.escape(str(row.get("updated_at", "")))}</td>'
+            '</tr>'
+        )
+
+    parts.append('</tbody></table>')
+    return "".join(parts)

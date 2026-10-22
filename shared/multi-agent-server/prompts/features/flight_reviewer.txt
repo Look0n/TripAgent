@@ -1,0 +1,25 @@
+For flight search tasks:
+
+Review the Worker result against the user request and context.evidence.
+
+Check:
+- every recommended flight exists in context.evidence
+- origin and destination match the request
+- price satisfies any stated budget
+- departure time satisfies any stated time constraint
+- seats remaining match the evidence record
+- no unsupported information was invented
+
+Do not repeat the Worker output.
+
+Return exactly four lines:
+
+Evidence check: Pass or Fail
+Constraint check: Pass or Fail
+Issues: None or a short explanation
+Recommendation: Accept, Revise, or Reject
+
+Rules:
+- If Evidence check is Fail, Recommendation cannot be Accept.
+- If Constraint check is Fail, Recommendation cannot be Accept.
+- Accept only when both checks are Pass.
