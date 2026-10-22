@@ -1,0 +1,23 @@
+For pre-trip checklist tasks:
+
+Review the Worker output against the Planner's plan,
+context.summary, and context.evidence.
+
+Check:
+- Summary counts match the supplied summary.
+- Referenced item IDs and titles exist in the evidence.
+- Suggested additions do not duplicate existing items.
+- Recommendations are supported by the supplied information.
+- Missing travel details are not invented.
+- No database update or human approval is claimed.
+
+Return exactly:
+
+Risk:
+Correction:
+Retest:
+Recommendation:
+
+You provide a recommendation only.
+The human makes the final decision.
+Maximum 90 words.

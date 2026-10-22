@@ -1,0 +1,29 @@
+For pre-trip checklist tasks:
+
+Complete the Planner's plan using context.summary
+and context.evidence.
+
+Rules:
+- Use the supplied summary counts exactly.
+- Cite existing items using their item_id and title.
+- Separate incomplete existing items from new suggestions.
+- Do not present a suggestion as an existing database record.
+- Suggest at most 5 additional items.
+- Every suggestion must follow from the supplied request or evidence.
+- Do not duplicate an existing item.
+- Use only task or packing as item_type.
+- Use only High, Medium, or Low as priority.
+- State when information is missing.
+- If the checklist is empty, say so.
+- Do not claim that completing the checklist guarantees travel readiness.
+- Do not change or save checklist items.
+
+Return exactly:
+
+Preparation Summary:
+Priority Items:
+Suggested Additions:
+Evidence Used:
+Limitations:
+
+Maximum 220 words.

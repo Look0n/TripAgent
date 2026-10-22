@@ -469,6 +469,10 @@ services:
       MCP_ENABLED: ${MCP_ENABLED:-true}
       RAG_SERVICE_URL: http://host.docker.internal:7002
       RAG_ENABLED: ${RAG_ENABLED:-true}
+      MULTI_AGENT_SERVICE_URL: http://host.docker.internal:7003
+      MULTI_AGENT_ENABLED: ${MULTI_AGENT_ENABLED:-false}
+      MULTI_AGENT_LOCKED: ${MULTI_AGENT_LOCKED:-false}
+      MULTI_AGENT_API_KEY: ${MULTI_AGENT_API_KEY:-}
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
