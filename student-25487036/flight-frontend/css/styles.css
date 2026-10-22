@@ -530,3 +530,124 @@ button:hover,
 .insufficient-context {
     border-left: 3px solid #f0a264;
 }
+
+.multi-agent-workflow .stage {
+    border-left: 3px solid #cfd8e3;
+    padding-left: 14px;
+    margin-bottom: 14px;
+}
+
+.multi-agent-workflow .stage h4 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+}
+
+.multi-agent-workflow .pending {
+    color: #6b7785;
+    font-style: italic;
+}
+
+.workflow-meta code {
+    background: #eef2f6;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+.workflow-status {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.status-running {
+    background: #e3eefb;
+    color: #1d4e89;
+}
+
+.status-review {
+    background: #fdf0d5;
+    color: #8a5a00;
+}
+
+.status-reviewed {
+    background: #e2f4e8;
+    color: #1d6b38;
+}
+
+.status-failed {
+    background: #fbe6e3;
+    color: #a3281a;
+}
+
+.human-review {
+    border-left-color: #8a5a00;
+}
+
+.polling {
+    background: #f4f7fa;
+    border: 1px dashed #c3cdd7;
+    border-radius: 5px;
+    padding: 10px 14px;
+    color: #4a5765;
+    font-size: 0.9rem;
+}
+
+.workflow-history {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.workflow-history th,
+.workflow-history td {
+    text-align: left;
+    padding: 7px 10px;
+    border-bottom: 1px solid #dde4ec;
+}
+
+.workflow-history code {
+    font-size: 0.85em;
+}
+
+.workflow-error {
+    background: #fbe6e3;
+    border-left: 3px solid #a3281a;
+    border-radius: 0 4px 4px 0;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+}
+
+.evidence-block {
+    margin-top: 10px;
+    font-size: 0.88rem;
+}
+
+.evidence-block summary {
+    cursor: pointer;
+    color: #4a5765;
+    padding: 4px 0;
+}
+
+.evidence-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 0.84rem;
+}
+
+.evidence-table th,
+.evidence-table td {
+    text-align: left;
+    padding: 5px 9px;
+    border-bottom: 1px solid #dde4ec;
+}
+
+.evidence-table th {
+    color: #4a5765;
+    font-weight: 600;
+}

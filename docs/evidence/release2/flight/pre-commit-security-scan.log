@@ -1,0 +1,260 @@
+[INFO] Initializing environment for https://github.com/pre-commit/pre-commit-hooks.
+[INFO] Initializing environment for https://github.com/astral-sh/ruff-pre-commit.
+[INFO] Initializing environment for https://github.com/Yelp/detect-secrets.
+[INFO] Initializing environment for https://github.com/pypa/pip-audit.
+[INFO] Installing environment for https://github.com/pre-commit/pre-commit-hooks.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+[INFO] Installing environment for https://github.com/astral-sh/ruff-pre-commit.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+[INFO] Installing environment for https://github.com/Yelp/detect-secrets.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+[INFO] Installing environment for https://github.com/pypa/pip-audit.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+check for merge conflicts................................................Passed
+check for added large files..............................................Passed
+detect private key.......................................................Passed
+check yaml...............................................................Passed
+check json...............................................................Passed
+check toml...............................................................Passed
+ruff (legacy alias)......................................................Failed
+- hook id: ruff
+- exit code: 1
+
+agentic-loop/collectors/architecture_collector.py:16:20: S603 `subprocess` call: check for execution of untrusted input
+agentic-loop/collectors/db_collector.py:41:40: S608 Possible SQL injection vector through string-based query construction
+agentic-loop/collectors/db_collector.py:75:21: S608 Possible SQL injection vector through string-based query construction
+agentic-loop/collectors/db_collector.py:75:21: S608 Possible SQL injection vector through string-based query construction
+agentic-loop/collectors/db_collector.py:112:21: S603 `subprocess` call: check for execution of untrusted input
+agentic-loop/collectors/devops_collector.py:57:18: S603 `subprocess` call: check for execution of untrusted input
+agentic-loop/collectors/devops_collector.py:58:13: S607 Starting a process with a partial executable path
+agentic-loop/collectors/devops_collector.py:75:39: S506 Probable use of unsafe loader `BaseLoader` with `yaml.load`. Allows instantiation of arbitrary objects. Consider `yaml.safe_load`.
+agentic-loop/collectors/endpoints_collector.py:17:15: S310 Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.
+agentic-loop/core/ai_runner.py:17:11: S310 Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.
+agentic-loop/core/ai_runner.py:22:14: S310 Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.
+agentic-loop/core/reporter.py:38:16: S603 `subprocess` call: check for execution of untrusted input
+agentic-loop/core/reporter.py:38:40: S607 Starting a process with a partial executable path
+student-14582668/checklist-backend/app.py:38:14: S104 Possible binding to all interfaces
+student-14582668/checklist-database/app.py:464:14: S104 Possible binding to all interfaces
+student-14582668/checklist-frontend/app.py:40:14: S104 Possible binding to all interfaces
+student-25487036/flight-backend/app.py:36:18: S104 Possible binding to all interfaces
+student-25487036/flight-database/app.py:279:18: S104 Possible binding to all interfaces
+student-25693742/attractions-backend/app.py:36:14: S104 Possible binding to all interfaces
+student-25693742/attractions-database/app.py:328:14: S104 Possible binding to all interfaces
+student-25992405/account-backend/app.py:61:14: S104 Possible binding to all interfaces
+student-25992405/account-database/app.py:395:14: S104 Possible binding to all interfaces
+Found 22 errors.
+
+Detect secrets...........................................................Failed
+- hook id: detect-secrets
+- exit code: 1
+
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Base64 High Entropy String
+Location:    agentic-loop/config/services.py:161
+
+Secret Type: Base64 High Entropy String
+Location:    agentic-loop/config/services.py:163
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Base64 High Entropy String
+Location:    .github/workflows/student-25487036-ci.yml:42
+
+Secret Type: Base64 High Entropy String
+Location:    docs/evidence/agentic-loop/runs/architecture-20261004T051412Z-a837c252.json:1383
+
+Secret Type: Base64 High Entropy String
+Location:    docs/evidence/agentic-loop/runs/architecture-20261004T051412Z-a837c252.json:1684
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20261004T045702Z-8f47952a.json:193
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20261004T045702Z-8f47952a.json:204
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20261004T045702Z-8f47952a.json:2466
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/mcp-20261004T045218Z-72d62bb9.md:4
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20260906T092614Z-9e056573.json:187
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20260906T092614Z-9e056573.json:741
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20260906T092614Z-9e056573.json:1831
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20260906T092614Z-9e056573.json:2410
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/rag-20261004T045219Z-122b69c9.json:6
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20261004T051412Z-6053d6e2.json:193
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20261004T051412Z-6053d6e2.json:204
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/devops-20261004T051412Z-6053d6e2.json:2466
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/mcp-20261004T051412Z-7ce3195f.md:4
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/mcp-20261004T035239Z-fabb5a14.md:4
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/mcp-20261004T035239Z-fabb5a14.json:6
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/rag-20261004T045219Z-122b69c9.md:4
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/mcp-20261004T051412Z-7ce3195f.json:6
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Secret Keyword
+Location:    agentic-loop/tests/test_validation_reporting.py:18
+
+Secret Type: Base64 High Entropy String
+Location:    docs/evidence/agentic-loop/runs/architecture-20260906T071942Z-f95f8868.json:1380
+
+Secret Type: Base64 High Entropy String
+Location:    docs/evidence/agentic-loop/runs/architecture-20260906T071942Z-f95f8868.json:1682
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/rag-20261004T035301Z-97ac87a9.md:4
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/rag-20261004T051412Z-68fffb56.json:6
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/rag-20261004T051412Z-68fffb56.md:4
+
+Secret Type: Secret Keyword
+Location:    student-25487036/flight-backend/services/llm_client.py:19
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/mcp-20261004T045218Z-72d62bb9.json:6
+
+Secret Type: Hex High Entropy String
+Location:    docs/evidence/agentic-loop/runs/rag-20261004T035301Z-97ac87a9.json:6
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+ERROR: Potential secrets about to be committed to git repo!
+
+Secret Type: Hex High Entropy String
+Location:    docs/agentic_loop_execution.json:1580
+
+Secret Type: Hex High Entropy String
+Location:    docs/agentic_loop_execution.json:1591
+
+Secret Type: Base64 High Entropy String
+Location:    docs/agentic_loop_execution.json:9180
+
+Secret Type: Base64 High Entropy String
+Location:    docs/agentic_loop_execution.json:9481
+
+Secret Type: Hex High Entropy String
+Location:    docs/agentic_loop_execution.json:9693
+
+Secret Type: Base64 High Entropy String
+Location:    docs/evidence/agentic-loop/runs/architecture-20261004T045634Z-3aef9b74.json:1383
+
+Secret Type: Base64 High Entropy String
+Location:    docs/evidence/agentic-loop/runs/architecture-20261004T045634Z-3aef9b74.json:1684
+
+Possible mitigations:
+  - For information about putting your secrets in a safer place, please ask in
+    #security
+  - Mark false positives with an inline `pragma: allowlist secret` comment
+
+If a secret has already been committed, visit
+https://help.github.com/articles/removing-sensitive-data-from-a-repository
+
+pip-audit................................................................Passed

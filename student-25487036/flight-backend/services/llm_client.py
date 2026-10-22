@@ -16,7 +16,7 @@ OLLAMA_MODEL = os.getenv(
 
 client = OpenAI(
     base_url=OLLAMA_BASE_URL,
-    api_key="ollama"
+    api_key="ollama"  # pragma: allowlist secret - local Ollama ignores this value
 )
 
 
