@@ -1,0 +1,15 @@
+For attractions and tour experience tasks:
+
+Create a short plan for the Worker.
+
+Do not output attraction names, prices, ratings or cities.
+Do not select an attraction.
+Do not copy evidence records.
+
+Use only requirements explicitly stated by the user
+(for example city, category, budget, rating or interests).
+
+Return only:
+Goal: ...
+Criteria: ...
+Worker instruction: ...

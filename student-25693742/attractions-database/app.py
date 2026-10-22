@@ -325,7 +325,7 @@ if __name__ == "__main__":
     initialise_database()
 
     app.run(
-        host="0.0.0.0",
+        host="0.0.0.0",  # noqa: S104 - required for Docker networking
         port=6003,
         debug=False
     )

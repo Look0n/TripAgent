@@ -1,0 +1,100 @@
+Pre-commit security scan - Attractions & Tour Experiences (student-25693742)
+Run: 2026-10-23 02:01   Config: .pre-commit-config.yaml (repository-wide policy)
+Hooks: Ruff security rules (--select=S), detect-secrets v1.5.0, pip-audit v2.9.0, plus pre-commit-hooks checks
+
+== 1. All pre-commit hooks on the Release 2 attractions changes ==
+$ pre-commit run --verbose --files <20 changed files>
+   .github/workflows/student-25693742-ci.yml
+   docker-compose.yml
+   shared/multi-agent-server/prompts/features/attractions_planner.txt
+   shared/multi-agent-server/prompts/features/attractions_reviewer.txt
+   shared/multi-agent-server/prompts/features/attractions_worker.txt
+   student-25693742/attractions-backend/app.py
+   student-25693742/attractions-backend/routes/ai_mode.py
+   student-25693742/attractions-backend/routes/mcp_mode.py
+   student-25693742/attractions-backend/routes/multi_agent_routes.py
+   student-25693742/attractions-backend/routes/normal_ui.py
+   student-25693742/attractions-backend/routes/rag_mode.py
+   student-25693742/attractions-backend/services/feature_flags.py
+   student-25693742/attractions-backend/services/multi_agent_client.py
+   student-25693742/attractions-backend/tests/test_ai_mode.py
+   student-25693742/attractions-backend/tests/test_endpoint_functions.py
+   student-25693742/attractions-backend/tests/test_multi_agent_routes.py
+   student-25693742/attractions-database/app.py
+   student-25693742/attractions-frontend/css/attractions.css
+   student-25693742/attractions-frontend/index.html
+   student-25693742/scripts/multi_agent_demo.py
+check for merge conflicts................................................Passed
+- hook id: check-merge-conflict
+- duration: 0.37s
+check for added large files..............................................Passed
+- hook id: check-added-large-files
+- duration: 0.43s
+detect private key.......................................................Passed
+- hook id: detect-private-key
+- duration: 0.25s
+check yaml...............................................................Passed
+- hook id: check-yaml
+- duration: 0.37s
+check json...........................................(no files to check)Skipped
+- hook id: check-json
+check toml...........................................(no files to check)Skipped
+- hook id: check-toml
+ruff (legacy alias)......................................................Passed
+- hook id: ruff
+- duration: 0.11s
+
+All checks passed!
+
+Detect secrets...........................................................Passed
+- hook id: detect-secrets
+- duration: 1.31s
+pip-audit................................................................Passed
+- hook id: pip-audit
+- duration: 4.18s
+
+No known vulnerabilities found
+
+
+== 2. Ruff security rules (S) on every Python file of the attractions service ==
+   student-25693742/attractions-backend/app.py
+   student-25693742/attractions-backend/routes/__init__.py
+   student-25693742/attractions-backend/routes/ai_mode.py
+   student-25693742/attractions-backend/routes/mcp_mode.py
+   student-25693742/attractions-backend/routes/multi_agent_routes.py
+   student-25693742/attractions-backend/routes/normal_ui.py
+   student-25693742/attractions-backend/routes/rag_mode.py
+   student-25693742/attractions-backend/services/__init__.py
+   student-25693742/attractions-backend/services/database_api.py
+   student-25693742/attractions-backend/services/feature_flags.py
+   student-25693742/attractions-backend/services/llm_client.py
+   student-25693742/attractions-backend/services/mcp_client.py
+   student-25693742/attractions-backend/services/multi_agent_client.py
+   student-25693742/attractions-backend/services/prompt_loader.py
+   student-25693742/attractions-backend/services/rag_client.py
+   student-25693742/attractions-backend/tests/__init__.py
+   student-25693742/attractions-backend/tests/test_ai_mode.py
+   student-25693742/attractions-backend/tests/test_attractions_api.py
+   student-25693742/attractions-backend/tests/test_endpoint_functions.py
+   student-25693742/attractions-backend/tests/test_multi_agent_routes.py
+   student-25693742/attractions-database/app.py
+   student-25693742/scripts/multi_agent_demo.py
+ruff (legacy alias)......................................................Passed
+- hook id: ruff
+- duration: 0.06s
+
+All checks passed!
+
+
+== 3. detect-secrets on every file of the attractions service ==
+Detect secrets...........................................................Passed
+- hook id: detect-secrets
+- duration: 1.62s
+
+== 4. pip-audit on the attractions backend and database requirements ==
+$ pip-audit -r student-25693742/attractions-backend/requirements.txt
+No known vulnerabilities found
+
+$ pip-audit -r student-25693742/attractions-database/requirements.txt
+No known vulnerabilities found
+
