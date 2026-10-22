@@ -1,0 +1,24 @@
+For attractions and tour experience tasks:
+
+Review the Worker result against the user request and context.evidence.
+
+Check:
+- every recommended attraction exists in context.evidence with the same attraction_id
+- city and category match the request when the user stated them
+- price satisfies any stated budget
+- rating and price match the evidence record
+- no unsupported information was invented
+
+Do not repeat the Worker output.
+
+Return exactly four lines:
+
+Evidence check: Pass or Fail
+Constraint check: Pass or Fail
+Issues: None or a short explanation
+Recommendation: Accept, Revise, or Reject
+
+Rules:
+- If Evidence check is Fail, Recommendation cannot be Accept.
+- If Constraint check is Fail, Recommendation cannot be Accept.
+- Accept only when both checks are Pass.

@@ -16,6 +16,7 @@ from services.mcp_client import (
     get_top_rated_attractions_mcp,
     call_mcp_tool,
 )
+from services.feature_flags import mcp_enabled
 
 
 mcp_bp = Blueprint("mcp", __name__)
@@ -100,6 +101,12 @@ def mcp_health():
 )
 def get_all_attractions_mcp():
 
+    if not mcp_enabled():
+        return jsonify({
+            "status": "error",
+            "error": "MCP Mode is disabled."
+        }), 403
+
     try:
         result = get_attractions_mcp()
 
@@ -122,6 +129,12 @@ def get_all_attractions_mcp():
     methods=["POST"]
 )
 def get_attractions_by_city_route():
+
+    if not mcp_enabled():
+        return jsonify({
+            "status": "error",
+            "error": "MCP Mode is disabled."
+        }), 403
 
     data = request.get_json(
         silent=True
@@ -163,6 +176,12 @@ def get_attractions_by_city_route():
     methods=["POST"],
 )
 def attractions_mcp_search():
+
+    if not mcp_enabled():
+        return jsonify({
+            "status": "error",
+            "error": "MCP Mode is disabled."
+        }), 403
     data = request.get_json(silent=True) or {}
 
     city = data.get("city")
@@ -197,6 +216,12 @@ def attractions_mcp_search():
     methods=["POST"]
 )
 def attraction_details_mcp_route():
+
+    if not mcp_enabled():
+        return jsonify({
+            "status": "error",
+            "error": "MCP Mode is disabled."
+        }), 403
 
     data = request.get_json(
         silent=True
@@ -240,6 +265,12 @@ def attraction_details_mcp_route():
     methods=["POST"]
 )
 def top_rated_mcp_route():
+
+    if not mcp_enabled():
+        return jsonify({
+            "status": "error",
+            "error": "MCP Mode is disabled."
+        }), 403
 
     data = request.get_json(
         silent=True

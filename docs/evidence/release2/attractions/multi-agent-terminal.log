@@ -1,0 +1,168 @@
+[01:48:58] Multi-Agent Server health (via attractions backend)
+{
+  "enabled": false,
+  "features": [
+    "accommodation",
+    "account",
+    "attractions",
+    "checklist",
+    "flight"
+  ],
+  "locked": false,
+  "status": "connected"
+}
+[01:48:58] Enable Multi-Agent Mode
+{
+  "enabled": true,
+  "locked": false
+}
+[01:48:58] Workflow 693729b5-158b-4712-a622-a646fefe4f7a created with 2 attraction records as evidence
+[01:48:58] Evidence supplied to the agents
+[
+  {
+    "attraction_id": 4,
+    "average_rating": 4.8,
+    "category": "Culture",
+    "city": "Sydney",
+    "description": "Go behind the scenes of one of the world's most iconic performance venues.",
+    "name": "Sydney Opera House Backstage Tour",
+    "price": 42.0
+  },
+  {
+    "attraction_id": 6,
+    "average_rating": 4.6,
+    "category": "Sightseeing",
+    "city": "Sydney",
+    "description": "A scenic self-guided coastal walk past some of Sydney's best beaches.",
+    "name": "Bondi to Coogee Coastal Walk",
+    "price": 0.0
+  }
+]
+[01:49:19] PLANNER completed (20s)
+{
+  "agent": "planner_agent",
+  "plan": "Goal: Find a cultural experience in Sydney under $60 that works on a rainy day.\nCriteria: \n- City: Sydney\n- Category: Culture\n- Price: Under $60\n- Rainy day: Yes\n- Rating: 4.8 or higher\n- Description: A scenic self-guided coastal walk past some of Sydney's best beaches\n- Evidence: Sydney Opera House Backstage Tour, Bondi to Coogee Coastal Walk\n- Constraints: Read-only, bookings allowed, evidence only\n- Feature: attractions",
+  "status": "success"
+}
+[01:50:28] WORKER completed (89s)
+{
+  "agent": "worker_agent",
+  "evidence": [
+    {
+      "attraction_id": 4,
+      "average_rating": 4.8,
+      "category": "Culture",
+      "city": "Sydney",
+      "description": "Go behind the scenes of one of the world's most iconic performance venues.",
+      "name": "Sydney Opera House Backstage Tour",
+      "price": 42.0
+    },
+    {
+      "attraction_id": 6,
+      "average_rating": 4.6,
+      "category": "Sightseeing",
+      "city": "Sydney",
+      "description": "A scenic self-guided coastal walk past some of Sydney's best beaches.",
+      "name": "Bondi to Coogee Coastal Walk",
+      "price": 0.0
+    }
+  ],
+  "output": "Attraction ID: 4\nName: Sydney Opera House Backstage Tour\nCity: Sydney\nCategory: Culture\nPrice: 42.0\nRating: 4.8\nWhy it fits: This attraction is a cultural experience in Sydney, fits the price requirement, and has a high rating.\n\nAttraction ID: 6\nName: Bondi to Coogee Coastal Walk\nCity: Sydney\nCategory: Sightseeing\nPrice: 0.0\nRating: 4.6\nWhy it fits: This attraction is in Sydney, is a scenic walk, and is free, making it suitable for a rainy day.",
+  "status": "success"
+}
+[01:50:44] REVIEWER completed (106s)
+{
+  "agent": "reviewer_agent",
+  "review": "Evidence check: Pass\nConstraint check: Pass\nIssues: None\nRecommendation: Accept",
+  "status": "success"
+}
+[01:50:44] Workflow status: pending_review
+[01:50:44] HUMAN REVIEW decision submitted: Accept
+{
+  "decision": "Accept",
+  "correction": ""
+}
+[01:50:44] Final workflow record
+{
+  "created_at": "2026-10-22T14:48:58.670186+00:00",
+  "duration_ms": 104427,
+  "feature": "attractions",
+  "human_decision": {
+    "correction": "",
+    "decision": "Accept",
+    "required": true,
+    "status": "completed",
+    "timestamp": "2026-10-22T14:50:44.770333+00:00"
+  },
+  "planner_result": {
+    "agent": "planner_agent",
+    "plan": "Goal: Find a cultural experience in Sydney under $60 that works on a rainy day.\nCriteria: \n- City: Sydney\n- Category: Culture\n- Price: Under $60\n- Rainy day: Yes\n- Rating: 4.8 or higher\n- Description: A scenic self-guided coastal walk past some of Sydney's best beaches\n- Evidence: Sydney Opera House Backstage Tour, Bondi to Coogee Coastal Walk\n- Constraints: Read-only, bookings allowed, evidence only\n- Feature: attractions",
+    "status": "success"
+  },
+  "reviewer_result": {
+    "agent": "reviewer_agent",
+    "review": "Evidence check: Pass\nConstraint check: Pass\nIssues: None\nRecommendation: Accept",
+    "status": "success"
+  },
+  "status": "completed",
+  "user_request": "A cultural experience in Sydney under $60 that works on a rainy day",
+  "worker_result": {
+    "agent": "worker_agent",
+    "evidence": [
+      {
+        "attraction_id": 4,
+        "average_rating": 4.8,
+        "category": "Culture",
+        "city": "Sydney",
+        "description": "Go behind the scenes of one of the world's most iconic performance venues.",
+        "name": "Sydney Opera House Backstage Tour",
+        "price": 42.0
+      },
+      {
+        "attraction_id": 6,
+        "average_rating": 4.6,
+        "category": "Sightseeing",
+        "city": "Sydney",
+        "description": "A scenic self-guided coastal walk past some of Sydney's best beaches.",
+        "name": "Bondi to Coogee Coastal Walk",
+        "price": 0.0
+      }
+    ],
+    "output": "Attraction ID: 4\nName: Sydney Opera House Backstage Tour\nCity: Sydney\nCategory: Culture\nPrice: 42.0\nRating: 4.8\nWhy it fits: This attraction is a cultural experience in Sydney, fits the price requirement, and has a high rating.\n\nAttraction ID: 6\nName: Bondi to Coogee Coastal Walk\nCity: Sydney\nCategory: Sightseeing\nPrice: 0.0\nRating: 4.6\nWhy it fits: This attraction is in Sydney, is a scenic walk, and is free, making it suitable for a rainy day.",
+    "status": "success"
+  },
+  "workflow_id": "693729b5-158b-4712-a622-a646fefe4f7a"
+}
+[01:50:44] Attractions workflow history
+{
+  "status": "success",
+  "workflows": [
+    {
+      "created_at": "2026-10-22T14:48:58.674352+00:00",
+      "feature": "attractions",
+      "id": "693729b5-158b-4712-a622-a646fefe4f7a",
+      "status": "completed",
+      "updated_at": "2026-10-22T14:50:44.771060+00:00"
+    }
+  ]
+}
+
+==================================================================
+[01:54:27] Human Review via backend/API (curl) for workflow started from the frontend UI
+$ curl -X POST http://localhost:5003/api/attractions/multi-agent/workflow/d1083015-4fea-400d-a007-f5f728909426/review -d '{"decision":"Partially Accept","correction":"..."}'
+{
+  "workflow_id": "d1083015-4fea-400d-a007-f5f728909426",
+  "status": "completed",
+  "human_decision": {
+    "correction": "Keep the Eiffel Tower and Louvre recommendations; drop Disneyland because it is close to the $100 limit for a family.",
+    "decision": "Partially Accept",
+    "required": true,
+    "status": "completed",
+    "timestamp": "2026-10-22T14:54:27.551778+00:00"
+  }
+}
+
+[01:54:27] Validation: invalid decision and missing correction are refused
+Approve -> HTTP 400
+Partially Accept without correction -> HTTP 400
+Second decision on a completed workflow -> HTTP 409

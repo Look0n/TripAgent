@@ -33,12 +33,18 @@ def get_attractions():
                 "error": "max_price must be a number"
             }), 400
 
-    attractions = get_all_attractions(
-        search=search,
-        city=city,
-        category=category,
-        max_price=max_price
-    )
+    try:
+        attractions = get_all_attractions(
+            search=search,
+            city=city,
+            category=category,
+            max_price=max_price
+        )
+
+    except requests.RequestException:
+        return jsonify({
+            "error": "Database service unavailable"
+        }), 503
 
     return jsonify(attractions)
 
@@ -67,7 +73,26 @@ def create():
                 "error": f"Missing required field: {field}"
             }), 400
 
-    attraction = create_attraction(data)
+    try:
+        price = float(data["price"])
+
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "price must be a number"
+        }), 400
+
+    if price < 0:
+        return jsonify({
+            "error": "price must not be negative"
+        }), 400
+
+    try:
+        attraction = create_attraction(data)
+
+    except requests.RequestException:
+        return jsonify({
+            "error": "Database service unavailable"
+        }), 503
 
     return jsonify(attraction), 201
 
