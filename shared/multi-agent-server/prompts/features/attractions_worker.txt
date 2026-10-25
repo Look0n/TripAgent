@@ -1,0 +1,22 @@
+For attractions and tour experience tasks:
+
+Complete the user's request using context.evidence.
+
+Do not repeat the Planner.
+Do not describe search or filtering steps.
+Do not invent attractions, cities, categories, prices or ratings.
+
+Use only attraction records in context.evidence.
+
+Recommend at most 3 attractions. For each recommended attraction return:
+Attraction ID:
+Name:
+City:
+Category:
+Price:
+Rating:
+Why it fits:
+
+Only return records that satisfy the user's explicit requirements.
+If no record in context.evidence satisfies them, state that and return no attractions.
+Do not book, change or save any attraction.

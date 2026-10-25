@@ -12,6 +12,10 @@
         src="/checklist/static/js/checklist.js"
         defer
     ></script>
+    <script
+    src="/checklist/static/js/multi_agent.js"
+    defer
+></script>
 </head>
 <body data-api-url="{{ api_url }}">
     <header class="navbar">
@@ -188,15 +192,20 @@
         <section class="mcp-panel" aria-labelledby="mcp-heading">
             <div class="section-heading">
                 <h2 id="mcp-heading">MCP checklist tools</h2>
-                <button id="mcp-status-button" type="button">
-                    Check connection
-                </button>
+                <div class="multi-agent-controls">
+                    <button id="mcp-toggle" class="mode-toggle" type="button" aria-pressed="false" disabled>
+                        MCP: OFF
+                    </button>
+                    <button id="mcp-status-button" type="button">
+                        Check connection
+                    </button>
+                </div>
             </div>
-        
+
             <p id="mcp-status" role="status" aria-live="polite">
                 Checking MCP connection...
             </p>
-        
+
             <form id="mcp-list-form">
                 <div class="form-field">
                     <label for="mcp-item-type">Item type</label>
@@ -206,7 +215,7 @@
                         <option value="packing">Packing</option>
                     </select>
                 </div>
-        
+
                 <div class="form-field">
                     <label for="mcp-priority">Priority</label>
                     <select id="mcp-priority">
@@ -216,7 +225,7 @@
                         <option value="Low">Low</option>
                     </select>
                 </div>
-        
+
                 <div class="form-field">
                     <label for="mcp-completed">Completion</label>
                     <select id="mcp-completed">
@@ -225,66 +234,148 @@
                         <option value="true">Completed</option>
                     </select>
                 </div>
-        
+
                 <button type="submit" data-mcp-action disabled>
                     Get checklist items
                 </button>
             </form>
-        
+
             <form id="mcp-item-form">
                 <div class="form-field">
                     <label for="mcp-item-id">Item ID</label>
                     <input id="mcp-item-id" type="number" min="1" step="1" required>
                 </div>
-        
+
                 <button type="submit" data-mcp-action disabled>
                     Get item details
                 </button>
             </form>
-        
+
             <button id="mcp-summary-button" type="button" data-mcp-action disabled>
                 Get checklist summary
             </button>
-        
+
             <div id="mcp-results" aria-live="polite"></div>
         </section>
 
         <section class="rag-panel" aria-labelledby="rag-heading">
             <div class="section-heading">
                 <h2 id="rag-heading">Checklist knowledge assistant</h2>
-                <button id="rag-status-button" type="button">
-                    Check connection
-                </button>
+                <div class="multi-agent-controls">
+                    <button id="rag-toggle" class="mode-toggle" type="button" aria-pressed="false" disabled>
+                        RAG: OFF
+                    </button>
+                    <button id="rag-status-button" type="button">
+                        Check connection
+                    </button>
+                </div>
             </div>
-        
+
             <p>
                 Ask about checklist features and indexed checklist records.
                 Record changes appear after the knowledge base is refreshed.
             </p>
-        
+
             <p id="rag-status" role="status" aria-live="polite">
                 Checking RAG connection...
             </p>
-        
+
             <form id="rag-form">
                 <div class="form-field">
                     <label for="rag-query">Question</label>
                     <textarea id="rag-query" rows="3" maxlength="2000"
                         placeholder="Are AI checklist suggestions saved automatically?" required></textarea>
                 </div>
-        
+
                 <button id="rag-ask-button" type="submit" disabled>
                     Ask question
                 </button>
             </form>
-        
+
             <div id="rag-results" aria-live="polite" hidden>
                 <h3>Answer</h3>
                 <p id="rag-answer"></p>
                 <p id="rag-confidence"></p>
-        
+
                 <h3>Retrieved sources</h3>
                 <ul id="rag-citations"></ul>
+            </div>
+        </section>
+
+        <section class="multi-agent-panel" aria-labelledby="multi-agent-heading">
+            <div class="section-heading">
+                <h2 id="multi-agent-heading">Pre-trip preparation review</h2>
+                <div class="multi-agent-controls">
+                <button id="multi-agent-toggle" type="button" aria-pressed="false" disabled>
+                    Multi-Agent: OFF
+                </button>
+                <button id="multi-agent-connection" type="button">
+                    Check connection
+                </button>
+                </div>
+            </div>
+
+            <p>
+                Review existing checklist records with Planner, Worker,
+                and Reviewer agents. Your decision is recorded separately.
+                Checklist items are not changed automatically.
+            </p>
+
+            <p id="multi-agent-status" role="status" aria-live="polite">
+                Checking Multi-Agent connection...
+            </p>
+
+            <form id="multi-agent-form">
+                <div class="form-field">
+                    <label for="multi-agent-request">Preparation request</label>
+                    <textarea id="multi-agent-request" rows="3" maxlength="4000"
+                        placeholder="Review my incomplete tasks and packing items." required></textarea>
+                </div>
+
+                <button id="multi-agent-start" type="submit" disabled>
+                    Start review
+                </button>
+            </form>
+
+            <div id="multi-agent-results" hidden>
+                <p id="multi-agent-workflow-id"></p>
+
+                <button id="multi-agent-refresh" type="button">
+                    Refresh workflow
+                </button>
+
+                <h3>Planner</h3>
+                <pre id="multi-agent-plan"></pre>
+
+                <h3>Worker</h3>
+                <pre id="multi-agent-output"></pre>
+
+                <h3>Reviewer</h3>
+                <pre id="multi-agent-review"></pre>
+
+                <details>
+                    <summary>Checklist evidence</summary>
+                    <pre id="multi-agent-evidence"></pre>
+                </details>
+
+                <form id="multi-agent-review-form">
+                    <fieldset id="multi-agent-review-fields" disabled>
+                        <legend>Your decision</legend>
+
+                        <label for="multi-agent-correction">
+                            Correction or comment
+                        </label>
+                        <textarea id="multi-agent-correction" rows="3" maxlength="4000"></textarea>
+
+                        <button type="submit" value="Accept">Accept</button>
+                        <button type="submit" value="Partially Accept">
+                            Partially Accept
+                        </button>
+                        <button type="submit" value="Reject">Reject</button>
+                    </fieldset>
+                </form>
+
+                <p id="multi-agent-decision"></p>
             </div>
         </section>
 

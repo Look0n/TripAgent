@@ -353,13 +353,19 @@ services:
 
     environment:
       DATABASE_API_URL: http://attractions-database:6003
-      OLLAMA_URL: http://ollama:11434/api/generate
+      # AI-Mode uses the non-containerised local Ollama on the host.
+      OLLAMA_URL: http://host.docker.internal:11434/api/generate
       OLLAMA_MODEL: qwen2.5:0.5b
+      AI_MODE_ENABLED: ${AI_MODE_ENABLED:-true}
       # Release 1: MCP and RAG servers run on the host, not in Docker.
       MCP_SERVER_URL: http://host.docker.internal:7001/mcp
       MCP_ENABLED: ${MCP_ENABLED:-true}
       RAG_SERVICE_URL: http://host.docker.internal:7002
       RAG_ENABLED: ${RAG_ENABLED:-true}
+      # Release 2: shared Multi-Agent Server runs on the host, not in Docker.
+      MULTI_AGENT_SERVICE_URL: http://host.docker.internal:7003
+      MULTI_AGENT_LOCKED: ${MULTI_AGENT_LOCKED:-false}
+      MULTI_AGENT_API_KEY: ${MULTI_AGENT_API_KEY:-}
 
     # Needed so host.docker.internal resolves on native Linux too.
     extra_hosts:
@@ -466,9 +472,12 @@ services:
       OLLAMA_URL: http://host.docker.internal:11434/api/generate
       OLLAMA_MODEL: qwen2.5:0.5b
       MCP_SERVER_URL: http://host.docker.internal:7001/mcp
-      MCP_ENABLED: ${MCP_ENABLED:-true}
+      MCP_LOCKED: ${MCP_LOCKED:-false}
       RAG_SERVICE_URL: http://host.docker.internal:7002
-      RAG_ENABLED: ${RAG_ENABLED:-true}
+      RAG_LOCKED: ${RAG_LOCKED:-false}
+      MULTI_AGENT_SERVICE_URL: http://host.docker.internal:7003
+      MULTI_AGENT_LOCKED: ${MULTI_AGENT_LOCKED:-false}
+      MULTI_AGENT_API_KEY: ${MULTI_AGENT_API_KEY:-}
 
     extra_hosts:
       - "host.docker.internal:host-gateway"

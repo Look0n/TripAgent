@@ -16,7 +16,20 @@ def client():
         yield client
 
 
-def test_recommend_requires_message(client):
+def test_recommend_requires_message(client, monkeypatch):
+    monkeypatch.setenv("AI_MODE_ENABLED", "true")
+
     response = client.post("/api/attractions/recommend", json={})
 
     assert response.status_code == 400
+
+
+def test_recommend_refused_when_ai_mode_disabled(client, monkeypatch):
+    monkeypatch.setenv("AI_MODE_ENABLED", "false")
+
+    response = client.post(
+        "/api/attractions/recommend",
+        json={"message": "museum in Paris"},
+    )
+
+    assert response.status_code == 403

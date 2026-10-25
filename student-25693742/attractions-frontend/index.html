@@ -72,6 +72,51 @@
             <div id="ragResults" class="ai-response-box hidden"></div>
         </section>
 
+        <!-- Release 2: Multi-Agent workflow (Planner -> Worker -> Reviewer -> Human Review) -->
+        <section class="ai-card" id="multiAgentCard">
+            <div class="ai-card-header ma-header">
+                <div>
+                    <h3>Multi-Agent Planner</h3>
+                    <p>Planner, Worker and Reviewer agents on the shared Multi-Agent Server recommend attractions from real database records. You make the final decision.</p>
+                </div>
+                <label class="ma-toggle">
+                    <input type="checkbox" id="maModeToggle" onchange="toggleMultiAgent(this.checked)">
+                    <span id="maModeLabel">Multi-Agent Mode: OFF</span>
+                </label>
+            </div>
+            <div class="ma-filters">
+                <input type="text" id="maCity" placeholder="City (optional)">
+                <select id="maCategory">
+                    <option value="">Any category</option>
+                    <option>Sightseeing</option>
+                    <option>Culture</option>
+                    <option>Adventure</option>
+                    <option>Entertainment</option>
+                    <option>Food &amp; Drink</option>
+                </select>
+                <input type="number" id="maMaxPrice" min="0" placeholder="Max price (optional)">
+            </div>
+            <div class="ai-input-wrapper">
+                <input type="text" id="maRequest" placeholder="e.g. A cultural experience in Sydney for a rainy day under $60">
+                <button class="btn-primary" id="maStartBtn" onclick="startMultiAgent()">Run Agents</button>
+            </div>
+            <div id="maStatus" class="ma-status"></div>
+            <div id="maResults" class="ai-response-box hidden"></div>
+            <div id="maReview" class="ma-review hidden">
+                <h4>Human Review</h4>
+                <textarea id="maCorrection" rows="2" placeholder="Correction (required for Partially Accept)"></textarea>
+                <div class="ma-review-buttons">
+                    <button class="btn-primary" onclick="submitHumanReview('Accept')">Accept</button>
+                    <button class="btn-secondary" onclick="submitHumanReview('Partially Accept')">Partially Accept</button>
+                    <button class="btn-danger" onclick="submitHumanReview('Reject')">Reject</button>
+                </div>
+            </div>
+            <div class="ma-history">
+                <button class="btn-link" onclick="loadMultiAgentHistory()">Show workflow history</button>
+                <div id="maHistory"></div>
+            </div>
+        </section>
+
         <!-- Search & Filter Controls -->
         <section class="filter-section">
             <div class="search-bar">
@@ -312,6 +357,223 @@
                 box.innerHTML = '<div class="ai-content error">Error connecting to RAG service.</div>';
             }
         }
+
+        // ---- Release 2: Multi-Agent workflow ----
+        // Backend/API -> shared Multi-Agent Server -> Planner -> Worker -> Reviewer,
+        // then the user records the Human Review decision.
+        const MA_API = '/api/attractions/attractions/multi-agent';
+        let maWorkflowId = null;
+        let maEvidence = [];
+
+        function escapeHtml(value) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+            return String(value ?? '').replace(/[&<>"']/g, ch => map[ch]);
+        }
+
+        // Agents may answer in markdown; show **bold** without trusting any HTML.
+        function formatAgentText(text) {
+            return escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        }
+
+        function setMaStatus(text, isError) {
+            const el = document.getElementById('maStatus');
+            el.textContent = text;
+            el.className = 'ma-status' + (isError ? ' error' : '');
+        }
+
+        function renderModeLabel(data) {
+            const toggle = document.getElementById('maModeToggle');
+            toggle.checked = !!data.enabled;
+            toggle.disabled = !!data.locked;
+            document.getElementById('maModeLabel').textContent = data.locked
+                ? 'Multi-Agent Mode: LOCKED'
+                : `Multi-Agent Mode: ${data.enabled ? 'ON' : 'OFF'}`;
+        }
+
+        async function loadMultiAgentMode() {
+            try {
+                const res = await fetch(`${MA_API}/mode`);
+                if (res.ok) renderModeLabel(await res.json());
+            } catch (err) {
+                setMaStatus('Unable to read Multi-Agent mode.', true);
+            }
+        }
+
+        async function toggleMultiAgent(enabled) {
+            try {
+                const res = await fetch(`${MA_API}/mode`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    setMaStatus(data.error || 'Unable to change mode.', true);
+                    await loadMultiAgentMode();
+                    return;
+                }
+                renderModeLabel(data);
+                setMaStatus('');
+            } catch (err) {
+                setMaStatus('Unable to change Multi-Agent mode.', true);
+            }
+        }
+
+        async function startMultiAgent() {
+            const userRequest = document.getElementById('maRequest').value.trim();
+            if (!userRequest) {
+                setMaStatus('Describe what you are looking for first.', true);
+                return;
+            }
+
+            const box = document.getElementById('maResults');
+            document.getElementById('maReview').classList.add('hidden');
+            box.classList.add('hidden');
+            setMaStatus('Submitting workflow...');
+
+            try {
+                const res = await fetch(`${MA_API}/workflow`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_request: userRequest,
+                        city: document.getElementById('maCity').value.trim(),
+                        category: document.getElementById('maCategory').value,
+                        max_price: document.getElementById('maMaxPrice').value
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    setMaStatus(data.error || 'Workflow could not be started.', true);
+                    return;
+                }
+                maWorkflowId = data.workflow_id;
+                maEvidence = data.evidence || [];
+                document.getElementById('maStartBtn').disabled = true;
+                renderWorkflow(data);
+                pollWorkflow();
+            } catch (err) {
+                setMaStatus('Error connecting to the Multi-Agent service.', true);
+            }
+        }
+
+        async function pollWorkflow() {
+            if (!maWorkflowId) return;
+            try {
+                const res = await fetch(`${MA_API}/workflow/${encodeURIComponent(maWorkflowId)}`);
+                const data = await res.json();
+                if (!res.ok) {
+                    setMaStatus(data.error || 'Unable to read workflow.', true);
+                    document.getElementById('maStartBtn').disabled = false;
+                    return;
+                }
+                renderWorkflow(data);
+                if (data.status === 'queued' || data.status === 'running') {
+                    setTimeout(pollWorkflow, 2000);
+                } else {
+                    document.getElementById('maStartBtn').disabled = false;
+                }
+            } catch (err) {
+                setMaStatus('Lost connection to the Multi-Agent service.', true);
+                document.getElementById('maStartBtn').disabled = false;
+            }
+        }
+
+        function agentStep(title, done, body) {
+            return `
+                <div class="ma-step ${done ? 'done' : 'pending'}">
+                    <div class="ma-step-title">${done ? '&#10003;' : '&#8230;'} ${title}</div>
+                    ${done ? `<pre class="ma-output">${formatAgentText(body)}</pre>` : ''}
+                </div>`;
+        }
+
+        function renderWorkflow(wf) {
+            const box = document.getElementById('maResults');
+            box.classList.remove('hidden');
+
+            const statusTexts = {
+                queued: 'Queued - waiting for the Planner',
+                running: 'Running - agents are working',
+                pending_review: 'Waiting for your Human Review decision',
+                completed: 'Completed - recorded by human reviewer',
+                rejected: 'Rejected by human reviewer',
+                failed: 'Workflow failed'
+            };
+            const statusText = statusTexts[wf.status] || wf.status;
+            setMaStatus(`Workflow ${wf.workflow_id}: ${statusText}`, wf.status === 'failed');
+
+            const evidenceRows = maEvidence.map(a => `
+                <tr><td>${escapeHtml(a.attraction_id)}</td><td>${escapeHtml(a.name)}</td>
+                <td>${escapeHtml(a.city)}</td><td>${escapeHtml(a.category)}</td>
+                <td>$${escapeHtml(a.price)}</td><td>${escapeHtml(a.average_rating ?? '-')}</td></tr>`).join('');
+
+            const hd = wf.human_decision || {};
+            const decision = hd.status === 'completed'
+                ? `<div class="ma-decision"><strong>Human decision:</strong> ${escapeHtml(hd.decision)}
+                   ${hd.correction ? `<br><strong>Correction:</strong> ${escapeHtml(hd.correction)}` : ''}</div>`
+                : '';
+
+            const evidenceTable = evidenceRows
+                ? `<details class="ma-evidence"><summary>Evidence supplied to the agents (${maEvidence.length} attractions)</summary>
+                   <table><tr><th>ID</th><th>Name</th><th>City</th><th>Category</th><th>Price</th><th>Rating</th></tr>${evidenceRows}</table></details>`
+                : '';
+
+            box.innerHTML = `
+                <div class="ai-content">
+                    ${agentStep('Planner Agent', !!wf.planner_result, wf.planner_result && wf.planner_result.plan)}
+                    ${agentStep('Worker Agent', !!wf.worker_result, wf.worker_result && wf.worker_result.output)}
+                    ${agentStep('Reviewer Agent', !!wf.reviewer_result, wf.reviewer_result && wf.reviewer_result.review)}
+                    ${wf.error ? `<p class="error">${escapeHtml(wf.error)}</p>` : ''}
+                    ${decision}
+                    ${evidenceTable}
+                </div>`;
+
+            document.getElementById('maReview').classList.toggle('hidden', wf.status !== 'pending_review');
+        }
+
+        async function submitHumanReview(decision) {
+            if (!maWorkflowId) return;
+            const correction = document.getElementById('maCorrection').value.trim();
+            try {
+                const res = await fetch(`${MA_API}/workflow/${encodeURIComponent(maWorkflowId)}/review`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ decision, correction })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    setMaStatus(data.error || 'Unable to record the decision.', true);
+                    return;
+                }
+                document.getElementById('maCorrection').value = '';
+                renderWorkflow(data);
+                loadMultiAgentHistory();
+            } catch (err) {
+                setMaStatus('Unable to record the decision.', true);
+            }
+        }
+
+        async function loadMultiAgentHistory() {
+            const box = document.getElementById('maHistory');
+            try {
+                const res = await fetch(`${MA_API}/history`);
+                const data = await res.json();
+                if (!res.ok) {
+                    box.innerHTML = `<p class="error">${escapeHtml(data.error || 'Unable to load history.')}</p>`;
+                    return;
+                }
+                const rows = (data.workflows || []).map(w => `
+                    <tr><td>${escapeHtml(w.id.slice(0, 8))}</td><td>${escapeHtml(w.status)}</td>
+                    <td>${escapeHtml(new Date(w.created_at).toLocaleString())}</td></tr>`).join('');
+                box.innerHTML = rows
+                    ? `<table class="ma-history-table"><tr><th>Workflow</th><th>Status</th><th>Created</th></tr>${rows}</table>`
+                    : '<p>No attractions workflows yet.</p>';
+            } catch (err) {
+                box.innerHTML = '<p class="error">Unable to load history.</p>';
+            }
+        }
+
+        loadMultiAgentMode();
 
         async function openDetail(attractionId) {
             const panel = document.getElementById('detailPanel');

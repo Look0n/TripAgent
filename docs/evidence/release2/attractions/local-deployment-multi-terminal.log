@@ -1,0 +1,125 @@
+Local deployment - multi-server system test (Attractions & Tour Experiences, student-25693742)
+Captured: 2026-10-23 02:04
+
+Terminal 1: python shared/mcp-server/mcp_server.py           (non-containerised, :7001)
+Terminal 2: python shared/rag-server/rag_http_server.py      (non-containerised, :7002)
+Terminal 3: python shared/multi-agent-server/app.py          (non-containerised, :7003)
+Terminal 4: ollama serve                                     (non-containerised AI-Mode LLM, :11434)
+Terminal 5: docker compose up -d --build                     (frontends, backends, databases)
+Terminal 6: system checks below
+
+===== Terminal 5: docker compose ps =====
+SERVICE                  STATUS                    PORTS
+accommodation-backend    Up 16 minutes (healthy)   0.0.0.0:5002->5002/tcp, [::]:5002->5002/tcp
+accommodation-database   Up 16 minutes (healthy)   0.0.0.0:6002->6002/tcp, [::]:6002->6002/tcp
+accommodation-frontend   Up 16 minutes (healthy)   0.0.0.0:3002->3002/tcp, [::]:3002->3002/tcp
+account-backend          Up 16 minutes (healthy)   0.0.0.0:5001->5001/tcp, [::]:5001->5001/tcp
+account-database         Up 16 minutes (healthy)   0.0.0.0:6001->6001/tcp, [::]:6001->6001/tcp
+account-frontend         Up 16 minutes             0.0.0.0:3001->80/tcp, [::]:3001->80/tcp
+attractions-backend      Up 16 minutes (healthy)   0.0.0.0:5003->5003/tcp, [::]:5003->5003/tcp
+attractions-database     Up 16 minutes (healthy)   0.0.0.0:6003->6003/tcp, [::]:6003->6003/tcp
+attractions-frontend     Up 10 minutes (healthy)   0.0.0.0:3003->80/tcp, [::]:3003->80/tcp
+checklist-backend        Up 16 minutes (healthy)   0.0.0.0:5004->5004/tcp, [::]:5004->5004/tcp
+checklist-database       Up 16 minutes (healthy)   0.0.0.0:6004->6004/tcp, [::]:6004->6004/tcp
+checklist-frontend       Up 16 minutes (healthy)   0.0.0.0:3004->3004/tcp, [::]:3004->3004/tcp
+flight-backend           Up 16 minutes (healthy)   0.0.0.0:5005->5005/tcp, [::]:5005->5005/tcp
+flight-database          Up 16 minutes (healthy)   0.0.0.0:6005->6005/tcp, [::]:6005->6005/tcp
+flight-frontend          Up 16 minutes             0.0.0.0:3005->80/tcp, [::]:3005->80/tcp
+shared-database          Up 16 minutes (healthy)   0.0.0.0:6000->6000/tcp, [::]:6000->6000/tcp
+shared-frontend          Up 16 minutes             0.0.0.0:3000->80/tcp, [::]:3000->80/tcp
+shared-gateway           Up 16 minutes (healthy)   0.0.0.0:5050->5000/tcp, [::]:5050->5000/tcp
+
+===== Terminal 6: checks through the attractions backend/API =====
+$ curl localhost:5003/health
+{"service":"attractions-backend","status":"ok"}
+
+$ curl localhost:5003/api/attractions/modes
+{"ai_mode":true,"mcp":true,"multi_agent":true,"multi_agent_locked":false,"rag":true}
+
+$ curl localhost:5003/api/attractions/mcp/health
+{"status":"connected"}
+
+$ curl localhost:5003/api/attractions/rag/health
+{"status":"connected"}
+
+$ curl localhost:5003/api/attractions/multi-agent/health
+{"enabled":true,"features":["accommodation","account","attractions","checklist","flight"],"locked":false,"status":"connected"}
+
+$ ollama list
+NAME            ID              SIZE      MODIFIED     
+llama3.1:8b     46e0c10c039e    4.9 GB    2 months ago    
+qwen2.5:0.5b    a8b0c5157701    397 MB    2 months ago    
+
+$ curl -X POST localhost:5003/api/attractions/recommend   (AI-Mode -> local Ollama)
+{"matches":2,"reply":"1. Sydney Opera House Backstage Tour\nReason: This attraction is located in Sydney, falls under the category of Culture, and costs $42.0, which is within the budget of 60 dollars.\n\n2. Bondi to Coogee Coastal Walk\nReason: This attraction is located in Sydney, falls under the category of Sightseeing, and costs $0.0, which is within the budget of 60 dollars.","requirements":{"budget":60,"category":null,"city":"Sydney","preferences":["outdoors","cheap"]}}
+
+
+$ curl -X POST localhost:5003/api/attractions/mcp/top-rated   (MCP tool)
+{"result":{"content":["{\n  \"status\": \"success\",\n  \"feature\": \"attractions\",\n  \"tool\": \"get_top_rated_attractions\",\n  \"input\": {\n    \"city\": \"Sydney\",\n    \"limit\": 3\n  },\n  \"count\": 3,\n  \"results\": [\n    {\n      \"attraction_id\": 5,\n      \"average_rating\": 4.9,\n      \"category\": \"Adventure\",\n      \"city\": \"Sydney\",\n      \"description\": \"Climb to the summit of the Harbour Bridge for panoramic views of the city.\",\n      \"image_url\": \"https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=600&q=80\",\n      \"na
+
+$ curl -X POST localhost:5003/api/attractions/rag   (grounded RAG)
+{"result":{"answer":"Attraction ratings are calculated based on customer reviews and are typically calculated using a five-star system, which includes a score from 1 to 5. For example, a rating of 4 indicates an average score of 3.4.","citations":[{"authority_tier":"tier_2","chunk_id":"attractions_knowledge_reviews","source_id":"rag-knowledge:attractions"}],"confidence_category":"Low","feature":"attractions","insufficient_context":false,"query":"How are attraction ratings calculated?","retrieval_summary":{"k":5,"retrieval_mode":"vector","retrieved_count":1,"top_chunk":"attractions_knowledge_reviews"},"status":"success"},"status":"success"}
+
+
+===== Terminal 1: MCP server log (tail) =====
+                             d53bcb7a22d14ab6810                               
+                             3ca945d02550d                                     
+INFO:     127.0.0.1:1447 - "POST /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1448 - "POST /mcp HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:1450 - "GET /mcp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:1451 - "POST /mcp HTTP/1.1" 200 OK
+                    INFO     Processing request of type           server.py:733
+                             CallToolRequest                                   
+INFO:     127.0.0.1:1453 - "POST /mcp HTTP/1.1" 200 OK
+                    INFO     Processing request of type           server.py:733
+                             ListToolsRequest                                  
+                    INFO     Terminating session:        streamable_http.py:831
+                             d53bcb7a22d14ab68103ca945d0                       
+                             2550d                                             
+INFO:     127.0.0.1:1454 - "DELETE /mcp HTTP/1.1" 200 OK
+
+===== Terminal 2: RAG server log (tail) =====
+TripAgent Shared RAG HTTP Server: http://localhost:7002
+ * Serving Flask app 'rag_http_server'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:7002
+ * Running on http://192.168.1.9:7002
+Press CTRL+C to quit
+127.0.0.1 - - [23/Oct/2026 01:48:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:48:25] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 02:04:15] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 02:04:42] "POST /rag/answer HTTP/1.1" 200 -
+
+===== Terminal 3: Multi-Agent server log (tail) =====
+127.0.0.1 - - [23/Oct/2026 01:55:12] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:14] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:16] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:18] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:20] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:22] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:24] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:26] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:28] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:30] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:32] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:34] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:36] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:38] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:40] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:42] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+Running reviewer using llama3.1:8b
+127.0.0.1 - - [23/Oct/2026 01:55:44] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:47] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:49] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:52] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:55] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:57] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:55:59] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:56:01] "GET /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:59:12] "GET /workflow/status?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:59:12] "GET /workflow/status?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:59:36] "POST /workflow/4d5f678d-6e84-4ea6-a452-f9938b709fc9/review HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 01:59:37] "GET /workflow/history?feature=attractions HTTP/1.1" 200 -
+127.0.0.1 - - [23/Oct/2026 02:04:15] "GET /health HTTP/1.1" 200 -

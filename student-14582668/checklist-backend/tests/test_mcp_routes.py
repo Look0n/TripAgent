@@ -28,6 +28,7 @@ def client():
 def dependencies(monkeypatch):
     # Simulate enabled mode without contacting the real MCP server.
     monkeypatch.setattr(mcp_client, "MCP_ENABLED", True)
+    monkeypatch.setenv("MCP_LOCKED", "false")
 
     tools = Mock(return_value=[
         {"name": name}

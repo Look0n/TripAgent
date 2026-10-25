@@ -1,9 +1,12 @@
-name: Pre-Trip Checklist Service CI
+name: Pre-Trip Checklist Release 2 CI
 
 on:
   push:
     paths:
       - "student-14582668/**"
+      - "shared/multi-agent-server/**"
+      - "shared/mcp-server/**"
+      - "shared/rag-server/**"
       - "docker-compose.yml"
       - ".github/workflows/student-14582668-ci.yml"
 
@@ -12,8 +15,13 @@ on:
       - main
     paths:
       - "student-14582668/**"
+      - "shared/multi-agent-server/**"
+      - "shared/mcp-server/**"
+      - "shared/rag-server/**"
       - "docker-compose.yml"
       - ".github/workflows/student-14582668-ci.yml"
+
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,10 +30,18 @@ jobs:
   checklist-service-ci:
     name: Test Pre-Trip Checklist Service
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        shell: bash
 
     env:
       MCP_ENABLED: "false"
       RAG_ENABLED: "false"
+      MCP_LOCKED: "true"
+      RAG_LOCKED: "true"
+      MULTI_AGENT_LOCKED: "true"
       OLLAMA_DEFAULT_MODEL: qwen2.5:0.5b
       CHECKLIST_NETWORK: checklist-ci-network
       DATABASE_CONTAINER: checklist-database-ci
@@ -60,6 +76,17 @@ jobs:
           python -m compileall -q student-14582668/checklist-database
           python -m compileall -q student-14582668/checklist-backend
           python -m compileall -q student-14582668/checklist-frontend
+          python -m compileall -q shared/multi-agent-server
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check Checklist JavaScript syntax
+        run: |
+          node --check student-14582668/checklist-frontend/static/js/checklist.js
+          node --check student-14582668/checklist-frontend/static/js/multi_agent.js
 
       # ---------------------------------------------------
       # 4. Run backend unit tests
@@ -69,18 +96,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r student-14582668/checklist-backend/requirements.txt
 
-      - name: Run Checklist pytest
+      # Required Release 2 endpoint functions:
+      # POST /api/checklist-items/multi-agent/workflow -> start_workflow
+      # POST /api/checklist-items/multi-agent/workflow/<uuid>/review -> review_workflow
+      # Tests use mocked dependencies; no local AI server is required on the runner.
+      - name: Test Release 2 workflow creation and human review endpoints
+        working-directory: student-14582668/checklist-backend
+        run: |
+          python -m pytest tests/test_multi_agent_routes.py -v -p no:cacheprovider \
+            --junitxml="$RUNNER_TEMP/checklist-release2-endpoints.xml" \
+            | tee "$RUNNER_TEMP/checklist-release2-endpoints.log"
+
+      - name: Run Checklist regression tests
         working-directory: student-14582668/checklist-backend
         run: |
           python -m pytest tests -v -p no:cacheprovider \
-            --junitxml=pytest-results.xml
+            --ignore=tests/test_multi_agent_routes.py \
+            --junitxml="$RUNNER_TEMP/checklist-regression.xml" \
+            | tee "$RUNNER_TEMP/checklist-regression.log"
 
       - name: Upload Checklist test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: checklist-backend-tests
-          path: student-14582668/checklist-backend/pytest-results.xml
+          name: student-14582668-release2-tests
+          path: |
+            ${{ runner.temp }}/checklist-release2-endpoints.xml
+            ${{ runner.temp }}/checklist-release2-endpoints.log
+            ${{ runner.temp }}/checklist-regression.xml
+            ${{ runner.temp }}/checklist-regression.log
           if-no-files-found: warn
 
       # ---------------------------------------------------
@@ -168,6 +212,9 @@ jobs:
             -e CHECKLIST_DATABASE_URL="http://$DATABASE_CONTAINER:6004" \
             -e MCP_ENABLED=false \
             -e RAG_ENABLED=false \
+            -e MCP_LOCKED=true \
+            -e RAG_LOCKED=true \
+            -e MULTI_AGENT_LOCKED=true \
             -e OLLAMA_URL="http://127.0.0.1:11434/api/generate" \
             -e OLLAMA_MODEL="$OLLAMA_DEFAULT_MODEL" \
             checklist-backend-ci
@@ -189,14 +236,14 @@ jobs:
           docker logs "$BACKEND_CONTAINER"
           exit 1
 
-      - name: Verify MCP and RAG are disabled
+      - name: Verify MCP RAG and Multi-Agent are disabled
         run: |
           docker exec -i "$BACKEND_CONTAINER" python - <<'PY'
           import requests
 
           base = "http://localhost:5004/api/checklist-items"
 
-          for mode in ("mcp", "rag"):
+          for mode in ("mcp", "rag", "multi-agent"):
               response = requests.get(
                   f"{base}/{mode}/status",
                   timeout=5,
@@ -206,6 +253,14 @@ jobs:
               assert payload["enabled"] is False, payload
               assert payload["available"] is False, payload
 
+              response = requests.get(f"{base}/{mode}/mode", timeout=5)
+              assert response.status_code == 200, response.text
+              assert response.json() == {"enabled": False, "locked": True}
+              response = requests.post(
+                  f"{base}/{mode}/mode", json={"enabled": True}, timeout=5,
+              )
+              assert response.status_code == 403, response.text
+
           checks = [
               ("/mcp/call", {
                   "tool": "get_checklist_summary",
@@ -214,6 +269,11 @@ jobs:
               ("/rag/refresh", {}),
               ("/rag/retrieve", {"query": "Checklist priority"}),
               ("/rag/answer", {"query": "Checklist priority"}),
+              ("/multi-agent/workflow", {"user_request": "Review my checklist"}),
+              ("/multi-agent/workflow/bdea8522-da18-408a-9bce-1641e7cdbf67/review", {
+                  "decision": "Accept",
+              }),
+              ("/multi-agent/mode", {"enabled": True}),
           ]
 
           for path, payload in checks:
@@ -226,7 +286,19 @@ jobs:
                   path, response.status_code, response.text
               )
 
-          print("PASS: MCP and RAG are disabled in the CI container.")
+          response = requests.get(f"{base}/multi-agent/mode", timeout=5)
+          assert response.status_code == 200, response.text
+          assert response.json() == {"enabled": False, "locked": True}
+
+          response = requests.get(
+              f"{base}/multi-agent/workflow/bdea8522-da18-408a-9bce-1641e7cdbf67",
+              timeout=5,
+          )
+          assert response.status_code == 403, response.text
+
+          print("PASS: MCP, RAG and Multi-Agent are disabled; Multi-Agent is locked.")
+          # AI recommendation has no OFF gate yet. Its validation test below
+          # does not prove the specification's complete cloud AI-disabled baseline.
           PY
 
       # ---------------------------------------------------
@@ -260,8 +332,15 @@ jobs:
 
       - name: Verify Checklist frontend page
         run: |
-          curl --fail --silent http://localhost:3004/ \
-            | grep --quiet "Pre-Trip Checklist"
+          curl --fail --silent http://localhost:3004/ > "$RUNNER_TEMP/checklist-page.html"
+          grep --quiet "Pre-Trip Checklist" "$RUNNER_TEMP/checklist-page.html"
+          grep --quiet 'id="multi-agent-toggle"' "$RUNNER_TEMP/checklist-page.html"
+          grep --quiet 'id="mcp-toggle"' "$RUNNER_TEMP/checklist-page.html"
+          grep --quiet 'id="rag-toggle"' "$RUNNER_TEMP/checklist-page.html"
+          grep --quiet 'id="multi-agent-review-form"' "$RUNNER_TEMP/checklist-page.html"
+          curl --fail --silent http://localhost:3004/static/js/multi_agent.js \
+            > "$RUNNER_TEMP/checklist-multi-agent.js"
+          node --check "$RUNNER_TEMP/checklist-multi-agent.js"
 
       # ---------------------------------------------------
       # 11. Run API smoke tests
@@ -332,17 +411,38 @@ jobs:
         run: |
           docker ps --filter "name=checklist-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
-      - name: Show Checklist logs on failure
-        if: failure()
+      - name: Collect Checklist container logs
+        if: always()
         run: |
-          echo "===== CHECKLIST DATABASE ====="
-          docker logs "$DATABASE_CONTAINER" || true
+          mkdir -p "$RUNNER_TEMP/checklist-container-logs"
+          for container in "$DATABASE_CONTAINER" "$BACKEND_CONTAINER" "$FRONTEND_CONTAINER"; do
+            if docker inspect "$container" > /dev/null 2>&1; then
+              docker logs "$container" > "$RUNNER_TEMP/checklist-container-logs/$container.log" 2>&1
+            fi
+          done
 
-          echo "===== CHECKLIST BACKEND ====="
-          docker logs "$BACKEND_CONTAINER" || true
+      - name: Upload Checklist container logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-14582668-release2-container-logs
+          path: ${{ runner.temp }}/checklist-container-logs/
+          if-no-files-found: warn
 
-          echo "===== CHECKLIST FRONTEND ====="
-          docker logs "$FRONTEND_CONTAINER" || true
+      - name: Write Release 2 evidence summary
+        if: always()
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## Checklist Release 2 validation
+          - Endpoint 1: `POST /api/checklist-items/multi-agent/workflow` (`start_workflow`).
+          - Endpoint 2: `POST /api/checklist-items/multi-agent/workflow/<uuid>/review` (`review_workflow`).
+          - Endpoint tests mock dependencies; results do not demonstrate real model inference.
+          - JUnit results and pytest logs: `student-14582668-release2-tests` artifact.
+          - Container logs: `student-14582668-release2-container-logs` artifact.
+          - Separate evidence is required for local pre-commit scans, real Multi-Agent execution,
+            agentic-loop reviews and group cloud deployment.
+          - Cloud baseline gap: the AI recommendation route still needs an explicit OFF gate.
+          EOF
 
       # ---------------------------------------------------
       # 13. Clean up only Checklist CI resources

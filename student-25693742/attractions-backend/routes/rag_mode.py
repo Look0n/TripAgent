@@ -6,6 +6,7 @@ import requests
 
 from flask import Blueprint, jsonify, request
 
+from services.feature_flags import rag_enabled
 from services.rag_client import (
     check_rag_health,
     ask_rag,
@@ -48,6 +49,12 @@ def rag_health():
     methods=["POST"],
 )
 def attractions_rag():
+
+    if not rag_enabled():
+        return jsonify({
+            "status": "error",
+            "error": "RAG Mode is disabled."
+        }), 403
     data = request.get_json(silent=True) or {}
 
     question = str(
@@ -103,6 +110,12 @@ def attractions_rag():
 )
 def retrieve_context():
 
+    if not rag_enabled():
+        return jsonify({
+            "status": "error",
+            "error": "RAG Mode is disabled."
+        }), 403
+
     data = request.get_json(
         silent=True
     ) or {}
@@ -145,6 +158,12 @@ def retrieve_context():
     methods=["POST"]
 )
 def refresh_context():
+
+    if not rag_enabled():
+        return jsonify({
+            "status": "error",
+            "error": "RAG Mode is disabled."
+        }), 403
 
     try:
 

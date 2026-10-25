@@ -538,3 +538,51 @@ textarea {
 .rag-panel button:disabled {
     cursor: not-allowed;
 }
+
+.multi-agent-panel {
+    margin-top: 24px;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #dbe2ea;
+    border-radius: 12px;
+}
+
+.multi-agent-panel pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: inherit;
+    line-height: 1.6;
+}
+
+.multi-agent-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.mode-toggle[aria-pressed="false"],
+#multi-agent-toggle[aria-pressed="false"] {
+    background: #475569;
+}
+
+.mode-toggle[aria-pressed="true"],
+#multi-agent-toggle[aria-pressed="true"] {
+    background: #15803d;
+}
+
+.multi-agent-panel textarea {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.multi-agent-panel fieldset {
+    margin-top: 20px;
+    padding: 16px;
+    border: 1px solid #dbe2ea;
+    border-radius: 8px;
+}
+
+.multi-agent-panel fieldset button {
+    margin-top: 12px;
+    margin-right: 8px;
+}

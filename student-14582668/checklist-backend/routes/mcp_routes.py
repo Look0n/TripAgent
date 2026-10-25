@@ -4,6 +4,8 @@ from services.mcp_client import (
     MCPClientError,
     call_tool,
     is_mcp_enabled,
+    is_mcp_locked,
+    set_mcp_enabled,
     list_tools,
 )
 
@@ -23,6 +25,25 @@ ALLOWED_TOOL_ARGUMENTS = {
     },
     "get_checklist_summary": set(),
 }
+
+
+@mcp_bp.route("/api/checklist-items/mcp/mode", methods=["GET", "POST"])
+def mcp_mode():
+    if request.method == "POST":
+        data = request.get_json(silent=True)
+
+        if not isinstance(data, dict) or type(data.get("enabled")) is not bool:
+            return jsonify({"error": "enabled must be true or false"}), 400
+
+        if data["enabled"] and is_mcp_locked():
+            return jsonify({"error": "MCP mode is locked"}), 403
+
+        set_mcp_enabled(data["enabled"])
+
+    return jsonify({
+        "enabled": is_mcp_enabled(),
+        "locked": is_mcp_locked(),
+    }), 200
 
 
 @mcp_bp.get("/api/checklist-items/mcp/status")
