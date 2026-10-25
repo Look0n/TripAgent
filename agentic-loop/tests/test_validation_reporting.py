@@ -1,3 +1,4 @@
+import pytest
 import json
 from pathlib import Path
 
@@ -43,9 +44,9 @@ def test_default_all_saves_every_mode(monkeypatch):
     monkeypatch.setattr(orchestrator, "collect_project_context", lambda: {})
     result = {"status": "COMPLETED", "execution_status": "COMPLETED", "validation_status": "PASS", "model_status": "COMPLETED", "output_checks": {"format": True}}
     outputs = {}
-    for name in ("db", "endpoints", "architecture", "devops", "mcp", "rag"):
+    for name in ("db", "endpoints", "architecture", "devops", "mcp", "rag", "multi-agent", "testing"):
         outputs[name] = {**result, "marker": name}
-        monkeypatch.setattr(orchestrator, f"run_{name}_pipeline", lambda *args, value=outputs[name], **kwargs: value)
+        monkeypatch.setattr(orchestrator, "run_" + name.replace("-", "_") + "_pipeline", lambda *args, value=outputs[name], **kwargs: value)
     saved = {}
     combined = []
     monkeypatch.setattr(orchestrator, "save_run_report", lambda data, mode: saved.update({mode: data}))
@@ -56,3 +57,8 @@ def test_default_all_saves_every_mode(monkeypatch):
         assert data["checklist"] == outputs[mode]
     assert len(combined) == 1
     assert combined[0]["checklist"]["database_analysis"] == outputs["db"]
+
+
+@pytest.fixture(autouse=True)
+def isolate_cli_mode_switches(monkeypatch):
+    monkeypatch.setattr(orchestrator, "run_with_mode", lambda service, feature, mode, pipeline: pipeline())

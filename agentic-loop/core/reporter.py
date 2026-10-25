@@ -7,17 +7,18 @@ from uuid import uuid4
 
 
 def save_run_report(data, mode="db"):
-    if mode not in ("db", "endpoints", "architecture", "devops", "mcp", "rag"):
+    if mode not in ("db", "endpoints", "architecture", "devops", "mcp", "rag", "multi-agent", "testing"):
         raise ValueError("Unsupported report mode")
     directory = Path(__file__).resolve().parents[2] / "docs" / "evidence" / "agentic-loop" / "runs"
     directory.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     path = directory / f"{mode}-{timestamp}-{uuid4().hex[:8]}.json"
-    if mode in ("mcp", "rag"):
-        data = {"run_id": path.stem, "mode": mode, "source": "live-services", "repository": repository_state(), "results": sanitise(data)}
+    if mode in ("mcp", "rag", "multi-agent", "testing"):
+        source = {"multi-agent": "read-only-workflow-db", "testing": "supplied-testing-evidence"}.get(mode, "live-services")
+        data = {"run_id": path.stem, "mode": mode, "source": source, "repository": repository_state(), "results": sanitise(data)}
     with path.open("x", encoding="utf-8") as stream:
         json.dump(data, stream, indent=2, ensure_ascii=False)
-    if mode in ("mcp", "rag"):
+    if mode in ("mcp", "rag", "multi-agent", "testing"):
         with path.with_suffix(".md").open("x", encoding="utf-8") as stream:
             stream.write(validation_markdown(data))
     print(f"[REPORTER] Report saved to {path}", flush=True)
@@ -50,8 +51,12 @@ def validation_markdown(data):
     lines = [f"# {data['mode'].upper()} validation", "", f"Run: {data['run_id']}", f"Repository: {json.dumps(data['repository'])}", "", "Automated checks and model opinions are separate. Human approval is not implied.", ""]
     for feature, result in data["results"].items():
         lines.extend([f"## {feature}", "", f"Execution: {result.get('execution_status')}", f"Validation: {result.get('validation_status')}", f"Models: {result.get('model_status')}", ""])
+        if result.get("feature_mode"):
+            lines.extend(["Feature switch: " + json.dumps(result["feature_mode"]), ""])
         for item in result.get("evidence", {}).get("checks", []):
             lines.append(f"- {item['status']}: {item['id']}")
+            if data["mode"] in ("multi-agent", "testing") and item.get("detail"):
+                lines.append(f"  Detail: {item['detail']}")
         for query in result.get("evidence", {}).get("queries", []):
             lines.extend(["", f"Query: {query['case']['query']}", f"Metrics: {json.dumps(query.get('metrics', {}))}"])
         lines.extend(["", "### Implementation", "", result.get("impl", "Not run"), "", "### Review", "", result.get("review", "Not run"), "", "### Limitations", ""])

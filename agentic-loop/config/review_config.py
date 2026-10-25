@@ -3,6 +3,15 @@ import os
 IMPLEMENTATION_MODEL = "qwen2.5:0.5b"
 REVIEW_MODEL = "llama3.1:8b"
 
+MULTI_AGENT_PROMPTS = {
+    "implementation": "implementation/multi_agent_implementation_prompt.txt",
+    "review": "review/multi_agent_review_prompt.txt",
+}
+TESTING_PROMPTS = {
+    "implementation": "implementation/testing_implementation_prompt.txt",
+    "review": "review/testing_review_prompt.txt",
+}
+
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
 OLLAMA_TIMEOUT_SECONDS = 180
 
