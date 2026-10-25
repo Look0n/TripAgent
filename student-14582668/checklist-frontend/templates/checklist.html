@@ -192,9 +192,14 @@
         <section class="mcp-panel" aria-labelledby="mcp-heading">
             <div class="section-heading">
                 <h2 id="mcp-heading">MCP checklist tools</h2>
-                <button id="mcp-status-button" type="button">
-                    Check connection
-                </button>
+                <div class="multi-agent-controls">
+                    <button id="mcp-toggle" class="mode-toggle" type="button" aria-pressed="false" disabled>
+                        MCP: OFF
+                    </button>
+                    <button id="mcp-status-button" type="button">
+                        Check connection
+                    </button>
+                </div>
             </div>
 
             <p id="mcp-status" role="status" aria-live="polite">
@@ -256,9 +261,14 @@
         <section class="rag-panel" aria-labelledby="rag-heading">
             <div class="section-heading">
                 <h2 id="rag-heading">Checklist knowledge assistant</h2>
-                <button id="rag-status-button" type="button">
-                    Check connection
-                </button>
+                <div class="multi-agent-controls">
+                    <button id="rag-toggle" class="mode-toggle" type="button" aria-pressed="false" disabled>
+                        RAG: OFF
+                    </button>
+                    <button id="rag-status-button" type="button">
+                        Check connection
+                    </button>
+                </div>
             </div>
 
             <p>
@@ -295,9 +305,14 @@
         <section class="multi-agent-panel" aria-labelledby="multi-agent-heading">
             <div class="section-heading">
                 <h2 id="multi-agent-heading">Pre-trip preparation review</h2>
+                <div class="multi-agent-controls">
+                <button id="multi-agent-toggle" type="button" aria-pressed="false" disabled>
+                    Multi-Agent: OFF
+                </button>
                 <button id="multi-agent-connection" type="button">
                     Check connection
                 </button>
+                </div>
             </div>
 
             <p>

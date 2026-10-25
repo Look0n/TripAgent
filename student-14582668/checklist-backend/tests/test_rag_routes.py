@@ -21,6 +21,7 @@ def client():
 @pytest.fixture(autouse=True)
 def dependencies(monkeypatch):
     monkeypatch.setattr(rag_client, "RAG_ENABLED", True)
+    monkeypatch.setenv("RAG_LOCKED", "false")
 
     health_response = Mock()
     health_response.raise_for_status.return_value = None

@@ -7,6 +7,7 @@ const multiAgentForm = document.getElementById("multi-agent-form");
 const multiAgentRequest = document.getElementById("multi-agent-request");
 const multiAgentStart = document.getElementById("multi-agent-start");
 const multiAgentConnection = document.getElementById("multi-agent-connection");
+const multiAgentToggle = document.getElementById("multi-agent-toggle");
 const multiAgentStatus = document.getElementById("multi-agent-status");
 const multiAgentResults = document.getElementById("multi-agent-results");
 const multiAgentRefresh = document.getElementById("multi-agent-refresh");
@@ -15,6 +16,9 @@ const multiAgentReviewFields = document.getElementById("multi-agent-review-field
 const multiAgentCorrection = document.getElementById("multi-agent-correction");
 
 let multiAgentAvailable = false;
+let multiAgentEnabled = false;
+let multiAgentLocked = false;
+let multiAgentModeKnown = false;
 let multiAgentBusy = false;
 let multiAgentWorkflow = null;
 let multiAgentTimer = null;
@@ -39,12 +43,18 @@ function updateMultiAgentButtons() {
         !multiAgentAvailable || multiAgentBusy || active;
 
     multiAgentConnection.disabled = multiAgentBusy;
+    multiAgentToggle.disabled = multiAgentBusy || !multiAgentModeKnown || multiAgentLocked;
+    multiAgentToggle.textContent = `Multi-Agent: ${multiAgentEnabled ? "ON" : "OFF"}`;
+    multiAgentToggle.setAttribute("aria-pressed", String(multiAgentEnabled));
+    multiAgentToggle.title = multiAgentLocked
+        ? "Multi-Agent mode is locked by the administrator."
+        : "Turn Checklist Multi-Agent mode on or off.";
 
     multiAgentRefresh.disabled =
-        multiAgentBusy || !multiAgentWorkflow;
+        !multiAgentEnabled || multiAgentBusy || !multiAgentWorkflow;
 
     multiAgentReviewFields.disabled =
-        multiAgentBusy || status !== "pending_review";
+        !multiAgentEnabled || multiAgentBusy || status !== "pending_review";
 }
 
 
@@ -93,7 +103,7 @@ function renderMultiAgentWorkflow(workflow) {
 function scheduleMultiAgentPoll() {
     stopMultiAgentPolling();
 
-    if (!["queued", "running"].includes(multiAgentWorkflow?.status)) {
+    if (!multiAgentEnabled || !["queued", "running"].includes(multiAgentWorkflow?.status)) {
         return;
     }
 
@@ -121,6 +131,14 @@ async function checkMultiAgentConnection() {
     updateMultiAgentButtons();
 
     try {
+        const mode = await apiRequest(`${MULTI_AGENT_URL}/mode`);
+        applyMultiAgentMode(mode);
+
+        if (!multiAgentEnabled) {
+            showMultiAgentOff();
+            return;
+        }
+
         const result = await apiRequest(
             `${MULTI_AGENT_URL}/status`
         );
@@ -143,8 +161,70 @@ async function checkMultiAgentConnection() {
 }
 
 
+function applyMultiAgentMode(mode) {
+    multiAgentEnabled = mode.enabled === true;
+    multiAgentLocked = mode.locked === true;
+    multiAgentModeKnown = true;
+    multiAgentAvailable = false;
+
+    if (!multiAgentEnabled) {
+        stopMultiAgentPolling();
+    }
+}
+
+
+function showMultiAgentOff() {
+    setMultiAgentStatus(
+        multiAgentLocked
+            ? "Multi-Agent mode is OFF and locked by the administrator."
+            : "Multi-Agent mode is OFF. Turn it ON to start a review. " +
+              "Switching OFF does not cancel a workflow already running on the server."
+    );
+}
+
+
+async function toggleMultiAgentMode() {
+    if (multiAgentBusy || !multiAgentModeKnown || multiAgentLocked) {
+        return;
+    }
+
+    stopMultiAgentPolling();
+    multiAgentBusy = true;
+    updateMultiAgentButtons();
+    let succeeded = false;
+
+    try {
+        const mode = await apiRequest(`${MULTI_AGENT_URL}/mode`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({enabled: !multiAgentEnabled})
+        });
+        applyMultiAgentMode(mode);
+        succeeded = true;
+        if (!multiAgentEnabled) {
+            showMultiAgentOff();
+        }
+    } catch (error) {
+        setMultiAgentStatus(`${error.message} Use Check connection to refresh the mode.`);
+    } finally {
+        multiAgentBusy = false;
+        updateMultiAgentButtons();
+    }
+
+    if (succeeded && multiAgentEnabled) {
+        await checkMultiAgentConnection();
+        if (multiAgentAvailable && multiAgentWorkflow) {
+            multiAgentDeadline = Date.now() + MULTI_AGENT_WAIT_MS;
+            await refreshMultiAgentWorkflow();
+        }
+    } else if (!succeeded) {
+        scheduleMultiAgentPoll();
+    }
+}
+
+
 async function refreshMultiAgentWorkflow() {
-    if (multiAgentBusy || !multiAgentWorkflow) {
+    if (!multiAgentEnabled || multiAgentBusy || !multiAgentWorkflow) {
         return;
     }
 
@@ -230,6 +310,7 @@ multiAgentReviewForm.addEventListener("submit", async event => {
     event.preventDefault();
 
     if (
+        !multiAgentEnabled ||
         multiAgentBusy ||
         multiAgentWorkflow?.status !== "pending_review"
     ) {
@@ -285,6 +366,8 @@ multiAgentConnection.addEventListener(
     "click",
     checkMultiAgentConnection
 );
+
+multiAgentToggle.addEventListener("click", toggleMultiAgentMode);
 
 multiAgentRefresh.addEventListener("click", () => {
     multiAgentDeadline = Date.now() + MULTI_AGENT_WAIT_MS;

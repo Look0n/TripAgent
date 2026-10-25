@@ -5,6 +5,8 @@ from services.rag_client import (
     answer_question,
     check_rag_status,
     is_rag_enabled,
+    is_rag_locked,
+    set_rag_enabled,
     refresh_checklist_corpus,
     retrieve_context,
 )
@@ -15,6 +17,25 @@ rag_bp = Blueprint(
     __name__,
     url_prefix="/api/checklist-items/rag",
 )
+
+
+@rag_bp.route("/mode", methods=["GET", "POST"])
+def rag_mode():
+    if request.method == "POST":
+        data = request.get_json(silent=True)
+
+        if not isinstance(data, dict) or type(data.get("enabled")) is not bool:
+            return jsonify({"error": "enabled must be true or false"}), 400
+
+        if data["enabled"] and is_rag_locked():
+            return jsonify({"error": "RAG mode is locked"}), 403
+
+        set_rag_enabled(data["enabled"])
+
+    return jsonify({
+        "enabled": is_rag_enabled(),
+        "locked": is_rag_locked(),
+    }), 200
 
 
 @rag_bp.get("/status")

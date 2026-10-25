@@ -547,18 +547,28 @@ loadChecklist();
 // MCP Connection
 const mcpStatus = document.getElementById("mcp-status");
 const mcpResults = document.getElementById("mcp-results");
+const mcpToggle = document.getElementById("mcp-toggle");
 const mcpStatusButton = document.getElementById("mcp-status-button");
 const mcpListForm = document.getElementById("mcp-list-form");
 const mcpItemForm = document.getElementById("mcp-item-form");
 const mcpSummaryButton = document.getElementById("mcp-summary-button");
 const mcpActionButtons = document.querySelectorAll("[data-mcp-action]");
 
+let mcpEnabled = false;
+let mcpLocked = false;
+let mcpModeKnown = false;
 let mcpAvailable = false;
 let mcpBusy = false;
 
 
 function updateMcpButtons() {
     mcpStatusButton.disabled = mcpBusy;
+    mcpToggle.disabled = mcpBusy || !mcpModeKnown || mcpLocked;
+    mcpToggle.textContent = `MCP: ${mcpEnabled ? "ON" : "OFF"}`;
+    mcpToggle.setAttribute("aria-pressed", String(mcpEnabled));
+    mcpToggle.title = mcpLocked
+        ? "MCP mode is locked by the administrator."
+        : "Turn Checklist MCP mode on or off.";
 
     mcpActionButtons.forEach(button => {
         button.disabled = mcpBusy || !mcpAvailable;
@@ -583,6 +593,13 @@ async function checkMcpConnection() {
     setMcpStatus("Checking MCP connection...");
 
     try {
+        const mode = await apiRequest(`${API_URL}/mcp/mode`);
+        applyMcpMode(mode);
+        if (!mcpEnabled) {
+            showMcpOff();
+            return;
+        }
+
         const result = await apiRequest(`${API_URL}/mcp/status`);
 
         mcpAvailable = result.enabled === true
@@ -619,7 +636,7 @@ function renderMcpItem(item) {
         makeElement(
             "p",
             "",
-            `${item.item_type} · ${item.priority || "No priority"} · `
+            `${item.item_type} 쨌 ${item.priority || "No priority"} 쨌 `
             + (item.is_completed ? "Completed" : "Pending")
         )
     );
@@ -720,6 +737,59 @@ async function runMcpTool(toolName, argumentsObject = {}) {
 }
 
 
+function applyMcpMode(mode) {
+    mcpEnabled = mode.enabled === true;
+    mcpLocked = mode.locked === true;
+    mcpModeKnown = true;
+    mcpAvailable = false;
+}
+
+
+function showMcpOff() {
+    clearElement(mcpResults);
+    setMcpStatus(
+        mcpLocked
+            ? "MCP mode is OFF and locked by the administrator."
+            : "MCP mode is OFF. Turn it ON to use this feature."
+    );
+}
+
+
+async function toggleMcpMode() {
+    if (mcpBusy || !mcpModeKnown || mcpLocked) {
+        return;
+    }
+
+    mcpBusy = true;
+    updateMcpButtons();
+    let succeeded = false;
+
+    try {
+        const mode = await apiRequest(`${API_URL}/mcp/mode`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({enabled: !mcpEnabled})
+        });
+        applyMcpMode(mode);
+        succeeded = true;
+        if (!mcpEnabled) {
+            showMcpOff();
+        }
+    } catch (error) {
+        setMcpStatus(`${error.message} Use Check connection to refresh the mode.`, true);
+    } finally {
+        mcpBusy = false;
+        updateMcpButtons();
+    }
+
+    if (succeeded && mcpEnabled) {
+        await checkMcpConnection();
+    }
+}
+
+
+mcpToggle.addEventListener("click", toggleMcpMode);
+
 mcpStatusButton.addEventListener("click", checkMcpConnection);
 
 mcpListForm.addEventListener("submit", event => {
@@ -767,6 +837,7 @@ mcpSummaryButton.addEventListener("click", () => {
 checkMcpConnection();
 
 const ragStatus = document.getElementById("rag-status");
+const ragToggle = document.getElementById("rag-toggle");
 const ragStatusButton = document.getElementById("rag-status-button");
 const ragForm = document.getElementById("rag-form");
 const ragQuery = document.getElementById("rag-query");
@@ -776,12 +847,21 @@ const ragAnswer = document.getElementById("rag-answer");
 const ragConfidence = document.getElementById("rag-confidence");
 const ragCitations = document.getElementById("rag-citations");
 
+let ragEnabled = false;
+let ragLocked = false;
+let ragModeKnown = false;
 let ragAvailable = false;
 let ragBusy = false;
 
 
 function updateRagButtons() {
     ragStatusButton.disabled = ragBusy;
+    ragToggle.disabled = ragBusy || !ragModeKnown || ragLocked;
+    ragToggle.textContent = `RAG: ${ragEnabled ? "ON" : "OFF"}`;
+    ragToggle.setAttribute("aria-pressed", String(ragEnabled));
+    ragToggle.title = ragLocked
+        ? "RAG mode is locked by the administrator."
+        : "Turn Checklist RAG mode on or off.";
     ragAskButton.disabled = ragBusy || !ragAvailable;
     ragQuery.disabled = ragBusy;
 }
@@ -812,6 +892,13 @@ async function checkRagConnection() {
     setRagStatus("Checking RAG connection...");
 
     try {
+        const mode = await apiRequest(`${API_URL}/rag/mode`);
+        applyRagMode(mode);
+        if (!ragEnabled) {
+            showRagOff();
+            return;
+        }
+
         const result = await apiRequest(`${API_URL}/rag/status`);
 
         ragAvailable = result.enabled === true
@@ -874,6 +961,59 @@ function renderRagAnswer(result) {
     ragResults.hidden = false;
 }
 
+
+function applyRagMode(mode) {
+    ragEnabled = mode.enabled === true;
+    ragLocked = mode.locked === true;
+    ragModeKnown = true;
+    ragAvailable = false;
+}
+
+
+function showRagOff() {
+    clearRagResult();
+    setRagStatus(
+        ragLocked
+            ? "RAG mode is OFF and locked by the administrator."
+            : "RAG mode is OFF. Turn it ON to use this feature."
+    );
+}
+
+
+async function toggleRagMode() {
+    if (ragBusy || !ragModeKnown || ragLocked) {
+        return;
+    }
+
+    ragBusy = true;
+    updateRagButtons();
+    let succeeded = false;
+
+    try {
+        const mode = await apiRequest(`${API_URL}/rag/mode`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({enabled: !ragEnabled})
+        });
+        applyRagMode(mode);
+        succeeded = true;
+        if (!ragEnabled) {
+            showRagOff();
+        }
+    } catch (error) {
+        setRagStatus(`${error.message} Use Check connection to refresh the mode.`, true);
+    } finally {
+        ragBusy = false;
+        updateRagButtons();
+    }
+
+    if (succeeded && ragEnabled) {
+        await checkRagConnection();
+    }
+}
+
+
+ragToggle.addEventListener("click", toggleRagMode);
 
 ragStatusButton.addEventListener("click", checkRagConnection);
 

@@ -6,17 +6,29 @@ MULTI_AGENT_SERVICE_URL = os.getenv("MULTI_AGENT_SERVICE_URL", "http://localhost
 
 MULTI_AGENT_TIMEOUT_SECONDS = float(os.getenv("MULTI_AGENT_SERVICE_TIMEOUT_SECONDS", "12"))
 
+# Checklist starts OFF. This switch belongs to this backend process only.
+MULTI_AGENT_ENABLED = False
+
 class MultiAgentClientError(RuntimeError):
     def __init__(self, message, status_code=503):
         super().__init__(message)
         self.status_code = status_code
 
 def is_multi_agent_enabled():
-    enabled = os.getenv("MULTI_AGENT_ENABLED", "false").lower() in ("true", "1", "yes", "on")
+    return MULTI_AGENT_ENABLED and not is_multi_agent_locked()
 
-    locked = os.getenv("MULTI_AGENT_LOCKED", "false").lower() in ("true", "1", "yes", "on")
 
-    return enabled and not locked
+def is_multi_agent_locked():
+    return os.getenv("MULTI_AGENT_LOCKED", "false").lower() in ("true", "1", "yes", "on")
+
+
+def set_multi_agent_enabled(enabled):
+    global MULTI_AGENT_ENABLED
+
+    if enabled and is_multi_agent_locked():
+        raise MultiAgentClientError("Multi-Agent mode is locked", 403)
+
+    MULTI_AGENT_ENABLED = enabled
 
 def call_server(method, path, params=None, payload=None):
     if not is_multi_agent_enabled():

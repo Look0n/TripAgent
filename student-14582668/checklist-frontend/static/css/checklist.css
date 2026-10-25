@@ -554,6 +554,22 @@ textarea {
     line-height: 1.6;
 }
 
+.multi-agent-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.mode-toggle[aria-pressed="false"],
+#multi-agent-toggle[aria-pressed="false"] {
+    background: #475569;
+}
+
+.mode-toggle[aria-pressed="true"],
+#multi-agent-toggle[aria-pressed="true"] {
+    background: #15803d;
+}
+
 .multi-agent-panel textarea {
     box-sizing: border-box;
     width: 100%;

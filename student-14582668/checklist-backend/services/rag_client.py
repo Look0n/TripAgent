@@ -6,10 +6,8 @@ RAG_SERVICE_URL = os.getenv(
     "http://localhost:7002",
 ).rstrip("/")
 
-RAG_ENABLED = os.getenv(
-    "RAG_ENABLED",
-    "true",
-).strip().lower() in ("1", "true", "yes", "on")
+# Checklist starts OFF; the UI controls this backend process only.
+RAG_ENABLED = False
 
 RAG_TIMEOUT_SECONDS = 150
 
@@ -21,7 +19,16 @@ class RAGClientError(RuntimeError):
 
 
 def is_rag_enabled() -> bool:
-    return RAG_ENABLED
+    return RAG_ENABLED and not is_rag_locked()
+
+
+def is_rag_locked() -> bool:
+    return os.getenv("RAG_LOCKED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+def set_rag_enabled(enabled: bool) -> None:
+    global RAG_ENABLED
+    RAG_ENABLED = enabled
 
 
 def check_rag_status() -> dict:

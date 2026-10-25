@@ -1,7 +1,10 @@
 from flask import Blueprint, jsonify, request
 
 from services.checklist_context import (ChecklistContextError, build_checklist_context,)
-from services.multi_agent_client import (MultiAgentClientError, call_server, is_multi_agent_enabled,)
+from services.multi_agent_client import (
+    MultiAgentClientError, call_server, is_multi_agent_enabled,
+    is_multi_agent_locked, set_multi_agent_enabled,
+)
 
 multi_agent_bp = Blueprint("checklist_multi_agent", __name__, url_prefix="/api/checklist-items/multi-agent",)
 
@@ -29,7 +32,7 @@ def handle_service_error(exc):
 
 @multi_agent_bp.before_request
 def require_enabled_mode():
-    if request.endpoint == "checklist_multi_agent.status":
+    if request.endpoint in ("checklist_multi_agent.status", "checklist_multi_agent.mode"):
         return None
 
     if not is_multi_agent_enabled():
@@ -38,6 +41,22 @@ def require_enabled_mode():
         }), 403
 
     return None
+
+@multi_agent_bp.route("/mode", methods=["GET", "POST"])
+def mode():
+    if request.method == "POST":
+        data = request.get_json(silent=True)
+
+        if not isinstance(data, dict) or type(data.get("enabled")) is not bool:
+            return jsonify({"error": "enabled must be true or false"}), 400
+
+        set_multi_agent_enabled(data["enabled"])
+
+    return jsonify({
+        "enabled": is_multi_agent_enabled(),
+        "locked": is_multi_agent_locked(),
+    }), 200
+
 
 def validate_workflow(result, expected_id=None):
     workflow_id = result.get("workflow_id")

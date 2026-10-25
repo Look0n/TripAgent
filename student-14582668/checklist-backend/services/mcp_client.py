@@ -12,10 +12,8 @@ MCP_SERVER_URL = os.getenv(
     "http://localhost:7001/mcp",
 )
 
-MCP_ENABLED = os.getenv(
-    "MCP_ENABLED",
-    "true",
-).strip().lower() in ("1", "true", "yes", "on")
+# Checklist starts OFF; the UI controls this backend process only.
+MCP_ENABLED = False
 
 MCP_TIMEOUT_SECONDS = 20
 
@@ -25,7 +23,16 @@ class MCPClientError(RuntimeError):
 
 
 def is_mcp_enabled() -> bool:
-    return MCP_ENABLED
+    return MCP_ENABLED and not is_mcp_locked()
+
+
+def is_mcp_locked() -> bool:
+    return os.getenv("MCP_LOCKED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+def set_mcp_enabled(enabled: bool) -> None:
+    global MCP_ENABLED
+    MCP_ENABLED = enabled
 
 
 def _normalise_tool_result(result: Any) -> Any:
