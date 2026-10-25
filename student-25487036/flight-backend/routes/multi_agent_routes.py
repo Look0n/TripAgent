@@ -167,6 +167,50 @@ def update_mode():
     })
 
 
+def render_mode_control():
+    """HTML for the Multi-Agent mode switch shown in the flight frontend."""
+    if mode_locked():
+        return (
+            '<p class="warning">Multi-Agent mode is <strong>locked off</strong>'
+            ' by deployment configuration and cannot be enabled here.</p>'
+        )
+
+    enabled = mode_enabled()
+    state = "ON" if enabled else "OFF"
+    requested = "false" if enabled else "true"
+    label = "Turn Multi-Agent off" if enabled else "Turn Multi-Agent on"
+
+    return (
+        f'<p>Multi-Agent mode is <strong>{state}</strong>. It starts off on'
+        ' every backend restart as a deployment control.</p>'
+        '<button type="button" class="primary-button"'
+        ' hx-post="/api/flight/multi-agent/mode/html"'
+        f" hx-vals='{{\"enabled\": \"{requested}\"}}'"
+        ' hx-target="#multi-agent-mode"'
+        f' hx-swap="innerHTML">{label}</button>'
+    )
+
+
+@multi_agent_bp.get("/api/flight/multi-agent/mode/html")
+def mode_html():
+    return render_mode_control(), 200, HTML_HEADERS
+
+
+@multi_agent_bp.post("/api/flight/multi-agent/mode/html")
+def update_mode_html():
+    requested = request.form.get("enabled", "").lower() in (
+        "true",
+        "1",
+        "yes",
+        "on",
+    )
+
+    if not (mode_locked() and requested):
+        set_mode_enabled(requested)
+
+    return render_mode_control(), 200, HTML_HEADERS
+
+
 @multi_agent_bp.get("/api/flight/multi-agent/status")
 def status():
     result = check_status()

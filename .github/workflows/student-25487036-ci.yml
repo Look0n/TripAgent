@@ -228,6 +228,18 @@ jobs:
 
           echo "AI-Mode, MCP and RAG correctly retained and disabled during CI"
 
+          echo "Re-enabling AI-Mode so the agentic workflow stages can be validated"
+          curl -sf -X PUT http://127.0.0.1:5005/api/flight/ai/mode \
+            -H "Content-Type: application/json" \
+            -d '{"enabled": true}' > /dev/null
+          AI_MODE=$(curl -sf http://127.0.0.1:5005/api/flight/ai/mode \
+            | python -c "import json,sys; print(json.load(sys.stdin)['enabled'])")
+          if [ "${AI_MODE}" != "True" ]; then
+            echo "Expected AI-Mode enabled after the runtime toggle, got ${AI_MODE}"
+            exit 1
+          fi
+          echo "AI-Mode runtime toggle confirmed"
+
       - name: Verify Multi-Agent is locked off during CI
         run: |
           echo "Confirming Multi-Agent mode reports locked"

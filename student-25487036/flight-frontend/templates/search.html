@@ -9,6 +9,18 @@
     <link rel="stylesheet" href="/flight/css/styles.css">
 
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script>
+        // HTMX discards non-2xx responses by default, which hid the backend's
+        // "Multi-Agent mode is OFF" message and made the button look dead.
+        document.addEventListener("DOMContentLoaded", function () {
+            document.body.addEventListener("htmx:beforeSwap", function (event) {
+                if (event.detail.xhr.status === 403) {
+                    event.detail.shouldSwap = true;
+                    event.detail.isError = false;
+                }
+            });
+        });
+    </script>
 
     <style>
         .htmx-indicator { display: none; }
@@ -276,6 +288,16 @@
             flight database, and a Reviewer checks that result against the
             evidence. The workflow then pauses for human review.
         </p>
+
+        <div
+            id="multi-agent-mode"
+            class="multi-agent-mode"
+            hx-get="/api/flight/multi-agent/mode/html"
+            hx-trigger="load"
+            hx-swap="innerHTML"
+        >
+            <p>Checking Multi-Agent mode...</p>
+        </div>
 
         <form
             hx-post="/api/flight/multi-agent/workflow/html"
