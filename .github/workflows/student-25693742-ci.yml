@@ -9,6 +9,8 @@ on:
       - "student-25693742/**"
       - "shared/mcp-server/**"
       - "shared/rag-server/**"
+      # Release 2: shared Multi-Agent Server (attractions prompts live here)
+      - "shared/multi-agent-server/**"
       - "docker-compose.yml"
       - ".github/workflows/student-25693742-ci.yml"
 
@@ -20,8 +22,12 @@ on:
       - "student-25693742/**"
       - "shared/mcp-server/**"
       - "shared/rag-server/**"
+      # Release 2: shared Multi-Agent Server (attractions prompts live here)
+      - "shared/multi-agent-server/**"
       - "docker-compose.yml"
       - ".github/workflows/student-25693742-ci.yml"
+
+  workflow_dispatch:
 
 
 jobs:
@@ -29,10 +35,13 @@ jobs:
     name: Test Attractions Service
     runs-on: ubuntu-latest
 
-    # Release 1 CI: retain MCP/RAG integration but disable local services during CI
+    # Release 2 CI: keep AI-Mode, MCP, RAG and Multi-Agent integrated in the
+    # code but disabled/locked, matching the cloud baseline.
     env:
+      AI_MODE_ENABLED: "false"
       MCP_ENABLED: "false"
       RAG_ENABLED: "false"
+      MULTI_AGENT_LOCKED: "true"
 
     steps:
 
@@ -65,6 +74,34 @@ jobs:
       - name: Check database Python syntax
         run: |
           python -m compileall student-25693742/attractions-database
+
+
+      # ---------------------------------------------------
+      # 3b. Release 2 post-commit endpoint tests
+      #     Endpoint function 1: GET  /api/attractions (list/search)
+      #     Endpoint function 2: POST /api/attractions (create)
+      #     plus Multi-Agent route tests (database and server stubbed)
+      # ---------------------------------------------------
+
+      - name: Install backend test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r student-25693742/attractions-backend/requirements.txt
+
+      - name: Run post-commit endpoint tests
+        working-directory: student-25693742/attractions-backend
+        run: |
+          python -m pytest tests/test_endpoint_functions.py \
+            tests/test_multi_agent_routes.py tests/test_ai_mode.py \
+            -v -p no:cacheprovider --junitxml=endpoint-test-results.xml
+
+      - name: Upload endpoint test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-25693742-endpoint-tests
+          path: student-25693742/attractions-backend/endpoint-test-results.xml
+          if-no-files-found: warn
 
 
       # ---------------------------------------------------
@@ -158,7 +195,7 @@ jobs:
 
 
       # ---------------------------------------------------
-      # 9b. Verify Release 1 CI configuration
+      # 9b. Verify Release 2 CI / cloud baseline configuration
       # ---------------------------------------------------
 
       - name: Verify MCP and RAG are disabled in CI
@@ -176,6 +213,29 @@ jobs:
           test "$RAG_VALUE" = "false"
 
           echo "MCP and RAG are correctly disabled for CI"
+
+      - name: Verify AI-Mode, MCP, RAG and Multi-Agent are off
+        run: |
+          MODES=$(curl -sf http://localhost:5003/api/attractions/modes)
+          echo "Service modes: $MODES"
+
+          echo "$MODES" | python -c "import json,sys; d=json.load(sys.stdin); sys.exit(0 if not (d['ai_mode'] or d['mcp'] or d['rag'] or d['multi_agent']) and d['multi_agent_locked'] else 1)"
+
+          expect_403() {
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X "$1" \
+              "http://localhost:5003$2" \
+              -H "Content-Type: application/json" -d "$3")
+            echo "$1 $2 -> $STATUS"
+            test "$STATUS" = "403"
+          }
+
+          expect_403 POST /api/attractions/recommend '{"message":"museum in Paris"}'
+          expect_403 POST /api/attractions/mcp/top-rated '{"city":"Paris"}'
+          expect_403 POST /api/attractions/rag '{"question":"What categories exist?"}'
+          expect_403 PUT /api/attractions/multi-agent/mode '{"enabled":true}'
+          expect_403 POST /api/attractions/multi-agent/workflow '{"user_request":"A museum in Paris"}'
+
+          echo "AI services are integrated but disabled/locked, as in the cloud baseline"
 
 
       # ---------------------------------------------------
@@ -222,6 +282,32 @@ jobs:
         run: |
           curl --fail \
             "http://localhost:5003/api/attractions?city=Paris"
+
+      - name: Live test of the two endpoint functions (list + create)
+        run: |
+          echo "Endpoint 1: GET /api/attractions?city=Paris"
+          COUNT=$(curl -sf "http://localhost:5003/api/attractions?city=Paris" \
+            | python -c "import json,sys; d=json.load(sys.stdin); assert all(a['city']=='Paris' for a in d); print(len(d))")
+          echo "Paris attractions: $COUNT"
+          test "$COUNT" -ge 1
+
+          echo "Endpoint 2: POST /api/attractions"
+          CREATED=$(curl -sf -X POST http://localhost:5003/api/attractions \
+            -H "Content-Type: application/json" \
+            -d '{"name":"CI Harbour Kayak Tour","category":"Adventure","city":"Sydney","price":60,"description":"Created by CI"}')
+          echo "Created: $CREATED"
+          NEW_ID=$(echo "$CREATED" | python -c "import json,sys; print(json.load(sys.stdin)['attraction_id'])")
+
+          curl -sf "http://localhost:5003/api/attractions/$NEW_ID" \
+            | python -c "import json,sys; d=json.load(sys.stdin); assert d['name']=='CI Harbour Kayak Tour'"
+
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:5003/api/attractions \
+            -H "Content-Type: application/json" -d '{"name":"Missing fields"}')
+          echo "Invalid create -> $STATUS"
+          test "$STATUS" = "400"
+
+          curl -sf -X DELETE "http://localhost:5003/api/attractions/$NEW_ID"
+          echo "Both endpoint functions validated against the running services"
 
 
       # ---------------------------------------------------

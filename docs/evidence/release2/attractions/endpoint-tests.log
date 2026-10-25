@@ -1,0 +1,53 @@
+Attractions backend - post-commit endpoint tests (same command as student-25693742-ci.yml)
+Run locally: 2026-10-23 02:00
+
+$ python -m pytest tests/test_endpoint_functions.py tests/test_multi_agent_routes.py tests/test_ai_mode.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.13.0, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\asud\Documents\GitHub\TripAgent\.venv\Scripts\python.exe
+rootdir: C:\Users\asud\Documents\GitHub\TripAgent\student-25693742\attractions-backend
+plugins: anyio-4.15.1, platformdirs-4.13.5
+collecting ... collected 31 items
+
+tests/test_endpoint_functions.py::test_list_attractions_returns_records PASSED [  3%]
+tests/test_endpoint_functions.py::test_list_attractions_forwards_filters PASSED [  6%]
+tests/test_endpoint_functions.py::test_list_attractions_rejects_non_numeric_max_price PASSED [  9%]
+tests/test_endpoint_functions.py::test_list_attractions_returns_503_when_database_unavailable PASSED [ 12%]
+tests/test_endpoint_functions.py::test_create_attraction_returns_201 PASSED [ 16%]
+tests/test_endpoint_functions.py::test_create_attraction_requires_fields[name] PASSED [ 19%]
+tests/test_endpoint_functions.py::test_create_attraction_requires_fields[category] PASSED [ 22%]
+tests/test_endpoint_functions.py::test_create_attraction_requires_fields[city] PASSED [ 25%]
+tests/test_endpoint_functions.py::test_create_attraction_requires_fields[price] PASSED [ 29%]
+tests/test_endpoint_functions.py::test_create_attraction_validates_price[free-price must be a number] PASSED [ 32%]
+tests/test_endpoint_functions.py::test_create_attraction_validates_price[-5-price must not be negative] PASSED [ 35%]
+tests/test_endpoint_functions.py::test_create_attraction_returns_503_when_database_unavailable PASSED [ 38%]
+tests/test_multi_agent_routes.py::test_mode_is_off_by_default PASSED     [ 41%]
+tests/test_multi_agent_routes.py::test_workflow_refused_when_mode_off PASSED [ 45%]
+tests/test_multi_agent_routes.py::test_lock_prevents_enabling PASSED     [ 48%]
+tests/test_multi_agent_routes.py::test_mode_requires_boolean PASSED      [ 51%]
+tests/test_multi_agent_routes.py::test_workflow_sends_database_evidence PASSED [ 54%]
+tests/test_multi_agent_routes.py::test_workflow_requires_request_text PASSED [ 58%]
+tests/test_multi_agent_routes.py::test_workflow_rejects_bad_max_price PASSED [ 61%]
+tests/test_multi_agent_routes.py::test_workflow_without_evidence_is_rejected PASSED [ 64%]
+tests/test_multi_agent_routes.py::test_workflow_database_down_returns_503 PASSED [ 67%]
+tests/test_multi_agent_routes.py::test_server_unavailable_returns_controlled_error PASSED [ 70%]
+tests/test_multi_agent_routes.py::test_review_rejects_unknown_decision[Approve] PASSED [ 74%]
+tests/test_multi_agent_routes.py::test_review_rejects_unknown_decision[] PASSED [ 77%]
+tests/test_multi_agent_routes.py::test_review_rejects_unknown_decision[None] PASSED [ 80%]
+tests/test_multi_agent_routes.py::test_partial_accept_requires_correction PASSED [ 83%]
+tests/test_multi_agent_routes.py::test_review_forwards_human_decision PASSED [ 87%]
+tests/test_multi_agent_routes.py::test_modes_endpoint_reports_ci_baseline PASSED [ 90%]
+tests/test_multi_agent_routes.py::test_disabled_services_refuse_calls PASSED [ 93%]
+tests/test_ai_mode.py::test_recommend_requires_message PASSED            [ 96%]
+tests/test_ai_mode.py::test_recommend_refused_when_ai_mode_disabled PASSED [100%]
+
+============================= 31 passed in 1.92s ==============================
+
+$ DATABASE_API_URL=http://localhost:6003 python -m pytest -v   (full suite, live attractions database)
+tests/test_multi_agent_routes.py::test_review_rejects_unknown_decision[] PASSED [ 85%]
+tests/test_multi_agent_routes.py::test_review_rejects_unknown_decision[None] PASSED [ 88%]
+tests/test_multi_agent_routes.py::test_partial_accept_requires_correction PASSED [ 91%]
+tests/test_multi_agent_routes.py::test_review_forwards_human_decision PASSED [ 94%]
+tests/test_multi_agent_routes.py::test_modes_endpoint_reports_ci_baseline PASSED [ 97%]
+tests/test_multi_agent_routes.py::test_disabled_services_refuse_calls PASSED [100%]
+
+============================= 35 passed in 2.16s ==============================

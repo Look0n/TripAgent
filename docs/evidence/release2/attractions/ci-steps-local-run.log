@@ -1,0 +1,30 @@
+Local run of the student-25693742-ci.yml verification steps
+attractions-backend started with AI_MODE_ENABLED=false MCP_ENABLED=false RAG_ENABLED=false MULTI_AGENT_LOCKED=true
+(identical to the CI job environment); step scripts extracted from the workflow file.
+
+::: STEP: Verify MCP and RAG are disabled in CI
+MCP_ENABLED=false
+RAG_ENABLED=false
+MCP and RAG are correctly disabled for CI
+::: STEP: Verify AI-Mode, MCP, RAG and Multi-Agent are off
+Service modes: {"ai_mode":false,"mcp":false,"multi_agent":false,"multi_agent_locked":true,"rag":false}
+POST /api/attractions/recommend -> 403
+POST /api/attractions/mcp/top-rated -> 403
+POST /api/attractions/rag -> 403
+PUT /api/attractions/multi-agent/mode -> 403
+POST /api/attractions/multi-agent/workflow -> 403
+AI services are integrated but disabled/locked, as in the cloud baseline
+::: STEP: Test get all attractions
+[{"attraction_id":1,"average_rating":4.8,"category":"Sightseeing","city":"Paris","description":"Experience breathtaking views of Paris from the iconic Eiffel Tower.","image_url":"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=600&q=80","name":"Eiffel Tower Summit Tour","price":45.0},{"attraction_id":2,"average_rating":4.5,"category":"Culture","city":"Paris","de
+::: STEP: Test attraction by ID
+{"attraction_id":1,"average_rating":4.8,"category":"Sightseeing","city":"Paris","description":"Experience breathtaking views of Paris from the iconic Eiffel Tower.","image_url":"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=600&q=80","name":"Eiffel Tower Summit Tour","price":45.0,"reviews":[{"attraction_id":1,"comment":"Absolutely stunning views, worth every d
+::: STEP: Test attraction search
+[{"attraction_id":1,"average_rating":4.8,"category":"Sightseeing","city":"Paris","description":"Experience breathtaking views of Paris from the iconic Eiffel Tower.","image_url":"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?auto=format&fit=crop&w=600&q=80","name":"Eiffel Tower Summit Tour","price":45.0},{"attraction_id":2,"average_rating":4.5,"category":"Culture","city":"Paris","de
+::: STEP: Live test of the two endpoint functions (list + create)
+Endpoint 1: GET /api/attractions?city=Paris
+Paris attractions: 3
+Endpoint 2: POST /api/attractions
+Created: {"attraction_id":13,"average_rating":0.0,"category":"Adventure","city":"Sydney","description":"Created by CI","image_url":null,"name":"CI Harbour Kayak Tour","price":60.0}
+Invalid create -> 400
+{"message":"Attraction deleted successfully"}
+Both endpoint functions validated against the running services

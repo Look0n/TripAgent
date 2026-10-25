@@ -418,3 +418,157 @@ body {
     border: 1px solid #cbd5e1;
     border-radius: 8px;
 }
+
+/* ---- Release 2: Multi-Agent panel ---- */
+.ma-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.ma-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.ma-filters {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.ma-filters input,
+.ma-filters select,
+.ma-review textarea {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.ma-status {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.ma-status.error,
+.ai-content .error {
+    color: #b91c1c;
+}
+
+.ma-step {
+    border-left: 3px solid #cbd5e1;
+    padding: 4px 12px;
+    margin-bottom: 10px;
+}
+
+.ma-step.done {
+    border-left-color: #2563eb;
+}
+
+.ma-step-title {
+    font-weight: 600;
+}
+
+.ma-output {
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 0.85rem;
+    margin: 6px 0 0;
+}
+
+.ma-evidence table,
+.ma-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin-top: 8px;
+}
+
+.ma-evidence th,
+.ma-evidence td,
+.ma-history-table th,
+.ma-history-table td {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 4px 6px;
+    text-align: left;
+}
+
+.ma-decision {
+    background: #eff6ff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 8px;
+}
+
+.ma-review {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ma-review.hidden {
+    display: none;
+}
+
+.ma-review h4 {
+    margin: 0;
+}
+
+.ma-review-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-secondary,
+.btn-danger {
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+}
+
+.btn-secondary {
+    background: #d97706;
+}
+
+.btn-danger {
+    background: #dc2626;
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #2563eb;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 12px;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+    .ma-header {
+        flex-direction: column;
+    }
+
+    .ma-filters {
+        grid-template-columns: 1fr;
+    }
+}

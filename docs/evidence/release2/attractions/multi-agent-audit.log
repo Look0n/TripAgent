@@ -1,0 +1,30 @@
+Multi-Agent Server coordination/audit log - feature: attractions
+Source: shared/multi-agent-server/workflow_state.sqlite3 (tables: workflows, audit)
+
+Workflow 693729b5-158b-4712-a622-a646fefe4f7a  final status: completed  duration_ms: 104427
+  Request: A cultural experience in Sydney under $60 that works on a rainy day
+  2026-10-22T14:48:58.674352+00:00  workflow_created         {}
+  2026-10-22T14:49:17.580366+00:00  planner_completed        {}
+  2026-10-22T14:50:26.553225+00:00  worker_completed         {}
+  2026-10-22T14:50:43.120240+00:00  awaiting_human_review    {}
+  2026-10-22T14:50:44.771060+00:00  human_review_recorded    {"decision": "Accept"}
+  Human decision: Accept  correction: -
+
+Workflow d1083015-4fea-400d-a007-f5f728909426  final status: completed  duration_ms: 88293
+  Request: A family-friendly day out in Paris under $100 with great reviews
+  2026-10-22T14:51:32.017268+00:00  workflow_created         {}
+  2026-10-22T14:51:37.702064+00:00  planner_completed        {}
+  2026-10-22T14:52:44.215755+00:00  worker_completed         {}
+  2026-10-22T14:53:00.326576+00:00  awaiting_human_review    {}
+  2026-10-22T14:54:27.552487+00:00  human_review_recorded    {"decision": "Partially Accept"}
+  Human decision: Partially Accept  correction: Keep the Eiffel Tower and Louvre recommendations; drop Disneyland because it is close to the $100 limit for a family.
+
+Workflow 4d5f678d-6e84-4ea6-a452-f9938b709fc9  final status: rejected  duration_ms: 84977
+  Request: An indoor cultural tour in Sydney for a rainy afternoon
+  2026-10-22T14:54:34.707648+00:00  workflow_created         {}
+  2026-10-22T14:54:37.483018+00:00  planner_completed        {}
+  2026-10-22T14:55:43.542459+00:00  worker_completed         {}
+  2026-10-22T14:55:59.694215+00:00  awaiting_human_review    {}
+  2026-10-22T14:59:36.975760+00:00  human_review_recorded    {"decision": "Reject"}
+  Human decision: Reject  correction: Only one Culture attraction exists in Sydney, but the Worker listed it three times and the Reviewer missed the duplicates. Rejected.
+

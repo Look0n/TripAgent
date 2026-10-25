@@ -3,6 +3,7 @@ import json
 import requests
 
 from services.database_api import search_for_recommendation
+from services.feature_flags import ai_mode_enabled
 from services.llm_client import generate_text
 from services.prompt_loader import (
     build_extraction_prompt,
@@ -18,6 +19,11 @@ ai_bp = Blueprint(
 
 @ai_bp.route("/api/attractions/recommend", methods=["POST"])
 def attractions_chat():
+
+    if not ai_mode_enabled():
+        return jsonify({
+            "error": "AI Mode is disabled."
+        }), 403
 
     data = request.get_json(silent=True) or {}
 
