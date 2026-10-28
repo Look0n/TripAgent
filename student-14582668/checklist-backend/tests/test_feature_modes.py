@@ -3,7 +3,7 @@ from unittest.mock import Mock
 import pytest
 
 from app import app
-from services import mcp_client, rag_client, multi_agent_client
+from services import mcp_client, rag_client, multi_agent_client, llm_client
 
 
 @pytest.fixture(params=["mcp", "rag"])
@@ -23,6 +23,7 @@ def client():
 
 
 def test_all_modes_start_off():
+    assert llm_client.AI_MODE_ENABLED is False
     assert mcp_client.MCP_ENABLED is False
     assert rag_client.RAG_ENABLED is False
     assert multi_agent_client.MULTI_AGENT_ENABLED is False
@@ -78,3 +79,33 @@ def test_off_blocks_operations(client, mode):
     ]
     for path, payload in operations:
         assert client.post(f"{base}/{path}", json=payload).status_code == 403
+
+
+@pytest.mark.parametrize("locked", [False, True])
+def test_ai_mode_switch_and_gate(client, monkeypatch, locked):
+    monkeypatch.setattr(llm_client, "AI_MODE_ENABLED", False)
+    monkeypatch.setenv("AI_MODE_LOCKED", str(locked))
+    external = Mock(side_effect=AssertionError("Disabled AI must not call dependencies"))
+    monkeypatch.setattr("routes.ai_mode.generate_text", external)
+    monkeypatch.setattr("routes.ai_mode.database_api.get_checklist_items", external)
+    base = "/api/checklist-items"
+    assert client.get(f"{base}/ai/mode").json == {"enabled": False, "locked": locked}
+    assert client.post(f"{base}/recommend", json={"message": "Travel checklist"}).status_code == 403
+    response = client.post(f"{base}/ai/mode", json={"enabled": True})
+    assert response.status_code == (403 if locked else 200)
+    assert client.get(f"{base}/ai/mode").json["enabled"] is (not locked)
+    if not locked:
+        assert client.post(f"{base}/recommend", json={}).status_code == 400
+    assert client.post(f"{base}/ai/mode", json={"enabled": False}).status_code == 200
+    assert client.post(f"{base}/recommend", json={"message": "Travel checklist"}).status_code == 403
+    if locked:
+        monkeypatch.setattr(llm_client, "AI_MODE_ENABLED", True)
+        assert client.post(f"{base}/recommend", json={"message": "Travel checklist"}).status_code == 403
+    external.assert_not_called()
+
+
+@pytest.mark.parametrize("payload", [{}, [], {"enabled": 1}, {"enabled": "true"}, {"enabled": None}])
+def test_ai_mode_requires_boolean(client, monkeypatch, payload):
+    monkeypatch.setattr(llm_client, "AI_MODE_ENABLED", False)
+    assert client.post("/api/checklist-items/ai/mode", json=payload).status_code == 400
+    assert client.get("/api/checklist-items/ai/mode").json["enabled"] is False

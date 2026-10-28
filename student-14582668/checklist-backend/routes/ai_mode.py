@@ -5,7 +5,12 @@ import requests
 from flask import Blueprint, jsonify, request
 
 from services import database_api
-from services.llm_client import generate_text
+from services.llm_client import (
+    generate_text,
+    is_ai_mode_enabled,
+    is_ai_mode_locked,
+    set_ai_mode_enabled,
+)
 from services.prompt_loader import (
     build_checklist_recommendation_prompt
 )
@@ -29,6 +34,25 @@ VALID_PRIORITIES = {
 }
 
 MAX_SUGGESTIONS = 5
+
+
+@ai_bp.route("/api/checklist-items/ai/mode", methods=["GET", "POST"])
+def ai_mode():
+    if request.method == "POST":
+        data = request.get_json(silent=True)
+
+        if not isinstance(data, dict) or type(data.get("enabled")) is not bool:
+            return jsonify({"error": "enabled must be true or false"}), 400
+
+        if data["enabled"] and is_ai_mode_locked():
+            return jsonify({"error": "AI mode is locked"}), 403
+
+        set_ai_mode_enabled(data["enabled"])
+
+    return jsonify({
+        "enabled": is_ai_mode_enabled(),
+        "locked": is_ai_mode_locked(),
+    }), 200
 
 
 def clean_suggestions(suggestions, existing_items):
@@ -122,6 +146,9 @@ def clean_suggestions(suggestions, existing_items):
     methods=["POST"]
 )
 def recommend_checklist_items():
+    if not is_ai_mode_enabled():
+        return jsonify({"error": "AI mode is disabled"}), 403
+
     data = request.get_json(silent=True) or {}
     message = data.get("message")
 

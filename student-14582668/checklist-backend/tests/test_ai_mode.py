@@ -2,8 +2,17 @@ import json
 from unittest.mock import Mock, patch
 
 import requests
+import pytest
+
+from services import llm_client
 
 from app import app
+
+
+@pytest.fixture(autouse=True)
+def enable_ai_mode(monkeypatch):
+    monkeypatch.setattr(llm_client, "AI_MODE_ENABLED", True)
+    monkeypatch.setenv("AI_MODE_LOCKED", "false")
 
 
 def make_database_response(items, status_code=200):

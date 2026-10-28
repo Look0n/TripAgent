@@ -14,6 +14,23 @@ OLLAMA_MODEL = os.getenv(
 )
 
 
+# Checklist starts OFF; the UI controls this backend process only.
+AI_MODE_ENABLED = False
+
+
+def is_ai_mode_enabled() -> bool:
+    return AI_MODE_ENABLED and not is_ai_mode_locked()
+
+
+def is_ai_mode_locked() -> bool:
+    return os.getenv("AI_MODE_LOCKED", "false").strip().lower() in ("1", "true", "yes", "on")
+
+
+def set_ai_mode_enabled(enabled: bool) -> None:
+    global AI_MODE_ENABLED
+    AI_MODE_ENABLED = enabled
+
+
 def generate_text(
     prompt,
     timeout=120,

@@ -468,6 +468,7 @@ services:
 
     environment:
       CHECKLIST_BACKEND_PORT: 5004
+      AI_MODE_LOCKED: ${AI_MODE_LOCKED:-false}
       CHECKLIST_DATABASE_URL: http://checklist-database:6004
       OLLAMA_URL: http://host.docker.internal:11434/api/generate
       OLLAMA_MODEL: qwen2.5:0.5b

@@ -489,8 +489,75 @@ function renderAiSuggestions(suggestions) {
 }
 
 
+const aiToggle = document.getElementById("ai-toggle");
+const aiModeStatus = document.getElementById("ai-mode-status");
+let aiEnabled = false;
+let aiLocked = false;
+let aiModeKnown = false;
+let aiBusy = false;
+
+
+function updateAiButtons() {
+    aiToggle.disabled = aiBusy || !aiModeKnown || aiLocked;
+    aiToggle.textContent = `AI-Mode: ${aiEnabled ? "ON" : "OFF"}`;
+    aiToggle.setAttribute("aria-pressed", String(aiEnabled));
+    aiToggle.title = aiLocked
+        ? "AI mode is locked by the administrator."
+        : "Turn Checklist AI mode on or off.";
+    askAiButton.disabled = aiBusy || !aiModeKnown || !aiEnabled;
+}
+
+
+async function loadAiMode() {
+    try {
+        const result = await apiRequest(`${API_URL}/ai/mode`);
+        aiEnabled = result.enabled === true;
+        aiLocked = result.locked === true;
+        aiModeKnown = true;
+        aiModeStatus.textContent = aiLocked
+            ? "AI mode is locked OFF by the administrator."
+            : `AI mode is ${aiEnabled ? "ON. You can request suggestions." : "OFF. Turn it ON to request suggestions."}`;
+    } catch (error) {
+        aiEnabled = false;
+        aiModeKnown = false;
+        aiModeStatus.textContent = error.message;
+    } finally {
+        updateAiButtons();
+    }
+}
+
+
+aiToggle.addEventListener("click", async () => {
+    if (aiBusy || !aiModeKnown || aiLocked) {
+        return;
+    }
+
+    aiBusy = true;
+    updateAiButtons();
+    try {
+        await apiRequest(`${API_URL}/ai/mode`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({enabled: !aiEnabled})
+        });
+    } catch (error) {
+        setStatus(error.message, "error");
+    } finally {
+        await loadAiMode();
+        aiBusy = false;
+        updateAiButtons();
+    }
+});
+
+loadAiMode();
+
+
 async function requestAiSuggestions(event) {
     event.preventDefault();
+
+    if (aiBusy || !aiModeKnown || !aiEnabled) {
+        return;
+    }
 
     const message = document
         .getElementById("travel-message")
@@ -502,7 +569,8 @@ async function requestAiSuggestions(event) {
         return;
     }
 
-    askAiButton.disabled = true;
+    aiBusy = true;
+    updateAiButtons();
     askAiButton.textContent = "Getting suggestions...";
     aiResults.hidden = true;
     setStatus("Asking the AI checklist assistant...");
@@ -524,7 +592,9 @@ async function requestAiSuggestions(event) {
     } catch (error) {
         setStatus(error.message, "error");
     } finally {
-        askAiButton.disabled = false;
+        await loadAiMode();
+        aiBusy = false;
+        updateAiButtons();
         askAiButton.textContent = "Ask AI";
     }
 }

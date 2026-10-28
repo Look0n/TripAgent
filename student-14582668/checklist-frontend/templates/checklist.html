@@ -159,7 +159,13 @@
             class="ai-panel"
             aria-labelledby="ai-heading"
         >
-            <h2 id="ai-heading">AI checklist assistant</h2>
+            <div class="section-heading">
+                <h2 id="ai-heading">AI checklist assistant</h2>
+                <button id="ai-toggle" class="mode-toggle" type="button" aria-pressed="false" disabled>
+                    AI-Mode: OFF
+                </button>
+            </div>
+            <p id="ai-mode-status" role="status">Checking AI mode...</p>
             <p>
                 Describe your trip to receive additional checklist
                 suggestions. Suggestions are not saved automatically.
@@ -177,7 +183,7 @@
                     ></textarea>
                 </div>
 
-                <button id="ask-ai-button" type="submit">
+                <button id="ask-ai-button" type="submit" disabled>
                     Ask AI
                 </button>
             </form>
